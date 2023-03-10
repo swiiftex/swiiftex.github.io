@@ -14,6 +14,13 @@
 	<p>A few months later, Redshift announced their own LAN event, and the tool had some features added such as OBS Auto-Replay and automatic score input. To do this, I accessed Echo Arena's API (the game being broadcasted) and grabbed the scores from there.</p>
 	<p>In 2022, someone in the European community for Echo Arena announced <a href="duckman.html">The Duckman LAN</a>. In this event I adapted the Broadcast Tool to use clientside python scripts instead of being hosted on an external server (every IP from the previous versions instead pointed to 127.0.0.1). We worked with the network engineers at the Carrington House Hotel where we were hosting the event, to ensure that both the game's API and that port 5005 could be accessed.</p>
 	<p>The repository is private, but the instructions for installing the first revision of the tool can be found <a href="../content/programming/broadcasttool.pdf">here.</a>
+  <br>
+  <h2><u>Live Automation for Echo Arena broadcasts</u></h2>
+  <p>During <a href="duckman.html">The Duckman LAN</a>, I created and ran the broadcast package live for the VR Master League twitch channel. However, during the event I ended up spending a lot of time on repetitive tasks such as saving replays, changing certain scenes or team names, or opening too many applications to the point where it just made more sense to combine them all into one tool or app.</p>
+  <p>For Duckman LAN 2, I have created a much more streamlined version of the package from the ground up, with more traditional scene naming structures much akin to what is standard practice in programming (e.g. an image for the scoreboard will be named 'Image.Scoreboard.X'), which allows a much easier time in OBS when reusing assets and reorganising scenes.</p>
+  <p>I was using the Echo Arena API before, however it was largely just to trigger animations. I was using a modified version of the Broadcast Tool which I made years earlier to save scores and select teams, but for this year I have integrated all of that functionality into Stream Deck using Companion and Python scripting. In doing this I have created my own API hub to access Echo Arena's score values, as well as team name listing using the Google Sheets API.</p>
+  <p>Automated things in the package include: <br> - Round score input<br> - Team name/logo display<br> - Goal animations<br> - Replay saving/transitions</p>
+
 	<script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
 <script>
   function addDarkmodeWidget() {
