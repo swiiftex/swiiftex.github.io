@@ -69,43 +69,52 @@
 		  <div class="row">
 			<div class="col-12 text-center offset-lg-0 col-lg-12">
 			<br><br>
-              <h1>Duckman LAN</h1>
-              <p>Community  event for Ready At Dawn's "Echo Arena"&nbsp; &nbsp;</p>
+              <h1>Software</h1>
             </div>
-			<div class="col-12 col-lg-12"><img src="images/duckmanlong.jpg" class="img-fluid" alt="duckman">&nbsp;</div>
           </div>	
         </div>
       </div>
     </section>
-    <section id=2022>
+    <section id=revolt>
       <div class="container">
         <div class="jumbotron">
-          <h1 class="display-4">Duckman LAN <b>2022</b></h1>
-          <p class="lead">The first European community LAN for Echo Arena</p>
-          <p class="lead">7th April 2022 - Bournemouth, UK</p>
+			<center><img src="images/revoltlogo.gif" class="img-fluid" alt="Placeholder image"></center>
+          <p class="lead" align=center>Broadcast and Production Tool for OBS</p>
 <hr class="my-4">
-          <p>In April of 2022, I got to produce and present a professional broadcast package for an in person eSports event in Bournemouth</p>
-          <p>I worked with Annexed Fate produce a professional livestream package for this event, which had multiple sponsors and was recieved very well by the community. I used tools such as OBS, UPDeck&nbsp; Photoshop and After Effects, as well as my own Broadcast Tool software to pull this off. I also worked with Blackmagic cameras and interfaces, GoPros, and a PA system to give the livestream and in person audience a great viewing experience. For the passion of the game and for the community.</p>
-	    <div class="embed-responsive embed-responsive-16by9">
-          <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/Xwq7up3mLKM"></iframe>
+			<div class="row">
+			  <div class="col-lg-6">
+			    <p>Revolt is a tool I am creating with 2 other people, who go by the online handles SputnikKobra and TheLaw.</p>
+			    <p>&nbsp;</p>
+<p>Features:</p>
+			    <p>- Team name/logo input and saving</p>
+			    <p>- Team selection and match queueing</p>
+			    <p>- Scorekeeping</p>
+			    <p>&nbsp;- OBS Scene Collection and run of show management using <a href="https://github.com/obsproject/obs-websocket"> OBS websocket. </a>&nbsp;</p>
+<p>&nbsp;Scores, team names and logos are updated automatically to OBS, allowing for easy team swapping during tournaments or broadcasts.&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</p>
+			  </div>
+			  <div class="col-lg-6"><img src="images/revolt2.jpg" class="img-fluid" alt="Placeholder image"></div>
+		  </div>
         </div>
-        </div>
-
     </section>
-	<section id=2023>
+		
+	<section id=btool>
       <div class="container">
         <div class="jumbotron">
-          <h1 class="display-4">Duckman LAN <b>2023</b></h1>
-          <p class="lead">Echo VR's final hurrah!</p>
-          <p class="lead">7th April 2023 - Southampton, UK&nbsp;</p>
+          <h1 class="display-4"><strong>Broadcast Tool</strong></h1>
+          <p class="lead">Used for Redshift Contender Series/Champion Series and Duckman LAN broadcasts.&nbsp;</p>
 <hr class="my-4">
-          <p>During the 2022 event, I created and ran the broadcast package live for the VR Master League twitch channel.&nbsp;</p>
-          <p>However, during the event I ended up spending a lot of time on repetitive tasks such as saving replays, changing certain scenes or team names, or opening too many applications to the point where it just made more sense to combine them all into one tool or app.&nbsp;</p>
-          <p>For Duckman LAN 2, I have created a much more streamlined version of the package from the ground up, with more traditional scene naming structures much akin to what is standard practice in programming (e.g. an image for the scoreboard will be named 'Image.Scoreboard.X'), which allows a much easier time in OBS when reusing assets and reorganising scenes. I was using the Echo Arena API before, however it was largely just to trigger animations. I was using a modified version of the Broadcast Tool which I made years earlier to save scores and select teams, but for this year I have integrated all of that functionality into Stream Deck using Companion and Python scripting. In doing this I have created my own API hub to access Echo Arena's score values, as well as team name listing using the Google Sheets API.&nbsp;</p>
-<p>Automated things in the package include round score input, team name/logo display, goal animations and replay saving/transitions.</p>
-		<div class="embed-responsive embed-responsive-16by9">
-          <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/7ZGMp1kXAgc"></iframe>
-        </div>
+          <p>&nbsp;The Broadcast Tool was created in 2021 when I tried to look around for scoreboard and team name/input solutions for OBS, and there weren't any options that fulfilled the needs for a stable and smooth live broadcast. I decided to partner with SputnikKobra to create the tool for the first Redshift Contender Series event.&nbsp;</p>
+					<div class="row">
+			  <div class="col-lg-6">
+				<p>Features:</p>
+			    <p>- Reading team names/logo URLs from Google Sheets API.</p>
+			    <p>- Automatic score input from Echo Arena's in-game API.</p>
+			    <p>- OBS scene collection and asset installation tool, which edits a JSON file, changing pointers to allow the package to be easily installed anywhere on the computer.</p>
+			    <p>&nbsp;- Stream Deck support through <a href="https://bitfocus.io/companion">Bitfocus Companion</a></p>
+                <p>The tool was designed specifically for use in Echo Arena tournaments, and was refined for a few years to be very robust, being eventually converted to run only on localhost python scripts, as using ports and GET requests can sometimes be tricky at unorthadox in-person venues.&nbsp;</p>
+                <p>We started Revolt as a way to make the tool more universal and user-friendly, and to eventually make it public.</p>
+              </div>
+			  <div class="col-lg-6"><img src="images/broadcasttool.png" class="img-fluid" alt="Placeholder image"></div>
         </div>
 
     </section>
