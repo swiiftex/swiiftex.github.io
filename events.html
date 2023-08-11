@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap Portfolio Page Template</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap-4.4.1.css" rel="stylesheet">
+    <style type="text/css">
+    .centered {
+}
+    .about {
+}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="#">Owen B.K&nbsp;</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <a class="nav-link" href="index.html">Home<span class="sr-only">(current)</span></a>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Games
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			  <a class="dropdown-header"><b>TITLES</b></a>              
+			  <a class="dropdown-item" href="#">LUNARBALL</a>
+              <a class="dropdown-item" href="#">VENATOR</a>
+			  <div class="dropdown-divider"></div>
+			  <a class="dropdown-header"><b>MODS</b></a>
+			  <a class="dropdown-item" href="#">MORDHAU</a>
+			  <a class="dropdown-item" href="https://steamcommunity.com/id/swiift_03/myworkshopfiles/" target="_blank">Steam Workshop</a>
+            </div>
+          </li>
+		 <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Software
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			  <a class="dropdown-header"><b>Broadcast</b></a>
+              <a class="dropdown-item" href="#">Revolt</a>
+              <a class="dropdown-item" href="#">Broadcast Tool</a>
+			  <div class="dropdown-divider"></div>
+			  <a class="dropdown-header"><b>GitHub</b></a>
+			  <a class="dropdown-item" href="https://github.com/swiiftex/DJHero-XInput" target="_blank">DJHero-XInput</a>
+            </div>
+          </li>
+	      <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Events
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			  <a class="dropdown-header"><b>Duckman LAN</b></a>
+              <a class="dropdown-item" href="#2022">2022</a>
+              <a class="dropdown-item" href="#2023">2023</a>
+			  </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <section id="about">
+      <div class="jumbotron text-center mt-2"><abbrev></abbrev>
+        <div class="container">
+		  <div class="row">
+			<div class="col-12 text-center offset-lg-0 col-lg-12">
+			<br><br>
+              <h1>Duckman LAN</h1>
+              <p>Community  event for Ready At Dawn's "Echo Arena"&nbsp; &nbsp;</p>
+            </div>
+			<div class="col-12 col-lg-12"><img src="images/duckmanlong.jpg" class="img-fluid" alt="duckman">&nbsp;</div>
+          </div>	
+        </div>
+      </div>
+    </section>
+    <section id=2022>
+      <div class="container">
+        <div class="jumbotron">
+          <h1 class="display-4">Duckman LAN <b>2022</b></h1>
+          <p class="lead">The first European community LAN for Echo Arena</p>
+          <p class="lead">7th April 2022 - Bournemouth, UK</p>
+<hr class="my-4">
+          <p>In April of 2022, I got to produce and present a professional broadcast package for an in person eSports event in Bournemouth</p>
+          <p>I worked with Annexed Fate produce a professional livestream package for this event, which had multiple sponsors and was recieved very well by the community. I used tools such as OBS, UPDeck&nbsp; Photoshop and After Effects, as well as my own Broadcast Tool software to pull this off. I also worked with Blackmagic cameras and interfaces, GoPros, and a PA system to give the livestream and in person audience a great viewing experience. For the passion of the game and for the community.</p>
+	    <div class="embed-responsive embed-responsive-16by9">
+          <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/Xwq7up3mLKM"></iframe>
+        </div>
+        </div>
+
+    </section>
+	<section id=2023>
+      <div class="container">
+        <div class="jumbotron">
+          <h1 class="display-4">Duckman LAN <b>2023</b></h1>
+          <p class="lead">Echo VR's final hurrah!</p>
+          <p class="lead">7th April 2023 - Southampton, UK&nbsp;</p>
+<hr class="my-4">
+          <p>During the 2022 event, I created and ran the broadcast package live for the VR Master League twitch channel.&nbsp;</p>
+          <p>However, during the event I ended up spending a lot of time on repetitive tasks such as saving replays, changing certain scenes or team names, or opening too many applications to the point where it just made more sense to combine them all into one tool or app.&nbsp;</p>
+          <p>For Duckman LAN 2, I have created a much more streamlined version of the package from the ground up, with more traditional scene naming structures much akin to what is standard practice in programming (e.g. an image for the scoreboard will be named 'Image.Scoreboard.X'), which allows a much easier time in OBS when reusing assets and reorganising scenes. I was using the Echo Arena API before, however it was largely just to trigger animations. I was using a modified version of the Broadcast Tool which I made years earlier to save scores and select teams, but for this year I have integrated all of that functionality into Stream Deck using Companion and Python scripting. In doing this I have created my own API hub to access Echo Arena's score values, as well as team name listing using the Google Sheets API.&nbsp;</p>
+<p>Automated things in the package include round score input, team name/logo display, goal animations and replay saving/transitions.</p>
+		<div class="embed-responsive embed-responsive-16by9">
+          <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/7ZGMp1kXAgc"></iframe>
+        </div>
+        </div>
+
+    </section>
+    <hr>
+  </div>
+  </div>
+    </div>
+    <hr>
+    <footer class="text-center">
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p>© Owen Bladen-Kay 2023. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap-4.4.1.js"></script>
+  </body>
+</html>
