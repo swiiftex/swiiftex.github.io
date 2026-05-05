@@ -16,6 +16,19 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        .rainbow-player {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .rainbow-player audio {
+            width: 100%;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
@@ -23,6 +36,25 @@
     <img src="images/travis.png" width=900px height=300px></img>
     <h1 class="rainbow-text">thanks</p>
 
+    <div class="rainbow-player">
+        <audio id="rainbow-audio" controls autoplay muted>
+            <source src="audio/song.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <script>
+        const audio = document.getElementById('rainbow-audio');
+        audio.play().then(() => {
+            audio.muted = false;
+        }).catch(err => {
+            console.log('Autoplay prevented, waiting for user interaction');
+            document.addEventListener('click', function() {
+                audio.play();
+                audio.muted = false;
+            }, { once: true });
+        });
+    </script>
 
 </body>
 </html>
