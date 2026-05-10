@@ -9,7 +9,7 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: rainbow 2s ease-in-out infinite;
+            animation: rainbow 10s ease-in-out infinite;
         }
         @keyframes rainbow {
             0% { background-position: 0% 50%; }
@@ -28,6 +28,12 @@
         .rainbow-player audio {
             width: 100%;
             border-radius: 10px;
+            animation: rainbow 10s ease-in-out infinite;
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
     </style>
 </head>
@@ -56,5 +62,13 @@
         });
     </script>
 
+<h2 class="rainbow-text">epic links</h2>
+<li>
+    <a href="https://aka.ms/vs/17/release/vs_community.exe">visual studio 2022</a><br>
+    <a href="https://www.plasticscm.com/download/downloadinstaller/11.0.16.10042/plasticscm/windows/full?flags=None">plastic on-premesis</a>
+</li>
+
+
+<p class="rainbow-text">read their eulas and shit i'm not responsible for anything etc etc. don't you dare sue me microslop or unity. try instead making them easier to find, dipshits.</p>
 </body>
 </html>
