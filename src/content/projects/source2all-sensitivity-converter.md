@@ -8,6 +8,13 @@ when: "2026"
 status: v1.0.3 — free download
 platforms: [Windows]
 summary: Set your sensitivity once and apply it everywhere — 58 games, auto-detected across Steam, Epic and GOG, written straight into their configs.
+cover: ../../assets/projects/source2all-sensitivity-converter/auto-apply.png
+coverAlt: The Source2All Auto-apply tab, listing games found across Steam and Epic with each game's converted sensitivity.
+gallery:
+  - src: ../../assets/projects/source2all-sensitivity-converter/auto-apply.png
+    alt: The Auto-apply tab, listing games found across Steam and Epic with each game's converted sensitivity.
+  - src: ../../assets/projects/source2all-sensitivity-converter/convert.png
+    alt: The Convert tab, turning a Half-Life 2 sensitivity of 1.0 into 3.839723 for Rainbow Six Siege.
 highlightsTitle: What it does
 highlights:
   - Converts your sensitivity between 58 games — or from cm/360 and DPI — using each engine's yaw constant
