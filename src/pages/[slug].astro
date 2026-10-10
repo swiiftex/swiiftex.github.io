@@ -1,0 +1,484 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import TitleCard from '../components/TitleCard.astro';
+import Gallery from '../components/Gallery.astro';
+import YouTube from '../components/YouTube.astro';
+import SensCalc from '../components/SensCalc.astro';
+import Inventory from '../components/Inventory.astro';
+import { getProjects, projectHref, vtName, whenLabel, type Project } from '../lib/projects';
+import { CATEGORY_LABELS } from '../data/site';
+
+export async function getStaticPaths() {
+  const all = await getProjects();
+  return all.map((project) => {
+    const siblings = all.filter((p) => p.data.category === project.data.category);
+    const i = siblings.findIndex((p) => p.id === project.id);
+    return {
+      params: { slug: project.id },
+      props: {
+        project,
+        prev: siblings[i - 1] ?? null,
+        next: siblings[i + 1] ?? null,
+      },
+    };
+  });
+}
+
+interface Props {
+  project: Project;
+  prev: Project | null;
+  next: Project | null;
+}
+const { project, prev, next } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+
+const categoryHref = {
+  games: '/games/',
+  mods: '/games/#mods',
+  software: '/software/',
+  events: '/events/',
+}[data.category];
+
+// Wide banner: a dedicated hero image if there is one, else the cover.
+// Low-res covers are shown contained on a backdrop instead of stretched.
+const banner = data.hero ?? data.cover;
+const bannerFit = banner && banner.width >= 1000 ? 'cover' : 'contain';
+const ogImage = data.cover ? (await getImage({ src: data.cover, width: 1200, format: 'jpg' })).src : undefined;
+
+const spec = [
+  data.role && { k: 'Role', v: data.role },
+  data.studio && { k: 'Studio', v: data.studio },
+  data.game && { k: 'Game', v: data.game },
+  data.location && { k: 'Where', v: data.location },
+  { k: 'When', v: whenLabel(project) },
+  data.status && { k: 'Status', v: data.status },
+  data.platforms.length > 0 && { k: 'Platforms', v: data.platforms.join(' · ') },
+  data.downloads && { k: 'Downloads', v: `${data.downloads.toLocaleString('en-GB')} on mod.io` },
+].filter(Boolean) as { k: string; v: string }[];
+
+const [primary, ...secondary] = data.links;
+---
+
+<Base title={data.title} description={data.summary} image={ogImage}>
+  <article class="project" style={data.tint ? `--tint:${data.tint}` : undefined}>
+    <header class="project__head container">
+      <nav class="crumbs mono" aria-label="Breadcrumb" data-reveal>
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href={categoryHref}>{CATEGORY_LABELS[data.category]}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{data.title}</span>
+      </nav>
+      {data.kicker && <p class="eyebrow project__kicker" data-reveal style="--i:1"><span class="eyebrow__rule"></span>{data.kicker}</p>}
+      <h1 class="display h1 project__title" data-reveal style="--i:2">{data.title}</h1>
+      <p class="lede" data-reveal style="--i:3">{data.summary}</p>
+      {
+        primary && (
+          <div class="btn-row" data-reveal style="--i:4">
+            <a class="btn btn--primary" href={primary.href} target="_blank" rel="noopener" data-magnetic>
+              {primary.label} <Icon name="external" />
+            </a>
+            {secondary.slice(0, 2).map((l) => (
+              <a class="btn btn--ghost" href={l.href} target="_blank" rel="noopener">
+                {l.label} <Icon name="external" />
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="container">
+      <div class:list={['banner frame', `banner--${banner ? bannerFit : 'card'}`]} style={`view-transition-name:${vtName(project)}`}>
+        {
+          banner ? (
+            <>
+              {bannerFit === 'contain' && <div class="banner__grid" aria-hidden="true" />}
+              <Image
+                src={banner}
+                alt={data.hero ? '' : (data.coverAlt ?? '')}
+                widths={bannerFit === 'cover' ? [800, 1280, 1920] : undefined}
+                sizes={bannerFit === 'cover' ? '(min-width: 1320px) 1320px, 100vw' : undefined}
+                loading="eager"
+                fetchpriority="high"
+                class="banner__img"
+              />
+            </>
+          ) : (
+            <TitleCard title={data.title} kicker={data.kicker} meta={data.status ?? data.when} tint={data.tint} />
+          )
+        }
+      </div>
+    </div>
+
+    <div class="project__body container">
+      <div class="project__main">
+        <div class="prose" data-reveal>
+          <Content />
+        </div>
+
+        {
+          data.clip && (
+            <figure class="clip" data-reveal>
+              <video class="clip__video" src={data.clip} muted loop playsinline autoplay preload="metadata" aria-label={`${data.title} gameplay clip`} />
+              <figcaption class="clip__bar mono">Gameplay clip</figcaption>
+            </figure>
+          )
+        }
+
+        {project.id === 'source2all-sensitivity-converter' && <SensCalc />}
+        {project.id === 'lunarball' && <Inventory />}
+
+        {
+          data.youtube.length > 0 && (
+            <section class="project__videos" aria-label="Videos">
+              <h2 class="mono muted">Watch</h2>
+              <div class="videos">
+                {data.youtube.map((v) => (
+                  <YouTube id={v.id} title={v.title} />
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="project__aside">
+        <dl class="spec panel" data-reveal>
+          {
+            spec.map((s) => (
+              <div class="spec__row">
+                <dt class="mono">{s.k}</dt>
+                <dd>{s.v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        {
+          data.highlights.length > 0 && (
+            <section class="highlights panel" data-reveal style="--i:1">
+              <h2 class="mono">{data.highlightsTitle}</h2>
+              <ul role="list">
+                {data.highlights.map((h) => (
+                  <li>{h}</li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        {
+          data.stack.length > 0 && (
+            <ul role="list" class="chip-row" data-reveal style="--i:2" aria-label="Tools and tech">
+              {data.stack.map((t) => (
+                <li class="chip">{t}</li>
+              ))}
+            </ul>
+          )
+        }
+
+        {
+          data.links.length > 0 && (
+            <ul role="list" class="links" data-reveal style="--i:3">
+              {data.links.map((l) => (
+                <li>
+                  <a href={l.href} target="_blank" rel="noopener">
+                    <span>{l.label}</span>
+                    <Icon name="external" size={14} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </aside>
+    </div>
+
+    {
+      data.gallery.length > 0 && (
+        <section class="container project__gallery" aria-labelledby="gallery-title">
+          <p class="eyebrow" id="gallery-title">
+            <span class="eyebrow__index">{String(data.gallery.length).padStart(2, '0')}</span>
+            <span class="eyebrow__rule" />
+            Gallery
+          </p>
+          <Gallery items={data.gallery} />
+        </section>
+      )
+    }
+
+    <nav class="container pager" aria-label={`More ${CATEGORY_LABELS[data.category].toLowerCase()}`}>
+      {
+        prev ? (
+          <a href={projectHref(prev)} class="pager__link" data-cursor="view">
+            <span class="mono muted">← Newer</span>
+            <span class="pager__title display">{prev.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next ? (
+          <a href={projectHref(next)} class="pager__link pager__link--next" data-cursor="view">
+            <span class="mono muted">Older →</span>
+            <span class="pager__title display">{next.data.title}</span>
+          </a>
+        ) : (
+          <a href={categoryHref} class="pager__link pager__link--next">
+            <span class="mono muted">Back to</span>
+            <span class="pager__title display">All {CATEGORY_LABELS[data.category].toLowerCase()}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .project {
+    --tint: var(--accent);
+  }
+  .project__head {
+    display: grid;
+    gap: 22px;
+    justify-items: start;
+    padding-top: calc(var(--header-h) + clamp(40px, 7vw, 96px));
+    padding-bottom: clamp(32px, 5vw, 56px);
+  }
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+  }
+  .crumbs a:hover {
+    color: var(--tint);
+  }
+  .crumbs [aria-current] {
+    color: var(--fg-2);
+  }
+  .project__kicker {
+    color: var(--tint);
+  }
+  .project__title {
+    font-size: clamp(3.25rem, 10vw, 8rem);
+  }
+
+  /* ---------- banner ---------- */
+  .banner {
+    --frame-inset: -8px;
+    --frame-color: var(--tint);
+    position: relative;
+    aspect-ratio: 21 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  @media (max-width: 700px) {
+    .banner {
+      aspect-ratio: 16 / 10;
+    }
+  }
+  .banner :global(.banner__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .banner--contain {
+    display: grid;
+    place-items: center;
+  }
+  .banner--contain :global(.banner__img) {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: auto;
+    max-width: 80%;
+    max-height: 82%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.7);
+  }
+  .banner__grid {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(80% 90% at 50% 100%, color-mix(in oklab, var(--tint) 22%, transparent), transparent 70%),
+      linear-gradient(to right, color-mix(in oklab, var(--line-2) 70%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(to bottom, color-mix(in oklab, var(--line-2) 70%, transparent) 1px, transparent 1px) 0 0 / 32px 32px;
+  }
+  .clip {
+    display: grid;
+    gap: 10px;
+    max-width: 780px;
+  }
+  .clip__bar {
+    color: var(--muted);
+  }
+  .clip__video {
+    width: 100%;
+    aspect-ratio: 780 / 180;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #000;
+  }
+
+  /* ---------- body ---------- */
+  .project__body {
+    display: grid;
+    gap: 48px;
+    padding-block: clamp(48px, 7vw, 96px);
+  }
+  @media (min-width: 1000px) {
+    .project__body {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: clamp(48px, 6vw, 96px);
+      align-items: start;
+    }
+    .project__aside {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+    }
+  }
+  .project__main {
+    display: grid;
+    gap: 56px;
+    min-width: 0;
+  }
+  .project__main .prose {
+    font-size: 1.125rem;
+  }
+  .project__videos h2 {
+    margin-bottom: 16px;
+  }
+  .videos {
+    display: grid;
+    gap: 24px;
+  }
+  @media (min-width: 700px) {
+    .videos {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .videos > :only-child {
+      grid-column: span 2;
+    }
+  }
+
+  .project__aside {
+    display: grid;
+    gap: 20px;
+  }
+  .spec {
+    padding: 8px 20px;
+  }
+  .spec__row {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .spec__row:last-child {
+    border-bottom: 0;
+  }
+  .spec dt {
+    color: var(--muted);
+    padding-top: 3px;
+  }
+  .spec dd {
+    color: var(--fg);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .highlights {
+    padding: 22px 20px;
+  }
+  .highlights h2 {
+    color: var(--tint);
+    margin-bottom: 14px;
+  }
+  .highlights ul {
+    display: grid;
+    gap: 10px;
+  }
+  .highlights li {
+    position: relative;
+    padding-left: 26px;
+    color: var(--fg-2);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .highlights li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.45em;
+    width: 12px;
+    height: 7px;
+    border-left: 2px solid var(--tint);
+    border-bottom: 2px solid var(--tint);
+    transform: rotate(-45deg);
+  }
+  .links {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg-2);
+    transition:
+      color 0.2s,
+      padding 0.35s var(--ease-out);
+  }
+  .links a:hover {
+    color: var(--tint);
+    padding-left: 8px;
+  }
+
+  .project__gallery {
+    display: grid;
+    gap: 24px;
+    padding-bottom: clamp(48px, 7vw, 96px);
+  }
+
+  /* ---------- pager ---------- */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .pager__link {
+    display: grid;
+    gap: 6px;
+    padding: 20px 0;
+  }
+  .pager__link--next {
+    text-align: right;
+    justify-items: end;
+  }
+  .pager__title {
+    font-size: clamp(1.5rem, 4vw, 3rem);
+    line-height: 0.95;
+    transition: color 0.25s;
+  }
+  .pager__link:hover .pager__title {
+    color: var(--tint);
+  }
+</style>

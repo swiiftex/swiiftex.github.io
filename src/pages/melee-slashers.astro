@@ -1,0 +1,195 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import ParryTrainer from '../components/ParryTrainer.astro';
+
+const groups = [
+  {
+    id: 'offence',
+    title: 'Offensive mechanics',
+    terms: [
+      {
+        term: 'Real-time swings',
+        def: 'Weapon tracers are checked in real time along the length of the weapon to decide whether it hits — or gets parried.',
+        note: 'Introduced by Chivalry: Medieval Warfare.',
+        href: 'https://store.steampowered.com/app/219640/Chivalry_Medieval_Warfare/',
+      },
+      {
+        term: 'Feint',
+        def: 'Cancelling an attack mid-swing — either to bait out your enemy’s parry, or simply to avoid missing.',
+      },
+      {
+        term: 'Combo',
+        def: 'Chaining multiple attacks in sequence, whether the previous one missed or landed.',
+      },
+    ],
+  },
+  {
+    id: 'defence',
+    title: 'Defensive mechanics',
+    terms: [
+      {
+        term: 'Parry',
+        def: 'Blocking an attack. Depending on the game it’s either timed or held.',
+      },
+      {
+        term: 'Kick / jab',
+        def: 'A fast, low-damage attack — usually used to stop an opponent’s combo or punish facehugging.',
+      },
+    ],
+  },
+];
+
+const acronyms = [
+  { short: 'FTP', long: 'Feint-to-parry' },
+  { short: 'CFTP', long: 'Combo feint-to-parry' },
+];
+---
+
+<Base title="Melee Slashers: a Quick Start Guide" description="A quick start guide to melee slashers — real-time swings, feints, combos, parries and kicks — with a parry-timing mini game.">
+  <PageHeader
+    index="05"
+    eyebrow="Guide"
+    title="Melee slashers: a quick start guide"
+    lede="This guide is mainly for new players coming into the genre. Every melee slasher is different, but a few core mechanics carry over between most of them."
+  >
+    <p class="definition panel" data-reveal style="--i:3">
+      <span class="mono accent">Melee slasher</span>
+      <span>A melee-focused game that uses <a href="#real-time-swings">real-time swings</a>.</span>
+    </p>
+  </PageHeader>
+
+  {
+    groups.map((g, gi) => (
+      <section class="container section--tight" aria-labelledby={g.id}>
+        <h2 id={g.id} class="eyebrow" data-reveal>
+          <span class="eyebrow__index">{String(gi + 1).padStart(2, '0')}</span>
+          <span class="eyebrow__rule" />
+          {g.title}
+        </h2>
+        <dl class="terms">
+          {g.terms.map((t, i) => (
+            <div class="term panel" id={t.term.toLowerCase().replace(/[^a-z]+/g, '-')} data-reveal data-tilt="3" style={`--i:${i}`}>
+              <dt class="display term__name">{t.term}</dt>
+              <dd class="term__def">
+                {t.def}
+                {t.note && (
+                  <span class="term__note mono">
+                    {t.href ? (
+                      <a href={t.href} target="_blank" rel="noopener">
+                        {t.note}
+                      </a>
+                    ) : (
+                      t.note
+                    )}
+                  </span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))
+  }
+
+  <section class="container section--tight" aria-labelledby="short">
+    <h2 id="short" class="eyebrow" data-reveal><span class="eyebrow__index">03</span><span class="eyebrow__rule"></span>Shorthand</h2>
+    <p class="lede short__lede" data-reveal>You'll often see combinations of these mechanics shortened to acronyms:</p>
+    <dl class="acros">
+      {
+        acronyms.map((a, i) => (
+          <div class="acro" data-reveal style={`--i:${i}`}>
+            <dt class="display acro__short">{a.short}</dt>
+            <dd class="mono">{a.long}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="container section" aria-label="Parry trainer">
+    <ParryTrainer />
+    <p class="mono muted outro">
+      Want the competitive version? See <a class="accent" href="/swiifts-comp-mod/">swiift's Comp Mod</a> for MORDHAU.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .definition {
+    display: grid;
+    gap: 6px;
+    padding: 18px 22px;
+    max-width: 640px;
+    font-size: 1.2rem;
+    border-left: 3px solid var(--accent);
+  }
+  .definition a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .terms {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  @media (min-width: 900px) {
+    .terms {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .term {
+    --rx: 0deg;
+    --ry: 0deg;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding: 24px;
+    scroll-margin-top: calc(var(--header-h) + 24px);
+    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
+  }
+  .term:target {
+    border-color: var(--accent);
+  }
+  .term__name {
+    font-size: 2.1rem;
+    color: var(--fg);
+  }
+  .term__def {
+    color: var(--fg-2);
+    display: grid;
+    gap: 12px;
+  }
+  .term__note a {
+    color: var(--accent);
+  }
+  .short__lede {
+    margin-top: 16px;
+  }
+  .acros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .acro {
+    display: grid;
+    gap: 4px;
+    padding: 18px 24px;
+    border: 1px dashed var(--line-2);
+    border-radius: var(--radius);
+  }
+  .acro__short {
+    font-size: 3.5rem;
+    color: var(--accent);
+  }
+  .acro dd {
+    color: var(--fg-2);
+  }
+  .outro {
+    margin-top: 20px;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+</style>

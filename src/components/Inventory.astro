@@ -1,0 +1,192 @@
+---
+/**
+ * LUNARBALL cosmetic item art, laid out like a game inventory.
+ * Click (or focus) an item to inspect it.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/projects/lunarball/items/*.png', { eager: true });
+
+const nice = (slug: string) =>
+  slug
+    .replace(/^tophat/, 'top hat')
+    .replace(/^goalexplosion/, 'goal explosion')
+    .replace(/_/g, ' ')
+    .replace(/\b(gold|error|open)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+const items = Object.entries(files)
+  .map(([path, mod]) => {
+    const slug = path.split('/').pop()!.replace('.png', '');
+    const variant = slug.includes('gold') ? 'gold' : slug.includes('error') ? 'error' : 'standard';
+    const open = slug.includes('_open');
+    return { slug, img: mod.default, name: nice(slug) + (open ? ' (Open)' : ''), variant };
+  })
+  .sort((a, b) => a.slug.localeCompare(b.slug));
+const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
+---
+
+<section class="inv panel" aria-labelledby="inv-title" data-inv>
+  <header class="inv__head">
+    <p class="mono inv__tag">Inventory</p>
+    <h2 id="inv-title" class="display inv__title">Cosmetics &amp; items</h2>
+    <p class="inv__intro">Cosmetic item art made for LUNARBALL, including some VENATOR-themed helmets.</p>
+  </header>
+  <div class="inv__layout">
+    <div class="inv__inspect" aria-live="polite">
+      <Image src={first.img} alt="" width={360} class="inv__big" data-inv-big />
+      <p class="inv__name" data-inv-name>{first.name}</p>
+      <p class="inv__rarity mono" data-inv-rarity data-variant={first.variant}>{first.variant}</p>
+    </div>
+    <ul role="list" class="inv__grid">
+      {
+        items.map((it) => (
+          <li>
+            <button
+              type="button"
+              class="inv__slot"
+              data-variant={it.variant}
+              data-name={it.name}
+              aria-pressed={it === first ? 'true' : 'false'}
+              aria-label={`${it.name}, ${it.variant}`}
+            >
+              <Image src={it.img} alt="" width={128} loading="lazy" />
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-inv]').forEach((root) => {
+    const big = root.querySelector<HTMLImageElement>('[data-inv-big]')!;
+    const name = root.querySelector<HTMLElement>('[data-inv-name]')!;
+    const rarity = root.querySelector<HTMLElement>('[data-inv-rarity]')!;
+    const slots = [...root.querySelectorAll<HTMLButtonElement>('.inv__slot')];
+    const select = (slot: HTMLButtonElement) => {
+      slots.forEach((s) => s.setAttribute('aria-pressed', String(s === slot)));
+      const img = slot.querySelector('img')!;
+      big.removeAttribute('srcset');
+      big.src = img.currentSrc || img.src;
+      name.textContent = slot.dataset.name!;
+      rarity.textContent = slot.dataset.variant!;
+      rarity.dataset.variant = slot.dataset.variant;
+      big.animate?.([{ transform: 'scale(.9) rotate(-4deg)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], {
+        duration: 380,
+        easing: 'cubic-bezier(.16,1,.3,1)',
+      });
+    };
+    slots.forEach((s) => {
+      s.addEventListener('click', () => select(s));
+      s.addEventListener('pointerenter', () => window.matchMedia('(hover: hover)').matches && select(s));
+    });
+  });
+</script>
+
+<style>
+  .inv {
+    display: grid;
+    gap: 24px;
+    padding: clamp(22px, 3vw, 36px);
+  }
+  .inv__tag {
+    color: var(--tint, var(--accent));
+  }
+  .inv__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .inv__intro {
+    color: var(--fg-2);
+  }
+  .inv__head {
+    display: grid;
+    gap: 10px;
+  }
+  .inv__layout {
+    display: grid;
+    gap: 20px;
+  }
+  @media (min-width: 720px) {
+    .inv__layout {
+      grid-template-columns: 240px 1fr;
+      align-items: start;
+    }
+  }
+  .inv__inspect {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background:
+      radial-gradient(70% 60% at 50% 40%, color-mix(in oklab, var(--tint, var(--accent)) 18%, transparent), transparent 70%),
+      var(--bg-2);
+    border: 1px solid var(--line);
+  }
+  .inv__inspect :global(.inv__big) {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 1;
+    object-fit: contain;
+  }
+  .inv__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+  }
+  .inv__rarity {
+    color: var(--muted);
+  }
+  .inv__rarity[data-variant='gold'] {
+    color: var(--gold);
+  }
+  .inv__rarity[data-variant='error'] {
+    color: var(--live);
+  }
+  .inv__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px;
+  }
+  .inv__slot {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    transition:
+      border-color 0.2s,
+      transform 0.3s var(--ease-out),
+      box-shadow 0.3s;
+  }
+  .inv__slot :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .inv__slot[data-variant='gold'] {
+    box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--gold) 70%, transparent);
+  }
+  .inv__slot[data-variant='error'] {
+    box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--live) 70%, transparent);
+  }
+  .inv__slot:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-2);
+  }
+  .inv__slot[aria-pressed='true'] {
+    border-color: var(--tint, var(--accent));
+    background: color-mix(in oklab, var(--tint, var(--accent)) 10%, var(--bg-2));
+  }
+</style>

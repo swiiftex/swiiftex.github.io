@@ -1,0 +1,385 @@
+---
+/**
+ * A tiny parry-timing game. Incoming swings wind up, then land; parry so the
+ * 325ms parry window covers the impact. Some swings are feints — parrying
+ * those gets you "feinted". Ten rounds, then a verdict.
+ */
+---
+
+<section class="parry panel" data-parry aria-labelledby="parry-title">
+  <header class="parry__head">
+    <p class="mono parry__tag">Try it</p>
+    <h2 id="parry-title" class="display parry__title">Parry trainer</h2>
+    <p class="parry__intro">
+      Each swing winds up, then releases. Parry with <kbd>Space</kbd>, a click or a tap so your 325ms parry is active when the swing lands.
+      Some swings are <strong>feints</strong> that cancel during the windup, so don't parry those.
+    </p>
+  </header>
+
+  <div class="arena" data-arena data-cursor="parry" tabindex="0" role="button" aria-label="Parry">
+    <div class="arena__status mono" data-phase>Ready</div>
+    <div class="track" aria-hidden="true">
+      <div class="track__release"></div>
+      <div class="track__fill" data-fill></div>
+      <div class="track__parry" data-parrybar></div>
+      <div class="track__marker" data-marker></div>
+      <div class="track__labels mono"><span>Windup</span><span>Release</span><span>Impact</span></div>
+    </div>
+    <p class="arena__result display" data-result aria-live="assertive"></p>
+  </div>
+
+  <div class="parry__foot">
+    <dl class="parry__score">
+      <div><dt class="mono">Round</dt><dd data-stat="round">0/10</dd></div>
+      <div><dt class="mono">Parried</dt><dd data-stat="parried">0</dd></div>
+      <div><dt class="mono">Feints read</dt><dd data-stat="read">0</dd></div>
+      <div><dt class="mono">Hits taken</dt><dd data-stat="hit">0</dd></div>
+    </dl>
+    <button type="button" class="btn btn--primary" data-start>Start</button>
+  </div>
+</section>
+
+<script>
+  const PARRY_MS = 325;
+  const RELEASE_MS = 360;
+  const ROUNDS = 10;
+
+  document.querySelectorAll<HTMLElement>('[data-parry]').forEach((root) => {
+    const arena = root.querySelector<HTMLElement>('[data-arena]')!;
+    const fill = root.querySelector<HTMLElement>('[data-fill]')!;
+    const marker = root.querySelector<HTMLElement>('[data-marker]')!;
+    const parryBar = root.querySelector<HTMLElement>('[data-parrybar]')!;
+    const phaseEl = root.querySelector<HTMLElement>('[data-phase]')!;
+    const result = root.querySelector<HTMLElement>('[data-result]')!;
+    const startBtn = root.querySelector<HTMLButtonElement>('[data-start]')!;
+    const stat = (k: string) => root.querySelector<HTMLElement>(`[data-stat="${k}"]`)!;
+    const release = root.querySelector<HTMLElement>('.track__release')!;
+
+    type Swing = { start: number; windup: number; feintAt: number | null; impact: number };
+    let swing: Swing | null = null;
+    let parryAt = -Infinity;
+    let raf = 0;
+    let running = false;
+    let round = 0;
+    const score = { parried: 0, read: 0, hit: 0, feinted: 0 };
+
+    const show = (text: string, kind: 'good' | 'bad' | 'info') => {
+      result.textContent = text;
+      result.dataset.kind = kind;
+      arena.dataset.flash = kind;
+      result.animate?.(
+        [
+          { transform: 'scale(1.25)', opacity: 0 },
+          { transform: 'scale(1)', opacity: 1 },
+        ],
+        { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' },
+      );
+      setTimeout(() => delete arena.dataset.flash, 320);
+    };
+    const renderStats = () => {
+      stat('round').textContent = `${round}/${ROUNDS}`;
+      stat('parried').textContent = String(score.parried);
+      stat('read').textContent = String(score.read);
+      stat('hit').textContent = String(score.hit + score.feinted);
+    };
+
+    const newSwing = (now: number) => {
+      const windup = 520 + Math.random() * 380;
+      const feint = Math.random() < 0.3;
+      swing = {
+        start: now,
+        windup,
+        feintAt: feint ? now + windup * (0.55 + Math.random() * 0.3) : null,
+        impact: now + windup + RELEASE_MS,
+      };
+      const total = windup + RELEASE_MS;
+      release.style.left = `${(windup / total) * 100}%`;
+      parryBar.style.opacity = '0';
+      phaseEl.textContent = 'Incoming';
+    };
+
+    const endRound = (now: number) => {
+      swing = null;
+      round++;
+      renderStats();
+      if (round >= ROUNDS) {
+        running = false;
+        const pts = score.parried + score.read;
+        const verdict = pts >= 10 ? 'Perfect round' : pts >= 7 ? 'Nice — watch for feints' : pts >= 4 ? 'Not bad' : 'Keep practising';
+        phaseEl.textContent = `Score ${pts}/${ROUNDS}`;
+        setTimeout(() => show(verdict, pts >= 7 ? 'good' : 'info'), 500);
+        startBtn.textContent = 'Go again';
+        startBtn.hidden = false;
+        return;
+      }
+      setTimeout(() => running && newSwing(performance.now()), 650);
+      void now;
+    };
+
+    const frame = (now: number) => {
+      if (!running && !swing) {
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(frame);
+      if (!swing) {
+        fill.style.width = '0%';
+        marker.style.left = '0%';
+        return;
+      }
+      const total = swing.windup + RELEASE_MS;
+      const t = now - swing.start;
+      const p = Math.min(t / total, 1);
+      fill.style.width = `${p * 100}%`;
+      marker.style.left = `${p * 100}%`;
+      arena.dataset.phase = t < swing.windup ? 'windup' : 'release';
+      if (t >= swing.windup) phaseEl.textContent = 'Release!';
+
+      // Feint: the swing cancels during windup.
+      if (swing.feintAt !== null && now >= swing.feintAt) {
+        const parryUp = now - parryAt <= PARRY_MS;
+        if (parryUp) {
+          score.feinted++;
+          show('Feinted!', 'bad');
+        } else {
+          score.read++;
+          show('Feint read', 'good');
+        }
+        phaseEl.textContent = 'Feint';
+        endRound(now);
+        return;
+      }
+      // Impact.
+      if (now >= swing.impact) {
+        const parryUp = swing.impact - parryAt <= PARRY_MS && swing.impact >= parryAt;
+        if (parryUp) {
+          score.parried++;
+          show('Parried', 'good');
+        } else if (parryAt > swing.start && parryAt < swing.impact - PARRY_MS) {
+          score.hit++;
+          show('Too early', 'bad');
+        } else {
+          score.hit++;
+          show('Hit!', 'bad');
+        }
+        endRound(now);
+      }
+    };
+
+    const parry = () => {
+      if (!running) return;
+      const now = performance.now();
+      if (now - parryAt < PARRY_MS + 150) return; // recovery: no spamming
+      parryAt = now;
+      if (swing) {
+        const total = swing.windup + RELEASE_MS;
+        const x = ((now - swing.start) / total) * 100;
+        parryBar.style.left = `${x}%`;
+        parryBar.style.width = `${(PARRY_MS / total) * 100}%`;
+        parryBar.style.opacity = '1';
+      }
+      arena.classList.remove('is-parry');
+      void arena.offsetWidth;
+      arena.classList.add('is-parry');
+    };
+
+    const start = () => {
+      running = true;
+      round = 0;
+      score.parried = score.read = score.hit = score.feinted = 0;
+      parryAt = -Infinity;
+      renderStats();
+      result.textContent = '';
+      startBtn.hidden = true;
+      phaseEl.textContent = 'Get ready';
+      arena.focus({ preventScroll: true });
+      setTimeout(() => newSwing(performance.now()), 700);
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+
+    startBtn.addEventListener('click', start);
+    arena.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!running) start();
+      else parry();
+    });
+    arena.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.key === 'Enter') {
+        e.preventDefault();
+        if (!running) start();
+        else parry();
+      }
+    });
+    renderStats();
+  });
+</script>
+
+<style>
+  .parry {
+    display: grid;
+    gap: 24px;
+    padding: clamp(22px, 3vw, 36px);
+  }
+  .parry__head {
+    display: grid;
+    gap: 10px;
+  }
+  .parry__tag {
+    color: var(--accent);
+  }
+  .parry__title {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+  }
+  .parry__intro {
+    color: var(--fg-2);
+    max-width: 62ch;
+  }
+  kbd {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border: 1px solid var(--line-2);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    color: var(--fg);
+  }
+
+  .arena {
+    position: relative;
+    display: grid;
+    gap: 22px;
+    padding: 28px 24px 24px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    background:
+      radial-gradient(60% 100% at 50% 100%, var(--accent-soft), transparent 70%),
+      var(--bg-2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+    min-height: 220px;
+  }
+  .arena:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .arena[data-flash='good'] {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .arena[data-flash='bad'] {
+    border-color: var(--live);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--live) 18%, transparent);
+  }
+  .arena.is-parry .track__marker {
+    animation: parry-ping 0.35s var(--ease-out);
+  }
+  @keyframes parry-ping {
+    50% {
+      box-shadow: 0 0 0 10px color-mix(in oklab, var(--accent) 30%, transparent);
+    }
+  }
+  .arena__status {
+    color: var(--muted);
+  }
+  .arena[data-phase='release'] .arena__status {
+    color: var(--live);
+  }
+  .track {
+    position: relative;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+  }
+  .track__release {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 70%;
+    right: 0;
+    border-radius: 0 999px 999px 0;
+    background: repeating-linear-gradient(-45deg, color-mix(in oklab, var(--live) 35%, transparent) 0 6px, transparent 6px 12px);
+  }
+  .track__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--fg) 25%, transparent));
+  }
+  .track__parry {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: 0;
+    width: 0;
+    border-radius: 4px;
+    background: color-mix(in oklab, var(--accent) 40%, transparent);
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .track__marker {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 4px;
+    height: 34px;
+    margin: -17px 0 0 -2px;
+    border-radius: 2px;
+    background: var(--fg);
+    box-shadow: 0 0 12px rgb(255 255 255 / 0.6);
+  }
+  .track__labels {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.6rem;
+  }
+  .arena__result {
+    margin-top: 18px;
+    min-height: 1em;
+    font-size: clamp(2.25rem, 7vw, 4rem);
+    text-align: center;
+  }
+  .arena__result[data-kind='good'] {
+    color: var(--accent);
+  }
+  .arena__result[data-kind='bad'] {
+    color: var(--live);
+  }
+
+  .parry__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .parry__score {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .parry__score dt {
+    color: var(--muted);
+    font-size: 0.62rem;
+  }
+  .parry__score dd {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+</style>

@@ -1,0 +1,267 @@
+---
+import Base from '../layouts/Base.astro';
+import VisionMixer from '../components/VisionMixer.astro';
+import Icon from '../components/Icon.astro';
+import Ticker from '../components/Ticker.astro';
+import Scorebug from '../components/Scorebug.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ProjectFeed from '../components/ProjectFeed.astro';
+import { getProjects } from '../lib/projects';
+import { MODIO, NEXT_EVENT } from '../data/site';
+
+const all = await getProjects();
+const count = (c: string) => all.filter((p) => p.data.category === c).length;
+const pick = (id: string) => all.find((p) => p.id === id)!;
+
+const d8020 = pick('directive-8020');
+const bento = [
+  { p: d8020, size: 'feature' as const, span: 'wide' },
+  { p: pick('vrlan-2026'), size: 'default' as const, span: '' },
+  { p: pick('lunarball'), size: 'default' as const, span: '' },
+  { p: pick('source2all-sensitivity-converter'), size: 'feature' as const, span: 'wide' },
+];
+
+const mixer = [
+  { href: '/directive-8020/', image: d8020.data.cover!, tag: 'Now shipping', title: 'Directive 8020', sub: 'Supermassive Games · Steam, PS5, Xbox Series X|S' },
+  { href: '/vrlan-2026/', image: pick('vrlan-2026').data.cover!, tag: 'Live event', title: 'VRLAN 2026', sub: 'H20 Esports Campus · Purmerend, NL' },
+  { href: '/lunarball/', image: pick('lunarball').data.cover!, tag: 'Free on Steam', title: 'LUNARBALL', sub: '3v3 physics sports · built solo' },
+  { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Coming soon', title: 'Night Crew', sub: 'Binary Spiders · co-op horror' },
+];
+
+const ticker = [
+  { text: 'Directive 8020 — out now on Steam, PS5 & Xbox Series X|S', href: '/directive-8020/' },
+  { text: 'QuickClip v0.4.0 released', href: '/quickclip/' },
+  { text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
+  { text: `${MODIO.label} downloads on mod.io`, href: '/games/#mods' },
+  { text: 'Source2All Sensitivity Converter — free download', href: '/source2all-sensitivity-converter/' },
+  { text: 'Night Crew — wishlist on Steam', href: '/night-crew/' },
+  { text: `Next up: ${NEXT_EVENT.title} · ${NEXT_EVENT.dates} · ${NEXT_EVENT.where}`, href: '/events/' },
+  { text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
+];
+
+const disciplines = [
+  {
+    title: 'Unreal Engine',
+    body: 'Gameplay, UI and multiplayer programming in UE4 and UE5, on commercial projects and my own games. I also make mods for MORDHAU.',
+    tags: ['Blueprints', 'UMG', 'Multiplayer', 'Steamworks', 'Mod SDKs'],
+  },
+  {
+    title: 'Software',
+    body: 'Windows apps and utilities, plus tools that connect OBS, game APIs and Stream Decks for live broadcasts.',
+    tags: ['C#', '.NET / WPF', 'C++', 'Python', 'OBS WebSocket'],
+  },
+  {
+    title: 'Events',
+    body: "Broadcast graphics and live production for in-person VR esports events. I'm Production Lead and a company director at VRLAN.",
+    tags: ['OBS', 'Stream Deck', 'Companion', 'Vision mixing', 'Tournament ops'],
+  },
+];
+---
+
+<Base>
+  <!-- ================= HERO ================= -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero__inner container">
+      <div class="hero__copy">
+        <p class="eyebrow" data-reveal>Owen Bladen-Kay · Manchester, UK</p>
+
+        <h1 id="hero-title" class="display hero__title" data-reveal style="--i:1">I code games and software.</h1>
+
+        <p class="lede hero__lede" data-reveal style="--i:2">
+          I'm Owen, also known as <strong>swiift</strong>. I'm an Unreal Engine programmer, I make mods and tools, and I'm Production Lead
+          at <a href="/events/">VRLAN</a>.
+        </p>
+
+        <div class="btn-row" data-reveal style="--i:3">
+          <a class="btn btn--primary" href="#work" data-magnetic>See my work <Icon name="arrow" class="arrow" /></a>
+          <a class="btn btn--ghost" href="/about/" data-magnetic>About me</a>
+        </div>
+      </div>
+
+      <div class="hero__mixer" data-reveal="fade" style="--i:3">
+        <VisionMixer sources={mixer} />
+      </div>
+    </div>
+
+    <Ticker items={ticker} />
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="container section--tight" aria-label="By the numbers">
+    <Scorebug
+      stats={[
+        { value: 130, suffix: 'K+', label: 'Mod downloads', pad: 0, href: '/games/#mods' },
+        { value: 14, label: 'Mods published', href: '/games/#mods' },
+        { value: count('games'), label: 'Games', href: '/games/' },
+        { value: count('events'), label: 'Live events', href: '/events/' },
+      ]}
+    />
+  </section>
+
+  <!-- ================= SELECTED WORK ================= -->
+  <section class="section container" id="work" aria-labelledby="work-title">
+    <div class="section-head section-head--split">
+      <div>
+        <p class="eyebrow" data-reveal><span class="eyebrow__index">01</span><span class="eyebrow__rule"></span>Selected work</p>
+        <h2 id="work-title" class="display h2" data-reveal style="--i:1">Recent projects</h2>
+      </div>
+    </div>
+    <ul role="list" class="bento">
+      {
+        bento.map((b, i) => (
+          <li class:list={['bento__item', b.span && `bento__item--${b.span}`]}>
+            <ProjectCard project={b.p} size={b.size} index={i} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ================= DISCIPLINES ================= -->
+  <section class="section container" aria-labelledby="do-title">
+    <div class="section-head">
+      <p class="eyebrow" data-reveal><span class="eyebrow__index">02</span><span class="eyebrow__rule"></span>Skills</p>
+      <h2 id="do-title" class="display h2" data-reveal style="--i:1">What I do</h2>
+    </div>
+    <ol role="list" class="disciplines">
+      {
+        disciplines.map((d, i) => (
+          <li class="discipline panel" data-reveal data-tilt="3" style={`--i:${i}`}>
+            <span class="discipline__index mono">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="display h3">{d.title}</h3>
+            <p>{d.body}</p>
+            <ul role="list" class="chip-row">
+              {d.tags.map((t) => <li class="chip">{t}</li>)}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- ================= FEED ================= -->
+  <section class="section container" id="all" aria-labelledby="all-title">
+    <div class="section-head section-head--split">
+      <div>
+        <p class="eyebrow" data-reveal><span class="eyebrow__index">03</span><span class="eyebrow__rule"></span>Archive</p>
+        <h2 id="all-title" class="display h2" data-reveal style="--i:1">All projects</h2>
+      </div>
+      <p class="lede" data-reveal style="--i:2">Games, mods, software and events, newest first.</p>
+    </div>
+    <ProjectFeed projects={all} />
+  </section>
+</Base>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--header-h);
+  }
+  .hero__inner {
+    flex: 1;
+    display: grid;
+    gap: 48px;
+    align-items: center;
+    padding-block: clamp(40px, 7vw, 96px);
+  }
+  @media (min-width: 1000px) {
+    .hero__inner {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: clamp(40px, 5vw, 88px);
+    }
+  }
+  .hero__copy {
+    display: grid;
+    gap: 28px;
+    justify-items: start;
+    container-type: inline-size;
+    min-width: 0;
+  }
+  .hero__title {
+    /* Sized to the column so it always fits beside the monitor. */
+    font-size: clamp(3rem, 15cqi, 8.5rem);
+    line-height: 0.9;
+    max-width: 9ch;
+  }
+  .hero__lede a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .hero__lede strong {
+    color: var(--fg);
+  }
+
+  /* ---------- bento ---------- */
+  .bento {
+    display: grid;
+    gap: 20px;
+  }
+  @media (min-width: 700px) {
+    .bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bento__item--wide {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 1100px) {
+    .bento {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .bento__item--wide {
+      grid-column: span 2;
+    }
+  }
+
+  /* ---------- disciplines ---------- */
+  .disciplines {
+    display: grid;
+    gap: 20px;
+  }
+  @media (min-width: 900px) {
+    .disciplines {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .discipline {
+    --rx: 0deg;
+    --ry: 0deg;
+    --mx: 50%;
+    --my: 50%;
+    position: relative;
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding: 28px 28px 32px;
+    color: var(--fg-2);
+    /* transition comes from the shared [data-reveal] rule (opacity, translate, transform) */
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+    overflow: hidden;
+  }
+  .discipline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(360px circle at var(--mx) var(--my), var(--accent-soft), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .discipline:hover {
+    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+  }
+  .discipline:hover::after {
+    opacity: 1;
+  }
+  .discipline h3 {
+    color: var(--fg);
+  }
+  .discipline__index {
+    color: var(--accent);
+  }
+</style>

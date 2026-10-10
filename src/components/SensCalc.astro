@@ -1,0 +1,275 @@
+---
+/**
+ * A tiny in-browser taste of Source2All: the same 360-distance maths and the
+ * same yaw constants as the app's game catalog, for a handful of games.
+ */
+const GAMES = [
+  { id: 'cs2', name: 'Counter-Strike 2', yaw: 0.022 },
+  { id: 'apex', name: 'Apex Legends', yaw: 0.022 },
+  { id: 'deadlock', name: 'Deadlock', yaw: 0.022 },
+  { id: 'quake', name: 'Quake Champions', yaw: 0.022 },
+  { id: 'valorant', name: 'VALORANT', yaw: 0.07 },
+  { id: 'ow2', name: 'Overwatch 2', yaw: 0.0066 },
+  { id: 'cod', name: 'Call of Duty (MW 2019+)', yaw: 0.022 / 3.333333 },
+  { id: 'fortnite', name: 'Fortnite (config value)', yaw: 0.005555 },
+  { id: 'finals', name: 'The Finals', yaw: 0.022 / 22 },
+];
+---
+
+<section class="sens panel" data-sens data-games={JSON.stringify(GAMES)} aria-labelledby="sens-title">
+  <header class="sens__head">
+    <p class="mono sens__tag">Try it</p>
+    <h2 id="sens-title" class="display sens__title">Sensitivity calculator</h2>
+    <p class="sens__intro">
+      A web version of the app's conversion, using the same yaw values for a few of its 58 games. The app also finds your installed games and
+      writes the values into their configs.
+    </p>
+  </header>
+
+  <div class="sens__inputs">
+    <label class="field">
+      <span class="field__label mono">From</span>
+      <select name="game">
+        {GAMES.map((g) => <option value={g.id}>{g.name}</option>)}
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label mono">Sensitivity</span>
+      <input name="sens" type="number" inputmode="decimal" min="0.001" step="0.01" value="1.25" />
+    </label>
+    <label class="field">
+      <span class="field__label mono">Mouse DPI</span>
+      <input name="dpi" type="number" inputmode="numeric" min="100" step="50" value="800" />
+    </label>
+  </div>
+
+  <div class="sens__distance">
+    <div class="sens__readout">
+      <span class="sens__big" data-out="cm">41.6</span>
+      <span class="mono muted">cm / 360°</span>
+      <span class="mono muted sens__inch"><span data-out="in">16.4</span> in</span>
+    </div>
+    <div class="ruler" aria-hidden="true">
+      <div class="ruler__fill" data-out="bar"></div>
+      <div class="ruler__ticks"></div>
+      <div class="ruler__labels mono"><span>0</span><span>20</span><span>40</span><span>60</span><span>80 cm</span></div>
+    </div>
+  </div>
+
+  <ul role="list" class="sens__results" aria-live="polite" data-out="list"></ul>
+</section>
+
+<script>
+  type Game = { id: string; name: string; yaw: number };
+  document.querySelectorAll<HTMLElement>('[data-sens]').forEach((root) => {
+    const games: Game[] = JSON.parse(root.dataset.games!);
+    const gameEl = root.querySelector<HTMLSelectElement>('[name=game]')!;
+    const sensEl = root.querySelector<HTMLInputElement>('[name=sens]')!;
+    const dpiEl = root.querySelector<HTMLInputElement>('[name=dpi]')!;
+    const cmEl = root.querySelector<HTMLElement>('[data-out=cm]')!;
+    const inEl = root.querySelector<HTMLElement>('[data-out=in]')!;
+    const bar = root.querySelector<HTMLElement>('[data-out=bar]')!;
+    const list = root.querySelector<HTMLElement>('[data-out=list]')!;
+
+    const fmt = (n: number) => (n >= 100 ? n.toFixed(1) : n >= 10 ? n.toFixed(2) : n.toFixed(3)).replace(/\.?0+$/, '');
+
+    const update = () => {
+      const from = games.find((g) => g.id === gameEl.value)!;
+      const sens = parseFloat(sensEl.value);
+      const dpi = parseFloat(dpiEl.value);
+      if (!(sens > 0) || !(dpi > 0)) return;
+      const counts = 360 / (sens * from.yaw);
+      const inches = counts / dpi;
+      const cm = inches * 2.54;
+      cmEl.textContent = cm >= 100 ? cm.toFixed(0) : cm.toFixed(1);
+      inEl.textContent = inches.toFixed(1);
+      bar.style.setProperty('--w', `${Math.min(cm / 80, 1) * 100}%`);
+      list.replaceChildren(
+        ...games
+          .filter((g) => g.id !== from.id)
+          .map((g) => {
+            const value = fmt((sens * from.yaw) / g.yaw);
+            const li = document.createElement('li');
+            li.className = 'sens__row';
+            const name = document.createElement('span');
+            name.className = 'sens__game';
+            name.textContent = g.name;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'sens__value';
+            btn.dataset.cursor = 'copy';
+            btn.textContent = value;
+            btn.setAttribute('aria-label', `Copy ${g.name} sensitivity ${value}`);
+            btn.addEventListener('click', async () => {
+              try {
+                await navigator.clipboard.writeText(value);
+                btn.classList.add('is-copied');
+                setTimeout(() => btn.classList.remove('is-copied'), 900);
+              } catch {
+                /* clipboard blocked — the value is still visible */
+              }
+            });
+            li.append(name, btn);
+            return li;
+          }),
+      );
+    };
+    [gameEl, sensEl, dpiEl].forEach((el) => el.addEventListener('input', update));
+    update();
+  });
+</script>
+
+<style>
+  .sens {
+    display: grid;
+    gap: 28px;
+    padding: clamp(22px, 3vw, 36px);
+    border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+  }
+  .sens__head {
+    display: grid;
+    gap: 10px;
+  }
+  .sens__tag {
+    color: var(--accent);
+  }
+  .sens__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .sens__intro {
+    color: var(--fg-2);
+    max-width: 60ch;
+  }
+  .sens__inputs {
+    display: grid;
+    gap: 14px;
+  }
+  @media (min-width: 640px) {
+    .sens__inputs {
+      grid-template-columns: 1.6fr 1fr 1fr;
+    }
+  }
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field__label {
+    color: var(--muted);
+  }
+  .field select,
+  .field input {
+    height: 48px;
+    width: 100%;
+    padding: 0 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  .field select:focus,
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .sens__distance {
+    display: grid;
+    gap: 14px;
+  }
+  .sens__readout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+  }
+  .sens__big {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(3.5rem, 8vw, 5.5rem);
+    line-height: 0.9;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .sens__inch {
+    margin-left: auto;
+  }
+  .ruler {
+    position: relative;
+    height: 44px;
+  }
+  .ruler__fill {
+    --w: 50%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 14px;
+    width: var(--w);
+    background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 30%, transparent), var(--accent));
+    border-radius: 2px;
+    transition: width 0.5s var(--ease-out);
+  }
+  .ruler__ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 16px;
+    height: 10px;
+    background:
+      repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 12.5%) 0 0 / 100% 10px no-repeat,
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 2.5%) 0 0 / 100% 5px no-repeat;
+  }
+  .ruler__labels {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.62rem;
+  }
+  .sens__results {
+    display: grid;
+    gap: 0 28px;
+  }
+  @media (min-width: 640px) {
+    .sens__results {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .sens__results :global(.sens__row) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .sens__results :global(.sens__game) {
+    color: var(--fg-2);
+    font-size: 0.95rem;
+  }
+  .sens__results :global(.sens__value) {
+    position: relative;
+    min-width: 84px;
+    padding: 6px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .sens__results :global(.sens__value:hover) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sens__results :global(.sens__value.is-copied) {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<Base title="Page not found">
+  <section class="lost container">
+    <p class="eyebrow">Error 404</p>
+    <h1 class="display lost__code" aria-label="404">
+      <span>4</span><span class="outline-text">0</span><span>4</span>
+    </h1>
+    <p class="display lost__title">Page not found</p>
+    <p class="lede">This page doesn't exist. It may have moved when the site was rebuilt.</p>
+    <div class="btn-row">
+      <a class="btn btn--primary" href="/" data-magnetic>Back to home <Icon name="arrow" class="arrow" /></a>
+      <a class="btn btn--ghost" href="/games/">Games &amp; mods</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    min-height: 80vh;
+    display: grid;
+    align-content: center;
+    gap: 20px;
+    justify-items: start;
+    padding-top: calc(var(--header-h) + 40px);
+  }
+  .lost__code {
+    display: flex;
+    font-size: clamp(8rem, 30vw, 22rem);
+    line-height: 0.8;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lost__code span:nth-child(2) {
+      animation: glitch 2.4s steps(1) infinite;
+    }
+  }
+  @keyframes glitch {
+    0%,
+    92%,
+    100% {
+      transform: none;
+    }
+    94% {
+      transform: translate(6px, -3px) skewX(-8deg);
+    }
+    96% {
+      transform: translate(-5px, 2px);
+    }
+  }
+  .lost__title {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--accent);
+  }
+</style>

@@ -1,0 +1,382 @@
+---
+/**
+ * Home-page "program monitor": cuts between featured projects like a vision
+ * mixer. Each source has a lower third; the CAM buttons below cut manually
+ * (red tally = on air, green = up next). Auto-cuts pause on hover/focus and
+ * are off for reduced-motion users.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Logo from './Logo.astro';
+
+interface Source {
+  href: string;
+  image: ImageMetadata;
+  tag: string;
+  title: string;
+  sub: string;
+}
+interface Props {
+  sources: Source[];
+}
+const { sources } = Astro.props;
+---
+
+<div class="mixer" data-mixer>
+  <div class="mixer__bar mono">
+    <span class="mixer__tally">PGM</span>
+    <span class="mixer__cam" data-cam aria-live="polite">CAM 01 · {sources[0].title}</span>
+    <span class="mixer__tc" data-timecode>00:00:00:00</span>
+  </div>
+
+  <div class="mixer__screen frame">
+    {
+      sources.map((s, i) => (
+        <a
+          href={s.href}
+          class="mixer__source"
+          data-source={i}
+          data-title={s.title}
+          data-active={i === 0 ? '' : undefined}
+          aria-hidden={i === 0 ? undefined : 'true'}
+          tabindex={i === 0 ? undefined : -1}
+          data-cursor="view"
+        >
+          <Image
+            src={s.image}
+            alt=""
+            widths={[480, 720, 1000]}
+            sizes="(min-width: 1000px) 40vw, 100vw"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchpriority={i === 0 ? 'high' : undefined}
+          />
+          <span class="lower-third">
+            <span class="lower-third__tag mono">{s.tag}</span>
+            <span class="lower-third__main">
+              <span class="lower-third__title">{s.title}</span>
+              <span class="lower-third__sub">{s.sub}</span>
+            </span>
+          </span>
+        </a>
+      ))
+    }
+    <span class="mixer__flash" aria-hidden="true"></span>
+  </div>
+
+  <div class="mixer__desk" role="group" aria-label="Switch camera">
+    {
+      sources.map((s, i) => (
+        <button
+          type="button"
+          class="mixer__btn mono"
+          data-cut={i}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          aria-label={`Show ${s.title}`}
+        >
+          <span class="mixer__led" aria-hidden="true" />
+          CAM {String(i + 1).padStart(2, '0')}
+        </button>
+      ))
+    }
+    <span class="mixer__auto mono" data-auto>Auto</span>
+  </div>
+
+  <div class="mixer__id">
+    <Logo size={34} draw />
+    <div>
+      <p class="mixer__name">Owen Bladen-Kay</p>
+      <p class="mixer__role mono">Unreal Engine programmer · Production Lead, VRLAN</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-mixer]').forEach((root) => {
+    const sources = [...root.querySelectorAll<HTMLAnchorElement>('[data-source]')];
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-cut]')];
+    const cam = root.querySelector<HTMLElement>('[data-cam]')!;
+    const autoEl = root.querySelector<HTMLElement>('[data-auto]')!;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let current = 0;
+    let timer = 0;
+    let paused = reduce;
+
+    const cut = (to: number) => {
+      if (to === current) return;
+      current = (to + sources.length) % sources.length;
+      sources.forEach((s, i) => {
+        const on = i === current;
+        s.toggleAttribute('data-active', on);
+        if (on) {
+          s.removeAttribute('aria-hidden');
+          s.removeAttribute('tabindex');
+        } else {
+          s.setAttribute('aria-hidden', 'true');
+          s.tabIndex = -1;
+        }
+      });
+      const next = (current + 1) % sources.length;
+      buttons.forEach((b, i) => {
+        b.setAttribute('aria-pressed', String(i === current));
+        b.toggleAttribute('data-preview', i === next);
+      });
+      cam.textContent = `CAM ${String(current + 1).padStart(2, '0')} · ${sources[current].dataset.title}`;
+      root.classList.remove('is-cut');
+      void root.offsetWidth;
+      root.classList.add('is-cut');
+    };
+
+    const schedule = () => {
+      clearInterval(timer);
+      autoEl.toggleAttribute('data-on', !paused);
+      if (!paused) timer = window.setInterval(() => cut(current + 1), 4800);
+    };
+
+    buttons.forEach((b, i) =>
+      b.addEventListener('click', () => {
+        cut(i);
+        schedule();
+      }),
+    );
+    buttons[1]?.setAttribute('data-preview', '');
+    root.addEventListener('pointerenter', () => {
+      paused = true;
+      schedule();
+    });
+    root.addEventListener('pointerleave', () => {
+      paused = reduce;
+      schedule();
+    });
+    root.addEventListener('focusin', () => {
+      paused = true;
+      schedule();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearInterval(timer);
+      else schedule();
+    });
+    schedule();
+  });
+</script>
+
+<style>
+  .mixer {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+  }
+  .mixer__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 0.68rem;
+    min-width: 0;
+  }
+  .mixer__tally {
+    flex: none;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--live);
+    color: #fff;
+    font-weight: 700;
+  }
+  .mixer__cam {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mixer__tc {
+    margin-left: auto;
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-2);
+  }
+
+  .mixer__screen {
+    --frame-inset: -8px;
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    background: #000;
+    border: 1px solid var(--line-2);
+    box-shadow: 0 40px 80px -30px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .mixer__source {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+  }
+  .mixer__source[data-active] {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+  }
+  .mixer__source :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 6s linear;
+  }
+  .mixer__source[data-active] :global(img) {
+    transform: scale(1.06);
+  }
+  .mixer__source:hover :global(img) {
+    transition-duration: 1s;
+  }
+
+  /* Lower third wipes in on every cut */
+  .lower-third {
+    position: absolute;
+    left: 5%;
+    bottom: 7%;
+    display: grid;
+    max-width: 88%;
+  }
+  .lower-third__tag {
+    justify-self: start;
+    padding: 4px 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    font-size: 0.65rem;
+  }
+  .lower-third__main {
+    display: grid;
+    padding: 10px 16px 12px;
+    background: rgb(7 8 11 / 0.82);
+    backdrop-filter: blur(8px);
+    border-left: 3px solid var(--accent);
+  }
+  .lower-third__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .lower-third__sub {
+    font-size: 0.8rem;
+    color: var(--fg-2);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mixer__source[data-active] .lower-third {
+      animation: l3-in 0.8s var(--ease-out) 0.25s both;
+    }
+    .mixer__source[data-active] .lower-third__main {
+      animation: l3-in 0.8s var(--ease-out) 0.35s both;
+    }
+    .is-cut .mixer__flash {
+      animation: cut-flash 0.35s ease-out;
+    }
+  }
+  @keyframes l3-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  .mixer__flash {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: inherit;
+    background: #fff;
+    opacity: 0;
+  }
+  @keyframes cut-flash {
+    0% {
+      opacity: 0.18;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Desk buttons */
+  .mixer__desk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .mixer__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    background: var(--panel);
+    font-size: 0.68rem;
+    color: var(--fg-2);
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .mixer__btn:hover {
+    border-color: var(--fg-2);
+    color: var(--fg);
+  }
+  .mixer__led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--line-2);
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .mixer__btn[data-preview] .mixer__led {
+    background: #2bd46a;
+  }
+  .mixer__btn[aria-pressed='true'] {
+    border-color: var(--live);
+    color: var(--fg);
+  }
+  .mixer__btn[aria-pressed='true'] .mixer__led {
+    background: var(--live);
+    box-shadow: 0 0 10px var(--live);
+  }
+  .mixer__auto {
+    margin-left: auto;
+    font-size: 0.62rem;
+    color: var(--muted);
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+  .mixer__auto[data-on] {
+    color: var(--accent);
+    border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  }
+
+  .mixer__id {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+  .mixer__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .mixer__role {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.65rem;
+  }
+</style>
