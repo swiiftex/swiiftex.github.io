@@ -18,9 +18,9 @@
     <h2 id="parry-title" class="display parry__title">Parry trainer</h2>
     <p class="parry__intro">
       Each swing is a ring closing in on the centre, speeding up as it lands. <strong>Right click</strong> (or <kbd>Space</kbd>) to parry so
-      your 325ms parry is active when it hits. Some swings are <strong>feints</strong> that pull back late — don't parry those. Read one and
-      you get a short opening: <strong>left click</strong> (or <kbd>F</kbd>) to punish it before the follow-up comes. Attacking at any other
-      time leaves you open.
+      your 325ms parry is active when it hits. Some swings are <strong>feints</strong> that pull back late — don't parry those, even after
+      they pull back. Read one and you get a short opening: <strong>left click</strong> (or <kbd>F</kbd>) to punish it before the follow-up
+      comes. Attacking at any other time leaves you open.
     </p>
   </header>
 
@@ -363,6 +363,18 @@
       arena.classList.remove('is-parry');
       void arena.offsetWidth;
       arena.classList.add('is-parry');
+      if (punish) {
+        // Parrying after the feint means you bit on it — they hit you instead.
+        window.clearTimeout(timer);
+        closePunish();
+        score.read--;
+        score.feinted++;
+        renderStats();
+        show('Feinted!', 'bad');
+        impact();
+        phaseEl.textContent = 'Bit on the feint';
+        scheduleNext('gap');
+      }
       kick();
     };
 
