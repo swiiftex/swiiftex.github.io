@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://swiiftex.github.io/sitemap-index.xml
+Sitemap: https://www.swiift.co.uk/sitemap-index.xml

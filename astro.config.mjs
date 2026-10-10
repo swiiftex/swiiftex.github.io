@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://docs.astro.build/en/reference/configuration-reference/
 export default defineConfig({
-  site: 'https://swiiftex.github.io',
+  site: 'https://www.swiift.co.uk',
   trailingSlash: 'ignore',
   // Astro 7 defaults to JSX-style whitespace collapsing; keep normal HTML spacing.
   compressHTML: true,
