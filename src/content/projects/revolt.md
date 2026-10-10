@@ -2,10 +2,10 @@
 title: Revolt
 category: software
 date: 2025-09-13
-kicker: Broadcast & production tool for OBS
+kicker: Bespoke broadcast tool for OBS
 role: Co-developer, with SputnikKobra and TheLaw
-when: In development
-status: In development
+when: Bespoke
+status: Bespoke
 platforms: [Windows, OBS Studio]
 summary: Team switching, scorekeeping and run-of-show management for OBS — scores, names and logos update on stream automatically.
 cover: ../../assets/projects/revolt/square.png
@@ -26,6 +26,6 @@ links:
 tint: '#ff3b4e'
 ---
 
-Revolt is a broadcast tool I'm building with two others, who go by the online handles SputnikKobra and TheLaw.
+Revolt is a bespoke broadcast tool I made with two others, who go by the online handles SputnikKobra and TheLaw.
 
-Scores, team names and logos update in OBS automatically, which makes swapping teams between matches painless during tournaments and broadcasts. It started as a way to make my older [Broadcast Tool](/broadcast-tool/) more universal and user-friendly — and to eventually make it public.
+Scores, team names and logos update in OBS automatically, which makes swapping teams between matches painless during tournaments and broadcasts. It started as a way to make my older [Broadcast Tool](/broadcast-tool/) more universal and user-friendly.

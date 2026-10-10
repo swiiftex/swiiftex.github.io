@@ -3,7 +3,7 @@ export const SITE = {
   author: 'Owen Bladen-Kay',
   title: 'swiift — Owen Bladen-Kay',
   description:
-    'Owen Bladen-Kay (swiift): Unreal Engine programmer, MORDHAU modder and Production Lead at VRLAN. Games, mods, broadcast software and live events.',
+    'Owen Bladen-Kay (swiift): Unreal Engine programmer and MORDHAU modder. Games, mods, software and live events.',
   email: 'obladenkay@gmail.com',
   location: 'Manchester, UK',
   timezone: 'Europe/London',
@@ -75,15 +75,6 @@ export const MORE_ON_GITHUB = [
     blurb: 'An Arduino sketch that turns a DJ Hero turntable into an XInput controller, with a Dolphin profile.',
   },
 ];
-
-/** The next VRLAN, shown as "up next" on the Events page. */
-export const NEXT_EVENT = {
-  title: 'VR LAN 2027',
-  where: 'Amsterdam, NL',
-  dates: '29–30 Oct 2027',
-  startsAt: '2027-10-29T00:00:00+02:00',
-  href: 'https://vr-lan.com',
-};
 
 export const CATEGORY_LABELS = {
   games: 'Games',

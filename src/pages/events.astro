@@ -3,9 +3,7 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/PageHeader.astro';
 import TitleCard from '../components/TitleCard.astro';
-import Icon from '../components/Icon.astro';
 import { getProjects, projectHref, vtName } from '../lib/projects';
-import { NEXT_EVENT } from '../data/site';
 
 const events = await getProjects('events');
 ---
@@ -15,31 +13,10 @@ const events = await getProjects('events');
     index="03"
     eyebrow="Portfolio"
     title="Events"
-    lede="I've produced broadcasts for in-person VR esports events since 2022. I'm currently Production Lead and a company director at VRLAN."
+    lede="I produced broadcasts for in-person VR esports events from 2022 to 2026, most recently as Production Lead at VRLAN."
   />
 
-  <!-- Up next -->
-  <section class="container" aria-labelledby="next-title">
-    <div class="next panel" data-reveal data-countdown={NEXT_EVENT.startsAt}>
-      <div class="next__label mono">Next event</div>
-      <div class="next__main">
-        <h2 id="next-title" class="display next__title">{NEXT_EVENT.title}</h2>
-        <p class="mono muted">{NEXT_EVENT.dates} · {NEXT_EVENT.where}</p>
-      </div>
-      <dl class="next__clock" aria-label="Countdown">
-        <div><dt class="mono">Days</dt><dd data-cd="d">---</dd></div>
-        <div><dt class="mono">Hrs</dt><dd data-cd="h">--</dd></div>
-        <div><dt class="mono">Min</dt><dd data-cd="m">--</dd></div>
-        <div><dt class="mono">Sec</dt><dd data-cd="s">--</dd></div>
-      </dl>
-      <a class="btn btn--primary next__cta" href={NEXT_EVENT.href} target="_blank" rel="noopener" data-magnetic>
-        vr-lan.com <Icon name="external" />
-      </a>
-    </div>
-  </section>
-
-  <!-- Run of show -->
-  <section class="section container" aria-labelledby="ros-title">
+  <section class="container section--tight" aria-labelledby="ros-title">
     <div class="ros__head">
       <h2 id="ros-title" class="eyebrow"><span class="eyebrow__index">{String(events.length).padStart(2, '0')}</span><span class="eyebrow__rule"></span>Past events</h2>
       <p class="mono muted ros__cols" aria-hidden="true"><span>#</span><span>Date / venue</span><span>Event</span></p>
@@ -75,80 +52,8 @@ const events = await getProjects('events');
   </section>
 </Base>
 
-<script>
-  document.querySelectorAll<HTMLElement>('[data-countdown]').forEach((el) => {
-    const target = new Date(el.dataset.countdown!).getTime();
-    const out = (k: string) => el.querySelector<HTMLElement>(`[data-cd="${k}"]`)!;
-    const [d, h, m, s] = ['d', 'h', 'm', 's'].map(out);
-    const two = (n: number) => String(n).padStart(2, '0');
-    const tick = () => {
-      const left = Math.max(target - Date.now(), 0);
-      const sec = Math.floor(left / 1000);
-      d.textContent = String(Math.floor(sec / 86400)).padStart(3, '0');
-      h.textContent = two(Math.floor(sec / 3600) % 24);
-      m.textContent = two(Math.floor(sec / 60) % 60);
-      s.textContent = two(sec % 60);
-    };
-    tick();
-    setInterval(tick, 1000);
-  });
-</script>
-
 <style>
-  /* ---------- up next ---------- */
-  .next {
-    display: grid;
-    gap: 20px 32px;
-    align-items: center;
-    padding: clamp(20px, 3vw, 32px);
-    border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
-    background:
-      radial-gradient(70% 140% at 0% 50%, var(--accent-soft), transparent 70%),
-      linear-gradient(180deg, var(--panel-2), var(--panel));
-  }
-  @media (min-width: 1000px) {
-    .next {
-      grid-template-columns: auto 1fr auto auto;
-    }
-  }
-  .next__label {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .next__title {
-    font-size: clamp(2.25rem, 5vw, 3.5rem);
-  }
-  .next__clock {
-    display: flex;
-    gap: 6px;
-  }
-  .next__clock div {
-    display: grid;
-    justify-items: center;
-    gap: 4px;
-    min-width: 64px;
-    padding: 10px 8px;
-    background: var(--bg);
-    border: 1px solid var(--line-2);
-    border-radius: 4px;
-  }
-  .next__clock dt {
-    order: 2;
-    color: var(--muted);
-    font-size: 0.6rem;
-  }
-  .next__clock dd {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 2rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .next__cta {
-    justify-self: start;
-  }
-
-  /* ---------- run of show ---------- */
+  /* ---------- event list ---------- */
   .ros__head {
     display: grid;
     gap: 16px;

@@ -43,7 +43,7 @@ Body text in Markdown.
 
 All fields are defined in `src/content.config.ts`. Put images in `src/assets/projects/<slug>/`; the build converts them to responsive WebP automatically.
 
-Site-wide bits (nav, socials, mod.io total, the next VRLAN date, older GitHub repos) live in `src/data/site.ts`.
+Site-wide bits (nav, socials, mod.io total, older GitHub repos) live in `src/data/site.ts`.
 
 ## Structure
 

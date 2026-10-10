@@ -19,6 +19,7 @@ stack: [C++, IddCx / UMDF, Direct3D 11, DXGI, C#, WPF]
 links:
   - label: Source on GitHub
     href: https://github.com/swiiftex/DesktopSplitter
+featured: true
 tint: '#a970ff'
 ---
 

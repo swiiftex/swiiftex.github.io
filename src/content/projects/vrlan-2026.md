@@ -46,4 +46,4 @@ Our first venture outside of the UK — two days at the **H20 Esports Campus** i
 
 This was our first event in a purpose-built esports arena, and the first where we worked more directly with game developers to get in-game features and cosmetics ready specifically for our event.
 
-This year is also my first as a **company director** at VRLAN, alongside being Production Lead. In practice I take on a little more responsibility behind the scenes — mostly around competitive play, and fighting for competitive integrity wherever possible.
+For this event I was also a **company director** at VRLAN, alongside being Production Lead. In practice that meant a little more responsibility behind the scenes — mostly around competitive play, and fighting for competitive integrity wherever possible.

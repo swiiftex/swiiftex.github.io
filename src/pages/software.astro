@@ -7,12 +7,13 @@ import { getProjects } from '../lib/projects';
 import { MORE_ON_GITHUB } from '../data/site';
 
 const all = await getProjects('software');
-// Lead with the newest player-facing tools, then the broadcast lineage.
-const order = ['source2all-sensitivity-converter', 'quickclip', 'desktopsplitter', 'fgswidgets', 'revolt', 'broadcast-tool'];
-const software = order.map((id) => all.find((p) => p.id === id)!).filter(Boolean);
+const byId = (id: string) => all.find((p) => p.id === id)!;
+// QuickClip and DesktopSplitter lead; everything else follows.
+const featured = ['quickclip', 'desktopsplitter'].map(byId);
+const rest = ['source2all-sensitivity-converter', 'fgswidgets', 'revolt', 'broadcast-tool'].map(byId);
 ---
 
-<Base title="Software" description="Windows apps, an Unreal Engine plugin and broadcast tools by Owen Bladen-Kay — Source2All Sensitivity Converter, QuickClip, DesktopSplitter and more.">
+<Base title="Software" description="Windows apps, an Unreal Engine plugin and broadcast tools by Owen Bladen-Kay — QuickClip, DesktopSplitter, Source2All Sensitivity Converter and more.">
   <PageHeader
     index="02"
     eyebrow="Portfolio"
@@ -21,11 +22,20 @@ const software = order.map((id) => all.find((p) => p.id === id)!).filter(Boolean
   />
 
   <section class="container section--tight" aria-label="Software projects">
-    <ul role="list" class="grid">
+    <ul role="list" class="grid grid--featured">
       {
-        software.map((p, i) => (
-          <li class:list={[i === 0 && 'grid__wide']}>
-            <ProjectCard project={p} size={i === 0 ? 'feature' : 'default'} index={i} />
+        featured.map((p, i) => (
+          <li>
+            <ProjectCard project={p} size="feature" index={i} sizes="(min-width: 800px) 50vw, 100vw" />
+          </li>
+        ))
+      }
+    </ul>
+    <ul role="list" class="grid grid--rest">
+      {
+        rest.map((p, i) => (
+          <li>
+            <ProjectCard project={p} size="compact" index={i + 2} />
           </li>
         ))
       }
@@ -68,20 +78,13 @@ const software = order.map((id) => all.find((p) => p.id === id)!).filter(Boolean
     display: grid;
     gap: 20px;
   }
-  @media (min-width: 700px) {
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .grid__wide {
-      grid-column: span 2;
-    }
+  .grid--rest {
+    margin-top: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   }
-  @media (min-width: 1100px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    .grid__wide {
-      grid-column: span 3;
+  @media (min-width: 800px) {
+    .grid--featured {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
   .repos {

@@ -7,7 +7,7 @@ import Scorebug from '../components/Scorebug.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ProjectFeed from '../components/ProjectFeed.astro';
 import { getProjects } from '../lib/projects';
-import { MODIO, NEXT_EVENT } from '../data/site';
+import { MODIO } from '../data/site';
 
 const all = await getProjects();
 const count = (c: string) => all.filter((p) => p.data.category === c).length;
@@ -18,7 +18,7 @@ const bento = [
   { p: d8020, size: 'feature' as const, span: 'wide' },
   { p: pick('vrlan-2026'), size: 'default' as const, span: '' },
   { p: pick('lunarball'), size: 'default' as const, span: '' },
-  { p: pick('source2all-sensitivity-converter'), size: 'feature' as const, span: 'wide' },
+  { p: pick('quickclip'), size: 'feature' as const, span: 'wide' },
 ];
 
 const mixer = [
@@ -31,12 +31,12 @@ const mixer = [
 const ticker = [
   { text: 'Directive 8020 — out now on Steam, PS5 & Xbox Series X|S', href: '/directive-8020/' },
   { text: 'QuickClip v0.4.0 released', href: '/quickclip/' },
-  { text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
+  { text: 'DesktopSplitter — in development', href: '/desktopsplitter/' },
   { text: `${MODIO.label} downloads on mod.io`, href: '/games/#mods' },
+  { text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
   { text: 'Source2All Sensitivity Converter — free download', href: '/source2all-sensitivity-converter/' },
   { text: 'Night Crew — wishlist on Steam', href: '/night-crew/' },
-  { text: `Next up: ${NEXT_EVENT.title} · ${NEXT_EVENT.dates} · ${NEXT_EVENT.where}`, href: '/events/' },
-  { text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
+  { text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
 ];
 
 const disciplines = [
@@ -52,7 +52,7 @@ const disciplines = [
   },
   {
     title: 'Events',
-    body: "Broadcast graphics and live production for in-person VR esports events. I'm Production Lead and a company director at VRLAN.",
+    body: 'Broadcast graphics and live production for in-person VR esports events, most recently as Production Lead at VRLAN.',
     tags: ['OBS', 'Stream Deck', 'Companion', 'Vision mixing', 'Tournament ops'],
   },
 ];
@@ -68,8 +68,8 @@ const disciplines = [
         <h1 id="hero-title" class="display hero__title" data-reveal style="--i:1">I code games and software.</h1>
 
         <p class="lede hero__lede" data-reveal style="--i:2">
-          I'm Owen, also known as <strong>swiift</strong>. I'm an Unreal Engine programmer, I make mods and tools, and I'm Production Lead
-          at <a href="/events/">VRLAN</a>.
+          I'm Owen, also known as <strong>swiift</strong>. I'm an Unreal Engine programmer, and I also make mods, Windows tools and
+          broadcast software.
         </p>
 
         <div class="btn-row" data-reveal style="--i:3">

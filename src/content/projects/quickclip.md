@@ -22,6 +22,7 @@ links:
     href: https://github.com/swiiftex/QuickClip/releases/latest
   - label: Source on GitHub
     href: https://github.com/swiiftex/QuickClip
+featured: true
 tint: '#ff3b4e'
 ---
 

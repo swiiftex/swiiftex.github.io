@@ -26,4 +26,4 @@ I built the Broadcast Tool in 2021. I'd looked around for scoreboard and team-in
 
 It was designed specifically for Echo Arena tournaments, and we refined it for a few years until it was very robust. Eventually it ran entirely on localhost Python scripts, because ports and GET requests can be tricky at unorthodox in-person venues.
 
-It went on to power the [Duckman LAN](/duckman-lan-2022/) broadcasts, and we started [Revolt](/revolt/) to make the same idea more universal, user-friendly and, eventually, public.
+It went on to power the [Duckman LAN](/duckman-lan-2022/) broadcasts, and we later built [Revolt](/revolt/) to make the same idea more universal and user-friendly.

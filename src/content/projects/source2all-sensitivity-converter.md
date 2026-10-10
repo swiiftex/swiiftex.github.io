@@ -22,7 +22,6 @@ links:
     href: https://github.com/swiiftex/Source2AllSensitivityConverter/releases/latest
   - label: Source on GitHub
     href: https://github.com/swiiftex/Source2AllSensitivityConverter
-featured: true
 tint: '#00b1ff'
 ---
 
