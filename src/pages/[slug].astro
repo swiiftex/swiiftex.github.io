@@ -44,9 +44,9 @@ const categoryHref = {
 }[data.category];
 
 // Wide banner: a dedicated hero image if there is one, else the cover.
-// Low-res covers are shown contained on a backdrop instead of stretched.
+// App screenshots and low-res covers are shown whole on a backdrop instead of cropped or stretched.
 const banner = data.hero ?? data.cover;
-const bannerFit = banner && banner.width >= 1000 ? 'cover' : 'contain';
+const bannerFit = banner && banner.width >= 1000 && data.category !== 'software' ? 'cover' : 'contain';
 const ogImage = data.cover ? (await getImage({ src: data.cover, width: 1200, format: 'jpg' })).src : undefined;
 
 const spec = [
@@ -293,17 +293,15 @@ const [primary, ...secondary] = data.links;
     height: 100%;
     object-fit: cover;
   }
-  .banner--contain {
-    display: grid;
-    place-items: center;
-  }
   .banner--contain :global(.banner__img) {
-    position: relative;
-    inset: auto;
+    /* Centred, and sized against the banner's own (aspect-ratio) height. */
+    position: absolute;
+    inset: 0;
+    margin: auto;
     width: auto;
     height: auto;
-    max-width: 80%;
-    max-height: 82%;
+    max-width: 86%;
+    max-height: 84%;
     object-fit: contain;
     border-radius: 4px;
     box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.7);

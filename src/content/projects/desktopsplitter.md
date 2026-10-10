@@ -8,6 +8,8 @@ when: "2026"
 status: In development
 platforms: [Windows]
 summary: Split one physical monitor into 2–4 virtual monitors that Windows treats as real displays.
+cover: ../../assets/projects/desktopsplitter/app.png
+coverAlt: The DesktopSplitter window, showing a 5120×1440 240 Hz monitor and layout options including side by side, columns and a 16:9 centre split.
 highlightsTitle: Under the hood
 highlights:
   - IddCx (UMDF) virtual display driver — no test-signing required

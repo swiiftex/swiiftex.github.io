@@ -8,6 +8,13 @@ when: "2026"
 status: v0.4.0 — open source (GPL-3.0)
 platforms: [Windows]
 summary: A lightweight instant-replay clipper — it keeps the last few minutes of your screen in memory and saves a clip on a hotkey, with a built-in editor.
+cover: ../../assets/projects/quickclip/editor.png
+coverAlt: The QuickClip editor with a Deadlock clip loaded, showing the trim timeline, audio waveform, crop and export settings.
+gallery:
+  - src: ../../assets/projects/quickclip/gallery.png
+    alt: The QuickClip gallery, with recent clips sorted into Deadlock, Gears of War and Night Crew folders, and the instant-replay status bar.
+  - src: ../../assets/projects/quickclip/editor.png
+    alt: The QuickClip editor with a Deadlock clip loaded, showing the trim timeline, audio waveform, crop and export settings.
 highlightsTitle: Features
 highlights:
   - Keeps the last 10 seconds to 5 minutes in a RAM ring buffer and saves on a hotkey
