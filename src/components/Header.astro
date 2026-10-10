@@ -37,11 +37,6 @@ const isActive = (href: string) => {
     </nav>
 
     <div class="site-header__right">
-      <div class="rec" aria-hidden="true" title="Time on site">
-        <span class="live-dot"></span>
-        <span class="rec__label">REC</span>
-        <span class="rec__tc" data-timecode>00:00:00:00</span>
-      </div>
       <a class="btn btn--primary site-header__cta" href="#contact" data-magnetic>Get in touch</a>
       <button class="menu-btn" popovertarget="mobile-menu" aria-label="Open menu">
         <span></span><span></span>
@@ -188,24 +183,6 @@ const isActive = (href: string) => {
     align-items: center;
     gap: 16px;
   }
-  .rec {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    height: 32px;
-    padding: 0 12px;
-    border: 1px solid var(--line-2);
-    border-radius: 999px;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    color: var(--fg-2);
-    font-variant-numeric: tabular-nums;
-  }
-  .rec__label {
-    color: var(--live);
-    font-weight: 700;
-  }
   .site-header__cta {
     display: none;
     min-height: 40px;
@@ -243,11 +220,6 @@ const isActive = (href: string) => {
       display: none;
     }
     .site-header__cta {
-      display: inline-flex;
-    }
-  }
-  @media (min-width: 1160px) {
-    .rec {
       display: inline-flex;
     }
   }

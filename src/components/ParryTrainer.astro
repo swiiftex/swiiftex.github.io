@@ -1,8 +1,14 @@
 ---
 /**
- * A tiny parry-timing game. Incoming swings wind up, then land; parry so the
- * 325ms parry window covers the impact. Some swings are feints — parrying
- * those gets you "feinted". Ten rounds, then a verdict.
+ * Parry-and-punish timing game.
+ *
+ * Each swing is a ring closing in on the centre, slow at first and
+ * accelerating hard at the end like a real swing. Parry (right click / Space)
+ * so the 325ms parry window covers the moment it lands. Some swings are late
+ * feints that pull back just before impact: read one and you get a short
+ * opening to punish with an attack (left click / F). Get feinted, or let the
+ * opening pass, and a quick follow-up comes. Attacking at any other time
+ * commits you, so you can't parry until you recover.
  */
 ---
 
@@ -11,205 +17,442 @@
     <p class="mono parry__tag">Try it</p>
     <h2 id="parry-title" class="display parry__title">Parry trainer</h2>
     <p class="parry__intro">
-      Each swing winds up, then releases. Parry with <kbd>Space</kbd>, a click or a tap so your 325ms parry is active when the swing lands.
-      Some swings are <strong>feints</strong> that cancel during the windup, so don't parry those.
+      Each swing is a ring closing in on the centre, speeding up as it lands. <strong>Right click</strong> (or <kbd>Space</kbd>) to parry so
+      your 325ms parry is active when it hits. Some swings are <strong>feints</strong> that pull back late — don't parry those. Read one and
+      you get a short opening: <strong>left click</strong> (or <kbd>F</kbd>) to punish it before the follow-up comes. Attacking at any other
+      time leaves you open.
     </p>
   </header>
 
-  <div class="arena" data-arena data-cursor="parry" tabindex="0" role="button" aria-label="Parry">
-    <div class="arena__status mono" data-phase>Ready</div>
-    <div class="track" aria-hidden="true">
-      <div class="track__release"></div>
-      <div class="track__fill" data-fill></div>
-      <div class="track__parry" data-parrybar></div>
-      <div class="track__marker" data-marker></div>
-      <div class="track__labels mono"><span>Windup</span><span>Release</span><span>Impact</span></div>
-    </div>
+  <div
+    class="arena"
+    data-arena
+    data-cursor-label="Fight"
+    tabindex="0"
+    role="button"
+    aria-label="Arena: right click or Space to parry, left click or F to attack"
+  >
+    <svg class="arena__svg" viewBox="-100 -100 200 200" aria-hidden="true">
+      <defs>
+        <radialGradient id="parry-impact-grad">
+          <stop offset="0" stop-color="#ff3b4e" stop-opacity=".95"></stop>
+          <stop offset=".45" stop-color="#ff3b4e" stop-opacity=".45"></stop>
+          <stop offset="1" stop-color="#ff3b4e" stop-opacity="0"></stop>
+        </radialGradient>
+      </defs>
+      <circle class="arena__impact" r="98" fill="url(#parry-impact-grad)" data-impact></circle>
+      <circle class="arena__bounds" r="96"></circle>
+      <circle class="arena__guide" r="64"></circle>
+      <circle class="arena__guide" r="32"></circle>
+      <circle class="arena__opening" r="96" pathLength="360" transform="rotate(-90)" data-opening></circle>
+      <circle class="arena__shield" r="15" data-shield></circle>
+      <circle class="arena__target" r="11"></circle>
+      <g data-swing>
+        <circle class="arena__ring" r="96" data-ring></circle>
+        <circle class="arena__edge" r="96" data-edge pathLength="360" stroke-dasharray="70 290"></circle>
+      </g>
+      <line class="arena__slash" x1="-46" y1="34" x2="46" y2="-34" pathLength="100" data-slash></line>
+      <g class="arena__burst" data-burst>
+        <line x1="0" y1="-20" x2="0" y2="-34"></line>
+        <line x1="0" y1="20" x2="0" y2="34"></line>
+        <line x1="-20" y1="0" x2="-34" y2="0"></line>
+        <line x1="20" y1="0" x2="34" y2="0"></line>
+        <line x1="14" y1="14" x2="24" y2="24"></line>
+        <line x1="-14" y1="-14" x2="-24" y2="-24"></line>
+        <line x1="14" y1="-14" x2="24" y2="-24"></line>
+        <line x1="-14" y1="14" x2="-24" y2="24"></line>
+      </g>
+    </svg>
+    <p class="arena__status mono" data-phase>Ready</p>
     <p class="arena__result display" data-result aria-live="assertive"></p>
+  </div>
+
+  <div class="parry__controls">
+    <button type="button" class="btn parry__act" data-act="parry">Parry <span class="parry__key">Right click · Space</span></button>
+    <button type="button" class="btn parry__act parry__act--attack" data-act="attack">
+      Attack <span class="parry__key">Left click · F</span>
+    </button>
   </div>
 
   <div class="parry__foot">
     <dl class="parry__score">
-      <div><dt class="mono">Round</dt><dd data-stat="round">0/10</dd></div>
+      <div><dt class="mono">Swing</dt><dd data-stat="round">0/10</dd></div>
       <div><dt class="mono">Parried</dt><dd data-stat="parried">0</dd></div>
       <div><dt class="mono">Feints read</dt><dd data-stat="read">0</dd></div>
-      <div><dt class="mono">Hits taken</dt><dd data-stat="hit">0</dd></div>
+      <div><dt class="mono">Punished</dt><dd data-stat="punished">0</dd></div>
+      <div><dt class="mono">Mistakes</dt><dd data-stat="miss">0</dd></div>
     </dl>
     <button type="button" class="btn btn--primary" data-start>Start</button>
   </div>
 </section>
 
 <script>
-  const PARRY_MS = 325;
-  const RELEASE_MS = 360;
+  const PARRY_MS = 325; // parry window, as in swiift's Comp Mod
+  const PARRY_RECOVERY_MS = 175; // after the window closes, before you can parry again
+  const ATTACK_RECOVERY_MS = 450; // after attacking, before you can parry or attack again
+  const PUNISH_MS = 520; // opening after a read feint
   const ROUNDS = 10;
+  const R_START = 96; // ring radius at the start of a swing (svg units)
+  const R_IMPACT = 11; // radius of the target — impact when the ring reaches it
+
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+  type Swing = {
+    start: number;
+    duration: number; // windup to impact
+    accel: number; // easing exponent — higher = slower start, faster finish
+    feintAt: number | null; // absolute time the swing pulls back, if it's a feint
+    angle: number; // where the leading edge sits, for a bit of direction
+  };
 
   document.querySelectorAll<HTMLElement>('[data-parry]').forEach((root) => {
     const arena = root.querySelector<HTMLElement>('[data-arena]')!;
-    const fill = root.querySelector<HTMLElement>('[data-fill]')!;
-    const marker = root.querySelector<HTMLElement>('[data-marker]')!;
-    const parryBar = root.querySelector<HTMLElement>('[data-parrybar]')!;
+    const ring = root.querySelector<SVGCircleElement>('[data-ring]')!;
+    const edge = root.querySelector<SVGCircleElement>('[data-edge]')!;
+    const swingG = root.querySelector<SVGGElement>('[data-swing]')!;
+    const shield = root.querySelector<SVGCircleElement>('[data-shield]')!;
+    const opening = root.querySelector<SVGCircleElement>('[data-opening]')!;
+    const slash = root.querySelector<SVGLineElement>('[data-slash]')!;
+    const burst = root.querySelector<SVGGElement>('[data-burst]')!;
+    const impactEl = root.querySelector<SVGCircleElement>('[data-impact]')!;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const phaseEl = root.querySelector<HTMLElement>('[data-phase]')!;
     const result = root.querySelector<HTMLElement>('[data-result]')!;
     const startBtn = root.querySelector<HTMLButtonElement>('[data-start]')!;
     const stat = (k: string) => root.querySelector<HTMLElement>(`[data-stat="${k}"]`)!;
-    const release = root.querySelector<HTMLElement>('.track__release')!;
 
-    type Swing = { start: number; windup: number; feintAt: number | null; impact: number };
     let swing: Swing | null = null;
+    let pullback: { start: number; from: number } | null = null; // feint retreat animation
+    let punish: { start: number; until: number } | null = null; // opening after a read feint
     let parryAt = -Infinity;
+    let attackAt = -Infinity;
     let raf = 0;
     let running = false;
     let round = 0;
-    const score = { parried: 0, read: 0, hit: 0, feinted: 0 };
+    let timer = 0;
+    const score = { parried: 0, read: 0, punished: 0, hit: 0, feinted: 0 };
 
-    const show = (text: string, kind: 'good' | 'bad' | 'info') => {
-      result.textContent = text;
-      result.dataset.kind = kind;
-      arena.dataset.flash = kind;
-      result.animate?.(
-        [
-          { transform: 'scale(1.25)', opacity: 0 },
-          { transform: 'scale(1)', opacity: 1 },
-        ],
-        { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' },
-      );
-      setTimeout(() => delete arena.dataset.flash, 320);
-    };
     const renderStats = () => {
       stat('round').textContent = `${round}/${ROUNDS}`;
       stat('parried').textContent = String(score.parried);
       stat('read').textContent = String(score.read);
-      stat('hit').textContent = String(score.hit + score.feinted);
+      stat('punished').textContent = String(score.punished);
+      stat('miss').textContent = String(score.hit + score.feinted);
     };
 
-    const newSwing = (now: number) => {
-      const windup = 520 + Math.random() * 380;
-      const feint = Math.random() < 0.3;
+    // good = green (parried, feint read, punished), bad = red (hit, feinted), info = neutral.
+    const show = (text: string, kind: 'good' | 'bad' | 'info') => {
+      result.textContent = text;
+      result.dataset.kind = kind;
+      arena.dataset.flash = kind;
+      result.animate?.([{ transform: 'scale(1.25)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], {
+        duration: 260,
+        easing: 'cubic-bezier(.16,1,.3,1)',
+      });
+      window.setTimeout(() => delete arena.dataset.flash, 320);
+    };
+
+    const pop = (kind: 'good' | 'bad') => {
+      burst.dataset.kind = kind;
+      burst.animate?.(
+        [
+          { opacity: 1, transform: 'scale(.6)' },
+          { opacity: 0, transform: 'scale(1.5)' },
+        ],
+        { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' },
+      );
+    };
+
+    // Taking a hit: a red impact flash from the centre, and a short shake.
+    const impact = () => {
+      pop('bad');
+      impactEl.animate?.(
+        [
+          { opacity: 0, transform: 'scale(.3)' },
+          { opacity: 1, transform: 'scale(1)', offset: 0.18 },
+          { opacity: 0, transform: 'scale(1.08)' },
+        ],
+        { duration: 520, easing: 'cubic-bezier(.16,1,.3,1)' },
+      );
+      if (!reduceMotion) {
+        arena.animate?.(
+          [
+            { transform: 'translate(0, 0)' },
+            { transform: 'translate(-7px, 3px)' },
+            { transform: 'translate(6px, -4px)' },
+            { transform: 'translate(-4px, 2px)' },
+            { transform: 'translate(2px, -1px)' },
+            { transform: 'translate(0, 0)' },
+          ],
+          { duration: 320, easing: 'ease-out' },
+        );
+      }
+    };
+
+    const ringRadius = (s: Swing, now: number) => {
+      const p = Math.min(Math.max((now - s.start) / s.duration, 0), 1);
+      return R_IMPACT + (R_START - R_IMPACT) * (1 - Math.pow(p, s.accel));
+    };
+
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+
+    // ---------- flow ----------
+    const newSwing = (now: number, followUp = false) => {
+      const duration = followUp ? rand(420, 560) : rand(560, 1050);
+      const accel = followUp ? rand(2, 2.6) : rand(2.4, 3.6);
+      // Feints cancel late, when the ring is already close — but always at least
+      // 160ms before impact, so a patient parry can still read them. Never on a follow-up.
+      const feint = !followUp && Math.random() < 0.35;
       swing = {
         start: now,
-        windup,
-        feintAt: feint ? now + windup * (0.55 + Math.random() * 0.3) : null,
-        impact: now + windup + RELEASE_MS,
+        duration,
+        accel,
+        feintAt: feint ? now + Math.min(duration * rand(0.55, 0.85), duration - 160) : null,
+        angle: rand(0, 360),
       };
-      const total = windup + RELEASE_MS;
-      release.style.left = `${(windup / total) * 100}%`;
-      parryBar.style.opacity = '0';
-      phaseEl.textContent = 'Incoming';
+      pullback = null;
+      swingG.style.opacity = '1';
+      edge.setAttribute('transform', `rotate(${swing.angle})`);
+      phaseEl.textContent = followUp ? 'Follow-up!' : 'Incoming';
+      kick();
     };
 
-    const endRound = (now: number) => {
+    const finish = () => {
+      running = false;
+      window.clearTimeout(timer);
+      const possible = ROUNDS + score.read; // every swing, plus a punish for every feint read
+      const good = score.parried + score.read + score.punished;
+      const ratio = good / possible;
+      const verdict =
+        ratio >= 1 ? 'Perfect round' : ratio >= 0.75 ? 'Nice — watch for feints' : ratio >= 0.45 ? 'Not bad' : 'Keep practising';
+      phaseEl.textContent = `Score ${good}/${possible}`;
+      window.setTimeout(() => show(verdict, ratio >= 0.75 ? 'good' : 'info'), 500);
+      startBtn.textContent = 'Go again';
+      startBtn.hidden = false;
+    };
+
+    const scheduleNext = (kind: 'gap' | 'followup') => {
+      if (round >= ROUNDS) return finish();
+      window.clearTimeout(timer);
+      if (kind === 'followup') {
+        // Straight into the next swing — anything still recovering gets caught.
+        timer = window.setTimeout(() => running && newSwing(performance.now(), true), 90);
+      } else {
+        timer = window.setTimeout(() => running && newSwing(performance.now()), rand(550, 900));
+      }
+    };
+
+    const closePunish = () => {
+      punish = null;
+      delete arena.dataset.opening;
+      opening.style.strokeDasharray = '0 360';
+    };
+
+    const openPunish = (now: number) => {
+      punish = { start: now, until: now + PUNISH_MS };
+      arena.dataset.opening = '';
+      phaseEl.textContent = 'Opening — attack!';
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (!punish) return;
+        closePunish();
+        phaseEl.textContent = 'Opening missed';
+        show('Too slow', 'info');
+        // They've recovered — usually they swing straight back at you.
+        scheduleNext(Math.random() < 0.7 ? 'followup' : 'gap');
+      }, PUNISH_MS);
+    };
+
+    // A swing has been resolved — by impact or by a feint.
+    const resolve = (outcome: 'parried' | 'hit' | 'feinted' | 'read', now: number) => {
       swing = null;
       round++;
       renderStats();
-      if (round >= ROUNDS) {
-        running = false;
-        const pts = score.parried + score.read;
-        const verdict = pts >= 10 ? 'Perfect round' : pts >= 7 ? 'Nice — watch for feints' : pts >= 4 ? 'Not bad' : 'Keep practising';
-        phaseEl.textContent = `Score ${pts}/${ROUNDS}`;
-        setTimeout(() => show(verdict, pts >= 7 ? 'good' : 'info'), 500);
-        startBtn.textContent = 'Go again';
-        startBtn.hidden = false;
-        return;
-      }
-      setTimeout(() => running && newSwing(performance.now()), 650);
-      void now;
+      if (outcome === 'parried') phaseEl.textContent = 'Parried';
+      if (outcome === 'hit') phaseEl.textContent = 'Hit';
+      if (outcome === 'read') openPunish(now);
+      else if (outcome === 'feinted') scheduleNext('followup');
+      else scheduleNext('gap');
     };
 
-    const frame = (now: number) => {
-      if (!running && !swing) {
+    // ---------- render loop ----------
+    function frame(now: number) {
+      if (!running && !swing && !pullback && !punish) {
+        shield.style.opacity = '0';
         raf = 0;
         return;
       }
       raf = requestAnimationFrame(frame);
-      if (!swing) {
-        fill.style.width = '0%';
-        marker.style.left = '0%';
-        return;
-      }
-      const total = swing.windup + RELEASE_MS;
-      const t = now - swing.start;
-      const p = Math.min(t / total, 1);
-      fill.style.width = `${p * 100}%`;
-      marker.style.left = `${p * 100}%`;
-      arena.dataset.phase = t < swing.windup ? 'windup' : 'release';
-      if (t >= swing.windup) phaseEl.textContent = 'Release!';
 
-      // Feint: the swing cancels during windup.
+      // Parry shield: visible while the parry window is open.
+      const parryLeft = PARRY_MS - (now - parryAt);
+      shield.style.opacity = parryLeft > 0 ? String(0.35 + 0.65 * (parryLeft / PARRY_MS)) : '0';
+
+      // Punish opening: a gold arc around the arena counting down.
+      if (punish) {
+        const left = Math.max((punish.until - now) / PUNISH_MS, 0);
+        opening.style.strokeDasharray = `${(360 * left).toFixed(1)} 360`;
+      }
+
+      // Feint pull-back animation: the ring retreats and fades.
+      if (pullback) {
+        const t = Math.min((now - pullback.start) / 260, 1);
+        const r = pullback.from + (R_START - pullback.from) * (1 - Math.pow(1 - t, 3));
+        ring.setAttribute('r', r.toFixed(2));
+        edge.setAttribute('r', r.toFixed(2));
+        swingG.style.opacity = String(1 - t);
+        if (t >= 1) pullback = null;
+      }
+
+      if (!swing) return;
+      const r = ringRadius(swing, now);
+      ring.setAttribute('r', r.toFixed(2));
+      edge.setAttribute('r', r.toFixed(2));
+      // The ring thickens as it speeds up.
+      const p = Math.min((now - swing.start) / swing.duration, 1);
+      ring.style.strokeWidth = String(1.5 + 2.5 * Math.pow(p, swing.accel));
+
+      // Feint: the swing pulls back late.
       if (swing.feintAt !== null && now >= swing.feintAt) {
-        const parryUp = now - parryAt <= PARRY_MS;
-        if (parryUp) {
+        pullback = { start: now, from: r };
+        if (now - parryAt <= PARRY_MS) {
           score.feinted++;
           show('Feinted!', 'bad');
+          pop('bad');
+          phaseEl.textContent = 'Feinted';
+          resolve('feinted', now);
         } else {
           score.read++;
           show('Feint read', 'good');
+          pop('good');
+          resolve('read', now);
         }
-        phaseEl.textContent = 'Feint';
-        endRound(now);
         return;
       }
+
       // Impact.
-      if (now >= swing.impact) {
-        const parryUp = swing.impact - parryAt <= PARRY_MS && swing.impact >= parryAt;
+      const hitAt = swing.start + swing.duration;
+      if (now >= hitAt) {
+        const parryUp = hitAt >= parryAt && hitAt - parryAt <= PARRY_MS;
+        swingG.style.opacity = '0';
         if (parryUp) {
           score.parried++;
           show('Parried', 'good');
-        } else if (parryAt > swing.start && parryAt < swing.impact - PARRY_MS) {
-          score.hit++;
-          show('Too early', 'bad');
+          pop('good');
+          resolve('parried', now);
         } else {
           score.hit++;
-          show('Hit!', 'bad');
+          const recovering = hitAt - attackAt < ATTACK_RECOVERY_MS;
+          const early = parryAt > swing.start && parryAt < hitAt - PARRY_MS;
+          show(recovering ? 'Caught attacking' : early ? 'Too early' : 'Hit!', 'bad');
+          impact();
+          resolve('hit', now);
         }
-        endRound(now);
       }
-    };
+    }
 
+    // ---------- actions ----------
     const parry = () => {
-      if (!running) return;
+      if (!running) return start();
       const now = performance.now();
-      if (now - parryAt < PARRY_MS + 150) return; // recovery: no spamming
+      if (now - parryAt < PARRY_MS + PARRY_RECOVERY_MS) return; // parry still recovering
+      if (now - attackAt < ATTACK_RECOVERY_MS) return; // committed to an attack
       parryAt = now;
-      if (swing) {
-        const total = swing.windup + RELEASE_MS;
-        const x = ((now - swing.start) / total) * 100;
-        parryBar.style.left = `${x}%`;
-        parryBar.style.width = `${(PARRY_MS / total) * 100}%`;
-        parryBar.style.opacity = '1';
-      }
       arena.classList.remove('is-parry');
       void arena.offsetWidth;
       arena.classList.add('is-parry');
+      kick();
+    };
+
+    const attack = () => {
+      if (!running) return start();
+      const now = performance.now();
+      if (now - attackAt < ATTACK_RECOVERY_MS) return;
+      attackAt = now;
+      slash.animate?.(
+        [
+          { strokeDashoffset: 100, opacity: 1 },
+          { strokeDashoffset: 0, opacity: 1, offset: 0.45 },
+          { strokeDashoffset: 0, opacity: 0 },
+        ],
+        { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      );
+      if (punish && now <= punish.until) {
+        window.clearTimeout(timer);
+        closePunish();
+        score.punished++;
+        renderStats();
+        show('Punished!', 'good');
+        pop('good');
+        phaseEl.textContent = 'Punished';
+        scheduleNext('gap');
+      } else {
+        phaseEl.textContent = 'Whiffed';
+      }
+      kick();
     };
 
     const start = () => {
       running = true;
       round = 0;
-      score.parried = score.read = score.hit = score.feinted = 0;
-      parryAt = -Infinity;
+      score.parried = score.read = score.punished = score.hit = score.feinted = 0;
+      parryAt = attackAt = -Infinity;
+      swing = null;
+      pullback = null;
+      closePunish();
       renderStats();
       result.textContent = '';
       startBtn.hidden = true;
       phaseEl.textContent = 'Get ready';
+      swingG.style.opacity = '0';
       arena.focus({ preventScroll: true });
-      setTimeout(() => newSwing(performance.now()), 700);
-      if (!raf) raf = requestAnimationFrame(frame);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => running && newSwing(performance.now()), 800);
+      kick();
     };
 
-    startBtn.addEventListener('click', start);
+    // ---------- input ----------
+    // Mouse: left = attack, right = parry. Touch/pen: tap = parry (use the Attack button to punish).
     arena.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      if (!running) start();
-      else parry();
-    });
-    arena.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.key === 'Enter') {
-        e.preventDefault();
-        if (!running) start();
-        else parry();
+      if (e.pointerType === 'mouse') {
+        if (e.button === 0) attack();
+        else if (e.button === 2) parry();
+      } else {
+        parry();
       }
     });
+    arena.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    root.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((btn) => {
+      const act = () => (btn.dataset.act === 'attack' ? attack() : parry());
+      btn.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        act();
+      });
+      btn.addEventListener('click', (e) => {
+        if (e.detail === 0) act(); // keyboard activation
+      });
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+
+    root.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      const isParry = e.code === 'Space' || k === 'k';
+      const isAttack = k === 'f' || k === 'j' || e.key === 'Enter';
+      if (!isParry && !isAttack) return;
+      e.preventDefault();
+      if (e.repeat) return;
+      if (isParry) parry();
+      else attack();
+    });
+
+    startBtn.addEventListener('click', start);
+    swingG.style.opacity = '0';
+    opening.style.strokeDasharray = '0 360';
     renderStats();
   });
 </script>
@@ -232,7 +475,7 @@
   }
   .parry__intro {
     color: var(--fg-2);
-    max-width: 62ch;
+    max-width: 66ch;
   }
   kbd {
     font-family: var(--font-mono);
@@ -244,15 +487,17 @@
     color: var(--fg);
   }
 
+  /* ---------- arena ---------- */
   .arena {
     position: relative;
     display: grid;
-    gap: 22px;
-    padding: 28px 24px 24px;
+    justify-items: center;
+    gap: 10px;
+    padding: 24px 16px 20px;
     border: 1px solid var(--line-2);
     border-radius: var(--radius);
     background:
-      radial-gradient(60% 100% at 50% 100%, var(--accent-soft), transparent 70%),
+      radial-gradient(50% 60% at 50% 45%, var(--accent-soft), transparent 70%),
       var(--bg-2);
     user-select: none;
     -webkit-user-select: none;
@@ -260,103 +505,174 @@
     transition:
       border-color 0.2s,
       box-shadow 0.2s;
-    min-height: 220px;
   }
   .arena:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
   .arena[data-flash='good'] {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-soft);
+    border-color: var(--ok);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--ok) 22%, transparent);
   }
   .arena[data-flash='bad'] {
     border-color: var(--live);
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--live) 18%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--live) 22%, transparent);
   }
-  .arena.is-parry .track__marker {
+  /* Punish opening: the arena pulses until you attack or it closes. */
+  .arena[data-opening] {
+    border-color: var(--gold);
+    animation: opening-glow 0.26s ease-in-out infinite alternate;
+  }
+  @keyframes opening-glow {
+    from {
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--gold) 15%, transparent);
+    }
+    to {
+      box-shadow: 0 0 0 8px color-mix(in oklab, var(--gold) 35%, transparent);
+    }
+  }
+  .arena__svg {
+    width: min(100%, 320px);
+    aspect-ratio: 1;
+    overflow: visible;
+  }
+  .arena__bounds {
+    fill: none;
+    stroke: var(--line-2);
+    stroke-width: 1;
+  }
+  .arena__guide {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
+  }
+  .arena__opening {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--gold) 70%, transparent));
+    opacity: 0; /* a zero-length round-capped dash would still draw a dot */
+  }
+  .arena[data-opening] .arena__opening {
+    opacity: 1;
+  }
+  .arena__target {
+    fill: color-mix(in oklab, var(--fg) 12%, transparent);
+    stroke: var(--fg);
+    stroke-width: 2;
+    transition:
+      fill 0.15s,
+      stroke 0.15s;
+  }
+  .arena[data-opening] .arena__target {
+    fill: color-mix(in oklab, var(--gold) 45%, transparent);
+    stroke: var(--gold);
+    animation: target-pulse 0.26s ease-in-out infinite alternate;
+  }
+  @keyframes target-pulse {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.45);
+    }
+  }
+  .arena__impact {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .arena__shield {
+    fill: color-mix(in oklab, var(--accent) 35%, transparent);
+    stroke: var(--accent);
+    stroke-width: 3;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px var(--accent));
+  }
+  .arena__ring {
+    fill: none;
+    stroke: color-mix(in oklab, var(--live) 85%, white);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 4px color-mix(in oklab, var(--live) 70%, transparent));
+  }
+  /* A brighter arc on the ring: the leading edge of the swing. */
+  .arena__edge {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+  .arena__slash {
+    stroke: #fff;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.8));
+  }
+  .arena__burst {
+    opacity: 0;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .arena__burst[data-kind='good'] {
+    stroke: var(--ok);
+  }
+  .arena__burst[data-kind='bad'] {
+    stroke: var(--live);
+  }
+  .arena.is-parry .arena__target {
     animation: parry-ping 0.35s var(--ease-out);
   }
   @keyframes parry-ping {
     50% {
-      box-shadow: 0 0 0 10px color-mix(in oklab, var(--accent) 30%, transparent);
+      stroke: var(--accent);
     }
   }
   .arena__status {
     color: var(--muted);
   }
-  .arena[data-phase='release'] .arena__status {
-    color: var(--live);
-  }
-  .track {
-    position: relative;
-    height: 18px;
-    border-radius: 999px;
-    background: var(--panel-2);
-    border: 1px solid var(--line-2);
-  }
-  .track__release {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 70%;
-    right: 0;
-    border-radius: 0 999px 999px 0;
-    background: repeating-linear-gradient(-45deg, color-mix(in oklab, var(--live) 35%, transparent) 0 6px, transparent 6px 12px);
-  }
-  .track__fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 0;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--fg) 25%, transparent));
-  }
-  .track__parry {
-    position: absolute;
-    top: -6px;
-    bottom: -6px;
-    left: 0;
-    width: 0;
-    border-radius: 4px;
-    background: color-mix(in oklab, var(--accent) 40%, transparent);
-    border: 1.5px solid var(--accent);
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .track__marker {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 4px;
-    height: 34px;
-    margin: -17px 0 0 -2px;
-    border-radius: 2px;
-    background: var(--fg);
-    box-shadow: 0 0 12px rgb(255 255 255 / 0.6);
-  }
-  .track__labels {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    color: var(--muted);
-    font-size: 0.6rem;
+  .arena[data-opening] .arena__status {
+    color: var(--gold);
   }
   .arena__result {
-    margin-top: 18px;
     min-height: 1em;
-    font-size: clamp(2.25rem, 7vw, 4rem);
+    font-size: clamp(2rem, 6vw, 3.25rem);
     text-align: center;
   }
   .arena__result[data-kind='good'] {
-    color: var(--accent);
+    color: var(--ok);
   }
   .arena__result[data-kind='bad'] {
     color: var(--live);
+  }
+
+  /* ---------- on-screen controls ---------- */
+  .parry__controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .parry__act {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    min-height: 56px;
+    touch-action: manipulation;
+  }
+  .parry__act--attack:hover,
+  .parry__act--attack:focus-visible {
+    border-color: var(--gold);
+  }
+  .parry__act--attack::before {
+    background: var(--gold);
+  }
+  .parry__key {
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.7;
   }
 
   .parry__foot {
@@ -369,7 +685,7 @@
   .parry__score {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
+    gap: 20px 24px;
   }
   .parry__score dt {
     color: var(--muted);
