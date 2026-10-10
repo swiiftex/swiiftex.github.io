@@ -38,7 +38,22 @@ const projects = defineCollection({
       highlightsTitle: z.string().default('Highlights'),
       highlights: z.array(z.string()).default([]),
       stack: z.array(z.string()).default([]),
-      links: z.array(z.object({ label: z.string(), href: z.url() })).default([]),
+      links: z
+        .array(
+          z.object({
+            label: z.string(),
+            /** Fallback URL, used if the latest release can't be looked up. */
+            href: z.url(),
+            /** Point this link at a file in the repo's latest GitHub release. */
+            release: z
+              .object({
+                repo: z.string(), // "owner/name"
+                asset: z.string(), // regex matched against asset file names
+              })
+              .optional(),
+          }),
+        )
+        .default([]),
       steamAppId: z.string().optional(),
       youtube: z.array(z.object({ id: z.string(), title: z.string() })).default([]),
       featured: z.boolean().default(false),

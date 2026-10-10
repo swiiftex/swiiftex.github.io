@@ -25,8 +25,11 @@ highlights:
   - Explorer "Edit with QuickClip" menu, an installer and an auto-updater
 stack: [C#, WPF, .NET 10, C++, FFmpeg, libmpv, WASAPI]
 links:
-  - label: Download v0.4.0
+  - label: Download installer
     href: https://github.com/swiiftex/QuickClip/releases/latest
+    release:
+      repo: swiiftex/QuickClip
+      asset: '-setup\.exe$'
   - label: Source on GitHub
     href: https://github.com/swiiftex/QuickClip
 featured: true

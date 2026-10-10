@@ -9,6 +9,7 @@ import YouTube from '../components/YouTube.astro';
 import SensCalc from '../components/SensCalc.astro';
 import Inventory from '../components/Inventory.astro';
 import { getProjects, projectHref, vtName, whenLabel, type Project } from '../lib/projects';
+import { latestAsset } from '../lib/releases';
 import { CATEGORY_LABELS } from '../data/site';
 
 export async function getStaticPaths() {
@@ -60,7 +61,20 @@ const spec = [
   data.downloads && { k: 'Downloads', v: `${data.downloads.toLocaleString('en-GB')} on mod.io` },
 ].filter(Boolean) as { k: string; v: string }[];
 
-const [primary, ...secondary] = data.links;
+// Links flagged with `release` point straight at a file in the repo's latest
+// GitHub release (looked up now, and re-checked in the browser below).
+const links = await Promise.all(
+  data.links.map(async (l) => {
+    const asset = l.release ? await latestAsset(l.release.repo, l.release.asset) : null;
+    return { ...l, href: asset?.url ?? l.href, tag: asset?.tag ?? '' };
+  }),
+);
+type ResolvedLink = (typeof links)[number];
+const linkAttrs = (l: ResolvedLink) =>
+  l.release
+    ? { href: l.href, 'data-release-repo': l.release.repo, 'data-release-asset': l.release.asset }
+    : { href: l.href, target: '_blank', rel: 'noopener' };
+const [primary, ...secondary] = links;
 ---
 
 <Base title={data.title} description={data.summary} image={ogImage}>
@@ -79,12 +93,16 @@ const [primary, ...secondary] = data.links;
       {
         primary && (
           <div class="btn-row" data-reveal style="--i:4">
-            <a class="btn btn--primary" href={primary.href} target="_blank" rel="noopener" data-magnetic>
-              {primary.label} <Icon name="external" />
+            <a class="btn btn--primary" {...linkAttrs(primary)} data-magnetic>
+              {primary.label}
+              {primary.release && <span data-release-tag>{primary.tag && ` · ${primary.tag}`}</span>}
+              <Icon name={primary.release ? 'download' : 'external'} />
             </a>
             {secondary.slice(0, 2).map((l) => (
-              <a class="btn btn--ghost" href={l.href} target="_blank" rel="noopener">
-                {l.label} <Icon name="external" />
+              <a class="btn btn--ghost" {...linkAttrs(l)}>
+                {l.label}
+                {l.release && <span data-release-tag>{l.tag && ` · ${l.tag}`}</span>}
+                <Icon name={l.release ? 'download' : 'external'} />
               </a>
             ))}
           </div>
@@ -183,13 +201,16 @@ const [primary, ...secondary] = data.links;
         }
 
         {
-          data.links.length > 0 && (
+          links.length > 0 && (
             <ul role="list" class="links" data-reveal style="--i:3">
-              {data.links.map((l) => (
+              {links.map((l) => (
                 <li>
-                  <a href={l.href} target="_blank" rel="noopener">
-                    <span>{l.label}</span>
-                    <Icon name="external" size={14} />
+                  <a {...linkAttrs(l)}>
+                    <span>
+                      {l.label}
+                      {l.release && <span data-release-tag>{l.tag && ` · ${l.tag}`}</span>}
+                    </span>
+                    <Icon name={l.release ? 'download' : 'external'} size={14} />
                   </a>
                 </li>
               ))}
@@ -239,6 +260,57 @@ const [primary, ...secondary] = data.links;
     </nav>
   </article>
 </Base>
+
+<script>
+  // Re-check release download links against GitHub, so a new release is picked
+  // up straight away rather than at the next site build. Cached for 10 minutes.
+  type Rel = { tag: string; assets: { name: string; url: string }[] };
+  const anchors = [...document.querySelectorAll<HTMLAnchorElement>('a[data-release-repo]')];
+  const repos = new Set(anchors.map((a) => a.dataset.releaseRepo!));
+
+  const latest = async (repo: string): Promise<Rel | null> => {
+    const key = `swiift:release:${repo}`;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (cached && Date.now() - cached.t < 600_000) return cached.rel;
+    } catch {
+      /* storage unavailable */
+    }
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      const rel: Rel = {
+        tag: json.tag_name,
+        assets: (json.assets ?? []).map((a: any) => ({ name: a.name, url: a.browser_download_url })),
+      };
+      try {
+        sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), rel }));
+      } catch {
+        /* ignore */
+      }
+      return rel;
+    } catch {
+      return null; // offline or rate-limited: keep the build-time link
+    }
+  };
+
+  repos.forEach(async (repo) => {
+    const rel = await latest(repo);
+    if (!rel) return;
+    anchors
+      .filter((a) => a.dataset.releaseRepo === repo)
+      .forEach((a) => {
+        const re = new RegExp(a.dataset.releaseAsset!, 'i');
+        const asset = rel.assets.find((x) => re.test(x.name));
+        if (!asset) return;
+        a.href = asset.url;
+        a.querySelectorAll('[data-release-tag]').forEach((t) => (t.textContent = ` · ${rel.tag}`));
+      });
+  });
+</script>
 
 <style>
   .project {

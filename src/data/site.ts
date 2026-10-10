@@ -27,7 +27,8 @@ export type IconName =
   | 'modio'
   | 'youtube'
   | 'arrow'
-  | 'external';
+  | 'external'
+  | 'download';
 
 export const SOCIALS: Social[] = [
   { label: 'GitHub', handle: 'swiiftex', href: 'https://github.com/swiiftex', icon: 'github' },
