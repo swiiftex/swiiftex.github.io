@@ -5,7 +5,7 @@ date: 2026-10-08
 kicker: Windows app · C# / C++
 role: Solo developer
 when: "2026"
-status: v0.4.0 — open source (GPL-3.0)
+status: Free and open source (GPL-3.0)
 platforms: [Windows]
 summary: A lightweight instant-replay clipper — it keeps the last few minutes of your screen in memory and saves a clip on a hotkey, with a built-in editor.
 cover: ../../assets/projects/quickclip/editor.png

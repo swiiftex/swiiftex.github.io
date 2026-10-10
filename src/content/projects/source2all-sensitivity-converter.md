@@ -5,7 +5,7 @@ date: 2026-06-29
 kicker: Windows app · C# / WPF
 role: Solo developer
 when: "2026"
-status: v1.0.3 — free download
+status: Free download
 platforms: [Windows]
 summary: Set your sensitivity once and apply it everywhere — 58 games, auto-detected across Steam, Epic and GOG, written straight into their configs.
 cover: ../../assets/projects/source2all-sensitivity-converter/auto-apply.png
@@ -25,8 +25,11 @@ highlights:
   - Portable settings and CI-built single-file releases
 stack: [C#, .NET 9, WPF, MVVM, GitHub Actions]
 links:
-  - label: Download v1.0.3
+  - label: Download for Windows
     href: https://github.com/swiiftex/Source2AllSensitivityConverter/releases/latest
+    release:
+      repo: swiiftex/Source2AllSensitivityConverter
+      asset: '\.exe$'
   - label: Source on GitHub
     href: https://github.com/swiiftex/Source2AllSensitivityConverter
 tint: '#00b1ff'
