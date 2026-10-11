@@ -5,11 +5,14 @@ import PageHeader from '../components/PageHeader.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import Icon from '../components/Icon.astro';
 import { getProjects } from '../lib/projects';
+import { cardPreview } from '../lib/previews';
 import { MODIO } from '../data/site';
 import modioLogo from '../assets/brand/modio.png';
 
 const games = await getProjects('games');
 const mods = await getProjects('mods');
+const gamePreviews = await Promise.all(games.map(cardPreview));
+const modPreviews = await Promise.all(mods.map(cardPreview));
 const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}K` : String(n));
 ---
 
@@ -20,6 +23,7 @@ const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 
     title="Games & mods"
     lede="Games I've worked on or made myself, and mods for MORDHAU and Hellsplit Arena."
   />
+  <link slot="head" rel="preconnect" href="https://video.akamai.steamstatic.com" crossorigin />
 
   <section class="container section--tight" aria-labelledby="games-title">
     <h2 id="games-title" class="eyebrow"><span class="eyebrow__index">{String(games.length).padStart(2, '0')}</span><span class="eyebrow__rule"></span>Games</h2>
@@ -27,7 +31,7 @@ const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 
       {
         games.map((p, i) => (
           <li class:list={[i === 0 && 'grid__wide']}>
-            <ProjectCard project={p} size={i === 0 ? 'feature' : 'default'} index={i} />
+            <ProjectCard project={p} size={i === 0 ? 'feature' : 'default'} index={i} preview={gamePreviews[i]} />
           </li>
         ))
       }
@@ -57,7 +61,7 @@ const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 
       {
         mods.map((p, i) => (
           <li class="mod">
-            <ProjectCard project={p} size="compact" index={i % 4} />
+            <ProjectCard project={p} size="compact" index={i % 4} preview={modPreviews[i]} />
             {p.data.downloads && <span class="mod__dl mono">↓ {fmt(p.data.downloads)}</span>}
           </li>
         ))

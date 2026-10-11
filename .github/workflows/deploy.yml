@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Weekly rebuild to pick up new Steam trailers, GitHub releases and the
+  # Source2All games list, even when nothing has been pushed.
+  schedule:
+    - cron: '23 6 * * 1'
 
 permissions:
   contents: read

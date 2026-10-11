@@ -4,6 +4,10 @@ import TitleCard from './TitleCard.astro';
 import Icon from './Icon.astro';
 import { projectHref, vtName, whenLabel, type Project } from '../lib/projects';
 import { CATEGORY_LABELS } from '../data/site';
+import type { VideoSource } from '../scripts/hover-video';
+
+/** What plays on hover: a muted trailer, or a slideshow of image URLs. */
+export type CardPreview = { kind: 'video'; source: VideoSource } | { kind: 'gallery'; images: string[] };
 
 interface Props {
   project: Project;
@@ -12,8 +16,9 @@ interface Props {
   morph?: boolean;
   index?: number;
   sizes?: string;
+  preview?: CardPreview;
 }
-const { project, size = 'default', morph = true, index = 0, sizes } = Astro.props;
+const { project, size = 'default', morph = true, index = 0, sizes, preview } = Astro.props;
 const { data } = project;
 const imgSizes =
   sizes ??
@@ -47,6 +52,16 @@ const meta = [data.studio ?? data.game, whenLabel(project)].filter(Boolean).join
           <TitleCard title={data.title} kicker={data.kicker} meta={data.location ?? data.when} tint={data.tint} />
         )
       }
+      {preview?.kind === 'video' && <span class="hover-video" data-hover-video={JSON.stringify(preview.source)} data-start="8" aria-hidden="true" />}
+      {
+        preview?.kind === 'gallery' && (
+          <span class="card__slides" data-slides aria-hidden="true">
+            {preview.images.map((src) => (
+              <img data-src={src} alt="" decoding="async" />
+            ))}
+          </span>
+        )
+      }
       <span class="card__chip chip">{CATEGORY_LABELS[data.category]}</span>
     </div>
     <div class="card__body">
@@ -57,6 +72,51 @@ const meta = [data.studio ?? data.game, whenLabel(project)].filter(Boolean).join
     </div>
   </a>
 </article>
+
+<script>
+  import { HoverVideo } from '../scripts/hover-video';
+
+  // Hover previews: play a card's trailer, or cycle through its gallery.
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (canHover && !reduce) {
+    document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+      const link = card.querySelector<HTMLElement>('.card__link')!;
+      const videoHost = card.querySelector<HTMLElement>('[data-hover-video]');
+      const slides = card.querySelector<HTMLElement>('[data-slides]');
+
+      if (videoHost) {
+        let player: HoverVideo | null = null;
+        link.addEventListener('pointerenter', () => {
+          player ??= HoverVideo.fromElement(videoHost);
+          player?.play();
+        });
+        link.addEventListener('pointerleave', () => player?.stop());
+      }
+
+      if (slides) {
+        const imgs = [...slides.querySelectorAll<HTMLImageElement>('img')];
+        let timer = 0;
+        let i = 0;
+        const show = (n: number) => imgs.forEach((img, k) => img.classList.toggle('is-on', k === n));
+        link.addEventListener('pointerenter', () => {
+          imgs.forEach((img) => {
+            if (!img.src) img.src = img.dataset.src!;
+          });
+          i = 0;
+          show(i);
+          slides.classList.add('is-on');
+          window.clearInterval(timer);
+          timer = window.setInterval(() => show((i = (i + 1) % imgs.length)), 1200);
+        });
+        link.addEventListener('pointerleave', () => {
+          window.clearInterval(timer);
+          slides.classList.remove('is-on');
+        });
+      }
+    });
+  }
+</script>
 
 <style>
   .card {
@@ -136,6 +196,30 @@ const meta = [data.studio ?? data.game, whenLabel(project)].filter(Boolean).join
   .card__link:hover :global(.card__img) {
     transform: scale(1.045);
     filter: saturate(1.05) brightness(1);
+  }
+  /* Gallery slideshow shown over the cover while hovered */
+  .card__slides {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .card__slides.is-on {
+    opacity: 1;
+  }
+  .card__slides img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .card__slides img.is-on {
+    opacity: 1;
   }
   .card__chip {
     position: absolute;

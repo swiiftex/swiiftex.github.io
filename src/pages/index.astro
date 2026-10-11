@@ -7,6 +7,7 @@ import Scorebug from '../components/Scorebug.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ProjectFeed from '../components/ProjectFeed.astro';
 import { getProjects } from '../lib/projects';
+import { steamTrailer } from '../lib/steam';
 import { MODIO } from '../data/site';
 
 const all = await getProjects();
@@ -21,11 +22,15 @@ const bento = [
   { p: pick('quickclip'), size: 'feature' as const, span: 'wide' },
 ];
 
+// Hovering a camera plays its video: Steam trailers for the games, the after-video for VRLAN.
+const vrlan = pick('vrlan-2026');
+const vrlanVideo = vrlan.data.youtube.find((v) => /after/i.test(v.title)) ?? vrlan.data.youtube[0];
+const trailer = (id: string) => steamTrailer(pick(id).data.steamAppId!);
 const mixer = [
-  { href: '/directive-8020/', image: d8020.data.cover!, tag: 'Now shipping', title: 'Directive 8020', sub: 'Supermassive Games · Steam, PS5, Xbox Series X|S' },
-  { href: '/vrlan-2026/', image: pick('vrlan-2026').data.cover!, tag: 'Live event', title: 'VRLAN 2026', sub: 'H20 Esports Campus · Purmerend, NL' },
-  { href: '/lunarball/', image: pick('lunarball').data.cover!, tag: 'Free on Steam', title: 'LUNARBALL', sub: '3v3 physics sports · built solo' },
-  { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Coming soon', title: 'Night Crew', sub: 'Binary Spiders · co-op horror' },
+  { href: '/directive-8020/', image: d8020.data.cover!, tag: 'Now shipping', title: 'Directive 8020', sub: 'Supermassive Games · Steam, PS5, Xbox Series X|S', video: await trailer('directive-8020') },
+  { href: '/vrlan-2026/', image: vrlan.data.cover!, tag: 'Live event', title: 'VRLAN 2026', sub: 'H20 Esports Campus · Purmerend, NL', video: vrlanVideo ? { type: 'youtube' as const, id: vrlanVideo.id } : null },
+  { href: '/lunarball/', image: pick('lunarball').data.cover!, tag: 'Free on Steam', title: 'LUNARBALL', sub: '3v3 physics sports · built solo', video: await trailer('lunarball') },
+  { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Coming soon', title: 'Night Crew', sub: 'Binary Spiders · co-op horror', video: await trailer('night-crew') },
 ];
 
 const ticker = [
@@ -59,6 +64,7 @@ const disciplines = [
 ---
 
 <Base>
+  <link slot="head" rel="preconnect" href="https://video.akamai.steamstatic.com" crossorigin />
   <!-- ================= HERO ================= -->
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero__inner container">

@@ -1,0 +1,1040 @@
+[
+ {
+  "name": "Counter-Strike 2",
+  "engine": "Source 2",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Deadlock",
+  "engine": "Source 2",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Team Fortress 2",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Counter-Strike: Source",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life 2",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Left 4 Dead 2",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Portal 2",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Garry's Mod",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Day of Defeat: Source",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Portal",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life: Source",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life 2: Deathmatch",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Black Mesa",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Insurgency",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Day of Infamy",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Left 4 Dead",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life Deathmatch: Source",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Counter-Strike: Global Offensive (Legacy)",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "No More Room in Hell",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Fistful of Frags",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Zombie Panic! Source",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Synergy",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Nuclear Dawn",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Contagion",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Portal Stories: Mel",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Team Fortress 2 Classified",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Hunt Down The Freeman",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Apex Legends",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Titanfall 2",
+  "engine": "Source",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Titanfall",
+  "engine": "Source",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Half-Life",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Counter-Strike 1.6",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Day of Defeat",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Team Fortress Classic",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life: Opposing Force",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Counter-Strike: Condition Zero",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Sven Co-op",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Half-Life: Blue Shift",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Ricochet",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Deathmatch Classic",
+  "engine": "GoldSrc",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Quake Champions",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "DOOM Eternal",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Quake Live",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Quake III Arena",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Quake 4",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Return to Castle Wolfenstein",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Wolfenstein: Enemy Territory",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Warfork",
+  "engine": "id Tech",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Quake (2021)",
+  "engine": "id Tech",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Quake II (2023)",
+  "engine": "id Tech",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "DOOM (2016)",
+  "engine": "id Tech",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "DOOM: The Dark Ages",
+  "engine": "id Tech",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Xonotic",
+  "engine": "id Tech",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare (2019)",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Vanguard",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare II (2022)",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare III (2023)",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Black Ops 6",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Black Ops 7",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Warzone",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare 4",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Black Ops 4",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty 4: Modern Warfare",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: World at War",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty 2",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare 2 (2009)",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Modern Warfare 3 (2011)",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Black Ops III",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Black Ops",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Ghosts",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty: Advanced Warfare",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty: Modern Warfare Remastered",
+  "engine": "Call of Duty (IW)",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty: Black Ops Cold War",
+  "engine": "Call of Duty (IW)",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Call of Duty: Infinite Warfare",
+  "engine": "Call of Duty (IW)",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty: WWII",
+  "engine": "Call of Duty (IW)",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Call of Duty: Black Ops II",
+  "engine": "Call of Duty (IW)",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "The Finals",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Mordhau",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Chivalry 2",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Chivalry: Medieval Warfare",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Ready or Not",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Rising Storm 2: Vietnam",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Insurgency: Sandstorm",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "PUBG: BATTLEGROUNDS",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Rainbow Six Siege",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Deep Rock Galactic",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Unreal Tournament 2004",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Unreal Tournament (1999)",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Red Orchestra 2: Heroes of Stalingrad",
+  "engine": "Unreal Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Halo: The Master Chief Collection",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Fortnite",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Marvel Rivals",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Halo Infinite",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "ARC Raiders",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "FragPunk",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Arena Breakout: Infinite",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Delta Force",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Splitgate",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "SPLITGATE: Arena Reloaded",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Rogue Company",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Paladins",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Gears 5",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Gears of War: E-Day",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Squad",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "PAYDAY 3",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Killing Floor 2",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Borderlands 2",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Borderlands 3",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Tiny Tina's Wonderlands",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "BATTALION: Legacy",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Black Squad",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Darwin Project",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Aimbeast",
+  "engine": "Unreal Engine",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Battlefield 4",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Battlefield 2042",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Battlefield 1",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Battlefield V",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Battlefield 3",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Battlefield 6",
+  "engine": "Frostbite",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Star Wars Battlefront II (2017)",
+  "engine": "Frostbite",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Fallout 4",
+  "engine": "Creation Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Fallout 76",
+  "engine": "Creation Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "The Elder Scrolls V: Skyrim Special Edition",
+  "engine": "Creation Engine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Starfield",
+  "engine": "Creation Engine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Far Cry 5",
+  "engine": "Dunia",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Far Cry New Dawn",
+  "engine": "Dunia",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Far Cry 6",
+  "engine": "Dunia",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Tom Clancy's The Division 2",
+  "engine": "Snowdrop",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Warhammer: Vermintide 2",
+  "engine": "Stingray",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "HELLDIVERS 2",
+  "engine": "Stingray",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Warhammer 40,000: Darktide",
+  "engine": "Stingray",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Cyberpunk 2077",
+  "engine": "REDengine",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Escape from Tarkov",
+  "engine": "Unity",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Rust",
+  "engine": "Unity",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Risk of Rain 2",
+  "engine": "Unity",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "DUSK",
+  "engine": "Unity",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "BattleBit Remastered",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "7 Days to Die",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Unturned",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Valheim",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Lethal Company",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Aimlabs",
+  "engine": "Unity",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Hunt: Showdown 1896",
+  "engine": "CryEngine",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "Warface: Clutch",
+  "engine": "CryEngine",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "VALORANT",
+  "engine": "Riot",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Overwatch 2",
+  "engine": "Overwatch",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Minecraft (Java)",
+  "engine": "Other",
+  "status": "auto",
+  "approx": false
+ },
+ {
+  "name": "PlanetSide 2",
+  "engine": "Other",
+  "status": "auto",
+  "approx": true
+ },
+ {
+  "name": "Destiny 2",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Diabotical",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Marathon",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Warframe",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Tom Clancy's Rainbow Six Extraction",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Krunker",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Enlisted",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "DayZ",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Arma 3",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "PAYDAY 2",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Dying Light 2 Stay Human",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Roblox",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Natural Selection 2",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Reflex Arena",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Diabotical Rogue",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "3D Aim Trainer",
+  "engine": "Other",
+  "status": "convert",
+  "approx": false
+ },
+ {
+  "name": "Gunfire Reborn",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "ULTRAKILL",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "World War Z",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "SUPERHOT",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Sea of Thieves",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Devil Daggers",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Prodeus",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "The Outer Worlds",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ },
+ {
+  "name": "Control",
+  "engine": "Other",
+  "status": "convert",
+  "approx": true
+ }
+]

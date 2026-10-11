@@ -7,7 +7,9 @@ import TitleCard from '../components/TitleCard.astro';
 import Gallery from '../components/Gallery.astro';
 import YouTube from '../components/YouTube.astro';
 import SensCalc from '../components/SensCalc.astro';
+import SupportedGames from '../components/SupportedGames.astro';
 import Inventory from '../components/Inventory.astro';
+import { supportedGames } from '../lib/source2all';
 import { getProjects, projectHref, vtName, whenLabel, type Project } from '../lib/projects';
 import { latestAsset } from '../lib/releases';
 import { CATEGORY_LABELS } from '../data/site';
@@ -75,6 +77,8 @@ const linkAttrs = (l: ResolvedLink) =>
     ? { href: l.href, 'data-release-repo': l.release.repo, 'data-release-asset': l.release.asset }
     : { href: l.href, target: '_blank', rel: 'noopener' };
 const [primary, ...secondary] = links;
+
+const s2aGames = project.id === 'source2all-sensitivity-converter' ? await supportedGames() : null;
 ---
 
 <Base title={data.title} description={data.summary} image={ogImage}>
@@ -149,6 +153,7 @@ const [primary, ...secondary] = links;
         }
 
         {project.id === 'source2all-sensitivity-converter' && <SensCalc />}
+        {s2aGames && <SupportedGames games={s2aGames} />}
         {project.id === 'lunarball' && <Inventory />}
 
         {

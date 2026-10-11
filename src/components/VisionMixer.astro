@@ -8,6 +8,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import Logo from './Logo.astro';
+import type { VideoSource } from '../scripts/hover-video';
 
 interface Source {
   href: string;
@@ -15,6 +16,8 @@ interface Source {
   tag: string;
   title: string;
   sub: string;
+  /** Muted video that plays while the mixer is hovered on this camera. */
+  video?: VideoSource | null;
 }
 interface Props {
   sources: Source[];
@@ -50,6 +53,7 @@ const { sources } = Astro.props;
             loading={i === 0 ? 'eager' : 'lazy'}
             fetchpriority={i === 0 ? 'high' : undefined}
           />
+          {s.video && <span class="hover-video" data-hover-video={JSON.stringify(s.video)} data-start="8" aria-hidden="true" />}
           <span class="lower-third">
             <span class="lower-third__tag mono">{s.tag}</span>
             <span class="lower-third__main">
@@ -91,19 +95,38 @@ const { sources } = Astro.props;
 </div>
 
 <script>
+  import { HoverVideo } from '../scripts/hover-video';
+
   document.querySelectorAll<HTMLElement>('[data-mixer]').forEach((root) => {
     const sources = [...root.querySelectorAll<HTMLAnchorElement>('[data-source]')];
     const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-cut]')];
     const cam = root.querySelector<HTMLElement>('[data-cam]')!;
     const autoEl = root.querySelector<HTMLElement>('[data-auto]')!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     let current = 0;
     let timer = 0;
     let paused = reduce;
 
+    // Hovering the mixer plays the live camera's video (created on first use).
+    const players = new Map<number, HoverVideo | null>();
+    let hovering = false;
+    const player = (i: number) => {
+      if (!players.has(i)) {
+        const host = sources[i].querySelector<HTMLElement>('[data-hover-video]');
+        players.set(i, host ? HoverVideo.fromElement(host) : null);
+      }
+      return players.get(i) ?? null;
+    };
+    const playLive = () => {
+      if (canHover && !reduce && hovering) player(current)?.play();
+    };
+
     const cut = (to: number) => {
       if (to === current) return;
+      players.get(current)?.stop();
       current = (to + sources.length) % sources.length;
+      playLive();
       sources.forEach((s, i) => {
         const on = i === current;
         s.toggleAttribute('data-active', on);
@@ -142,10 +165,14 @@ const { sources } = Astro.props;
     root.addEventListener('pointerenter', () => {
       paused = true;
       schedule();
+      hovering = true;
+      playLive();
     });
     root.addEventListener('pointerleave', () => {
       paused = reduce;
       schedule();
+      hovering = false;
+      players.get(current)?.stop();
     });
     root.addEventListener('focusin', () => {
       paused = true;
@@ -231,6 +258,7 @@ const { sources } = Astro.props;
   /* Lower third wipes in on every cut */
   .lower-third {
     position: absolute;
+    z-index: 2; /* above the hover video */
     left: 5%;
     bottom: 7%;
     display: grid;

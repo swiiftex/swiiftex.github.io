@@ -47,6 +47,7 @@ const ogImage = new URL(image, Astro.site);
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
   </head>
   <body class={bodyClass}>
     <a class="skip-link" href="#main">Skip to content</a>

@@ -1,0 +1,319 @@
+---
+/**
+ * Every game Source2All supports, grouped by engine. ✓ = auto-apply (the app
+ * writes the config), ! = convert-only (you paste the value in-game).
+ * Filterable by name and by status.
+ */
+import type { S2AGame } from '../lib/source2all';
+
+interface Props {
+  games: S2AGame[];
+}
+const { games } = Astro.props;
+
+const engines = [...new Set(games.map((g) => g.engine))];
+const groups = engines.map((engine) => ({ engine, games: games.filter((g) => g.engine === engine) }));
+const count = (s: S2AGame['status']) => games.filter((g) => g.status === s).length;
+const auto = count('auto');
+const convert = count('convert');
+const none = count('none');
+const MARK = { auto: '✓', convert: '!', none: '✕' } as const;
+const LABEL = { auto: 'Auto-apply', convert: 'Convert-only', none: 'Not converted' } as const;
+---
+
+<section class="games panel" data-s2a-games aria-labelledby="s2a-games-title">
+  <header class="games__head">
+    <p class="mono games__tag">Supported games</p>
+    <h2 id="s2a-games-title" class="display games__title">{games.length} games and counting</h2>
+    <p class="games__summary">
+      <span class="games__count" data-kind="auto"><span class="mark" data-status="auto" aria-hidden="true">✓</span>{auto} auto-apply</span>
+      <span class="games__count" data-kind="convert"><span class="mark" data-status="convert" aria-hidden="true">!</span>{convert} convert-only</span>
+      {none > 0 && <span class="games__count"><span class="mark" data-status="none" aria-hidden="true">✕</span>{none} not converted</span>}
+    </p>
+    <dl class="games__legend">
+      <div><dt><span class="mark" data-status="auto" aria-hidden="true">✓</span> Fully supported</dt><dd>The app writes your sensitivity into the game's config for you.</dd></div>
+      <div><dt><span class="mark" data-status="convert" aria-hidden="true">!</span> Partially supported</dt><dd>The app works out the value — you paste it in-game yourself.</dd></div>
+      <div><dt><span class="approx" aria-hidden="true">≈</span> Approximate</dt><dd>Uses a commonly cited conversion factor.</dd></div>
+    </dl>
+  </header>
+
+  <div class="games__tools">
+    <label class="games__search">
+      <span class="visually-hidden">Search games</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+      <input type="search" placeholder="Search games" autocomplete="off" data-search />
+    </label>
+    <div class="games__filters" role="group" aria-label="Filter by support">
+      <button type="button" class="games__filter" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="games__filter" data-filter="auto" aria-pressed="false">✓ Auto-apply</button>
+      <button type="button" class="games__filter" data-filter="convert" aria-pressed="false">! Convert-only</button>
+    </div>
+  </div>
+
+  <div class="games__groups">
+    {
+      groups.map((g) => (
+        <section class="games__group" data-group>
+          <h3 class="games__engine mono">
+            {g.engine} <span class="games__engine-count">{g.games.length}</span>
+          </h3>
+          <ul role="list" class="games__list">
+            {g.games.map((game) => (
+              <li class="games__item" data-status={game.status} data-name={game.name.toLowerCase()}>
+                <span class="mark" data-status={game.status} aria-hidden="true">
+                  {MARK[game.status]}
+                </span>
+                <span class="games__name">{game.name}</span>
+                {game.approx && (
+                  <span class="approx" title="Approximate conversion factor" aria-hidden="true">
+                    ≈
+                  </span>
+                )}
+                <span class="visually-hidden">
+                  — {LABEL[game.status]}
+                  {game.approx ? ', approximate' : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+  <p class="games__empty mono" data-empty hidden>No games match.</p>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-s2a-games]').forEach((root) => {
+    const search = root.querySelector<HTMLInputElement>('[data-search]')!;
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const groups = [...root.querySelectorAll<HTMLElement>('[data-group]')];
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    let status = 'all';
+
+    const apply = () => {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+      groups.forEach((group) => {
+        let inGroup = 0;
+        group.querySelectorAll<HTMLElement>('[data-name]').forEach((item) => {
+          const ok = (status === 'all' || item.dataset.status === status) && (!q || item.dataset.name!.includes(q));
+          item.hidden = !ok;
+          if (ok) inGroup++;
+        });
+        group.hidden = inGroup === 0;
+        shown += inGroup;
+      });
+      empty.hidden = shown > 0;
+    };
+
+    search.addEventListener('input', apply);
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        status = b.dataset.filter!;
+        buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        apply();
+      }),
+    );
+  });
+</script>
+
+<style>
+  .games {
+    display: grid;
+    gap: 24px;
+    padding: clamp(22px, 3vw, 36px);
+  }
+  .games__head {
+    display: grid;
+    gap: 12px;
+  }
+  .games__tag {
+    color: var(--accent);
+  }
+  .games__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .games__summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    color: var(--fg-2);
+    font-weight: 600;
+  }
+  .games__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .games__legend {
+    display: grid;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+  }
+  @media (min-width: 760px) {
+    .games__legend {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .games__legend dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--fg);
+    font-size: 0.9rem;
+  }
+  .games__legend dd {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* ✓ / ! / ✕ marks */
+  .mark {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .mark[data-status='auto'] {
+    background: color-mix(in oklab, var(--ok) 18%, transparent);
+    color: var(--ok);
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ok) 60%, transparent);
+  }
+  .mark[data-status='convert'] {
+    background: color-mix(in oklab, var(--gold) 16%, transparent);
+    color: var(--gold);
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--gold) 60%, transparent);
+  }
+  .mark[data-status='none'] {
+    background: var(--panel-2);
+    color: var(--muted);
+    box-shadow: inset 0 0 0 1.5px var(--line-2);
+  }
+  .approx {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* tools */
+  .games__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .games__search {
+    flex: 1 1 220px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--muted);
+    transition: border-color 0.2s;
+  }
+  .games__search:focus-within {
+    border-color: var(--accent);
+  }
+  .games__search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: none;
+    outline: none;
+    color: var(--fg);
+  }
+  .games__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .games__filter {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+  .games__filter:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+  }
+  .games__filter[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  /* groups */
+  .games__groups {
+    display: grid;
+    gap: 22px;
+  }
+  .games__group[hidden] {
+    display: none;
+  }
+  .games__engine {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg-2);
+  }
+  .games__engine-count {
+    color: var(--muted);
+  }
+  .games__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: 2px 18px;
+  }
+  .games__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.92rem;
+    color: var(--fg-2);
+    min-width: 0;
+  }
+  .games__item[hidden] {
+    display: none;
+  }
+  .games__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .games__empty {
+    color: var(--muted);
+  }
+</style>

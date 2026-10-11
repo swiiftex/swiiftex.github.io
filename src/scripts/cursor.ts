@@ -61,6 +61,22 @@ export function initCursor() {
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
+  // Modal dialogs and popovers (the gallery lightbox, the mobile menu) render in
+  // the browser's top layer, above any z-index — so follow them in there.
+  const remount = () => {
+    let open: Element | null = null;
+    try {
+      const layers = document.querySelectorAll('dialog[open], [popover]:popover-open');
+      open = layers[layers.length - 1] ?? null;
+    } catch {
+      open = document.querySelector('dialog[open]');
+    }
+    const target = open ?? document.body;
+    if (el.parentElement !== target) target.append(canvas, el);
+  };
+  document.addEventListener('toggle', remount, true);
+  new MutationObserver(remount).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
+
   // ---- state ----
   let x = -100;
   let y = -100;
@@ -198,7 +214,11 @@ export function initCursor() {
     dot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 
     // canvas
+    // Clear in device pixels: below 100% zoom the dpr is < 1, so clearing in
+    // scaled units would leave the bottom/right of the screen uncleared.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawTrail(now);
     drawSparks(now);
 
