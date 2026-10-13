@@ -1,34 +1,40 @@
 ---
 /**
  * The swiift mark — a sword through a split shield — redrawn as SVG so it
- * can be tinted, scaled and "drawn on" with a stroke animation.
+ * can be tinted, scaled and animated.
  */
 interface Props {
   size?: number | string;
   class?: string;
   /** Animate the strokes drawing in on load. */
   draw?: boolean;
+  /** Intro on load: the sword drops in from above, plunges through the shield with a bounce, and the shield shakes. */
+  intro?: boolean;
+  /** Crop the empty space either side of the shield (taller, narrower box). */
+  tight?: boolean;
 }
-const { size = 32, class: className, draw = false } = Astro.props;
+const { size = 32, class: className, draw = false, intro = false, tight = false } = Astro.props;
 ---
 
 <svg
-  class:list={['logo-mark', { 'logo-mark--draw': draw }, className]}
+  class:list={['logo-mark', { 'logo-mark--draw': draw, 'logo-mark--intro': intro }, className]}
   width={size}
-  height={size}
-  viewBox="0 0 100 100"
+  height={tight ? undefined : size}
+  viewBox={tight ? '18 0 64 100' : '0 0 100 100'}
   role="img"
   aria-label="swiift logo"
 >
-  <g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
-    <path class="logo-mark__shield" d="M46.5 37.5C40 39.5 33 42.2 25.2 41.8c-.2 12.3 1.3 22.9 5 31L47.4 87" />
-    <path class="logo-mark__shield" d="M53.5 37.5C60 39.5 67 42.2 74.8 41.8c.2 12.3-1.3 22.9-5 31L52.6 87" />
-    <path class="logo-mark__guard" d="M36.2 28.8Q50 25.8 63.8 28.8" />
+  <g class="logo-mark__shield" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M46.5 37.5C40 39.5 33 42.2 25.2 41.8c-.2 12.3 1.3 22.9 5 31L47.4 87" />
+    <path d="M53.5 37.5C60 39.5 67 42.2 74.8 41.8c.2 12.3-1.3 22.9-5 31L52.6 87" />
   </g>
-  <g fill="currentColor" class="logo-mark__sword">
-    <circle cx="50" cy="9.6" r="3.9" />
-    <path d="M48.5 12.5h3l-.4 14.5h-2.2z" />
-    <path d="M48.2 30h3.6l-1 57.5L50 92l-.8-4.5z" />
+  <g class="logo-mark__sword">
+    <path class="logo-mark__guard" d="M36.2 28.8Q50 25.8 63.8 28.8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
+    <g fill="currentColor">
+      <circle cx="50" cy="9.6" r="3.9" />
+      <path d="M48.5 12.5h3l-.4 14.5h-2.2z" />
+      <path d="M48.2 30h3.6l-1 57.5L50 92l-.8-4.5z" />
+    </g>
   </g>
 </svg>
 
@@ -37,6 +43,8 @@ const { size = 32, class: className, draw = false } = Astro.props;
     flex: none;
     overflow: visible;
   }
+
+  /* ---------- draw-on (strokes trace in, sword drops) ---------- */
   @media (prefers-reduced-motion: no-preference) {
     .logo-mark--draw .logo-mark__shield,
     .logo-mark--draw .logo-mark__guard {
@@ -48,7 +56,6 @@ const { size = 32, class: className, draw = false } = Astro.props;
       animation-delay: 0.6s;
     }
     .logo-mark--draw .logo-mark__sword {
-      transform-origin: 50% 0;
       transform: translateY(-14px);
       opacity: 0;
       animation: logo-sword 0.9s var(--ease-out) 0.05s forwards;
@@ -63,6 +70,64 @@ const { size = 32, class: className, draw = false } = Astro.props;
     to {
       transform: none;
       opacity: 1;
+    }
+  }
+
+  /* ---------- intro (~420ms): sword fades in above, plunges through, bounces; shield shakes ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .logo-mark--intro .logo-mark__sword {
+      animation: logo-intro-sword 0.42s 0.08s both;
+    }
+    .logo-mark--intro .logo-mark__shield {
+      transform-box: fill-box;
+      transform-origin: 50% 35%;
+      animation: logo-intro-shield 0.42s 0.08s both;
+    }
+  }
+  /* Sword units are the logo's own 100×100 grid. */
+  @keyframes logo-intro-sword {
+    0% {
+      opacity: 0;
+      transform: translateY(-64px);
+      animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
+    }
+    26% {
+      opacity: 1;
+      transform: translateY(-56px); /* poised above the shield */
+      animation-timing-function: cubic-bezier(0.6, 0, 1, 0.5); /* accelerates down */
+    }
+    54% {
+      transform: translateY(3.5px); /* through the shield, a touch too far */
+      animation-timing-function: cubic-bezier(0.3, 0.6, 0.4, 1);
+    }
+    76% {
+      transform: translateY(-2.5px); /* bounce */
+      animation-timing-function: ease-in-out;
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes logo-intro-shield {
+    0%,
+    52% {
+      transform: none;
+    }
+    60% {
+      transform: translateX(-2.2px) rotate(-3.5deg);
+    }
+    70% {
+      transform: translateX(1.8px) rotate(2.6deg);
+    }
+    80% {
+      transform: translateX(-1.1px) rotate(-1.4deg);
+    }
+    90% {
+      transform: translateX(0.5px) rotate(0.6deg);
+    }
+    100% {
+      transform: none;
     }
   }
 </style>

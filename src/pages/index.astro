@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import VisionMixer from '../components/VisionMixer.astro';
+import Logo from '../components/Logo.astro';
 import Icon from '../components/Icon.astro';
 import Ticker from '../components/Ticker.astro';
 import Scorebug from '../components/Scorebug.astro';
@@ -68,6 +69,9 @@ const disciplines = [
   <!-- ================= HERO ================= -->
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero__inner container">
+      <div class="hero__logo" aria-hidden="true">
+        <Logo size="100%" intro tight />
+      </div>
       <div class="hero__copy">
         <p class="eyebrow" data-reveal>Owen Bladen-Kay · Manchester, UK</p>
 
@@ -170,14 +174,55 @@ const disciplines = [
   .hero__inner {
     flex: 1;
     display: grid;
+    grid-template-areas: 'logo' 'copy' 'mixer';
     gap: 48px;
     align-items: center;
+    align-content: center;
     padding-block: clamp(40px, 7vw, 96px);
+  }
+  /* Narrow screens: a small logo above the heading. */
+  .hero__logo {
+    grid-area: logo;
+    justify-self: start;
+    width: clamp(48px, 11vw, 68px);
+    margin-bottom: -20px;
+    color: var(--fg);
+    line-height: 0;
+  }
+  .hero__logo :global(.logo-mark) {
+    width: 100%;
+    height: auto;
+  }
+  .hero__copy {
+    grid-area: copy;
+  }
+  .hero__mixer {
+    grid-area: mixer;
   }
   @media (min-width: 1000px) {
     .hero__inner {
       grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      gap: clamp(40px, 5vw, 88px);
+      grid-template-areas: 'logo mixer' 'copy mixer';
+      column-gap: clamp(40px, 5vw, 88px);
+      row-gap: 0;
+    }
+    .hero__logo {
+      align-self: end;
+      margin-bottom: 20px;
+    }
+  }
+  /* Wide screens: the logo gets its own column, as big as the copy. */
+  @media (min-width: 1440px) {
+    .hero__inner {
+      width: min(100% - 2 * var(--gutter), 1720px);
+      grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.1fr) minmax(0, 1fr);
+      grid-template-areas: 'logo copy mixer';
+    }
+    .hero__logo {
+      align-self: center;
+      justify-self: center;
+      width: min(100%, 280px);
+      margin: 0;
     }
   }
   .hero__copy {
