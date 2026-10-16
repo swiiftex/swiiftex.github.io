@@ -1,0 +1,266 @@
+{
+  "note": "LUNARBALL cosmetics, rendered in-engine with transparent backgrounds. id is the Steam item definition id; icon is 512 px, iconLarge 1024 px. The Steam item catalog links to these files, so keep their paths.",
+  "items": [
+    {
+      "id": 1,
+      "slug": "anthem",
+      "name": "Default Player Anthem",
+      "slot": "Anthem",
+      "rarity": "Common",
+      "icon": "anthem.png",
+      "iconLarge": "anthem_large.png"
+    },
+    {
+      "id": 2,
+      "slug": "ge_default",
+      "name": "Default Goal Explosion",
+      "slot": "Goal Explosion",
+      "rarity": "Common",
+      "icon": "ge_default.png",
+      "iconLarge": "ge_default_large.png"
+    },
+    {
+      "id": 3,
+      "slug": "ge_galaxy",
+      "name": "Galaxy",
+      "slot": "Goal Explosion",
+      "rarity": "Common",
+      "icon": "ge_galaxy.png",
+      "iconLarge": "ge_galaxy_large.png"
+    },
+    {
+      "id": 4,
+      "slug": "hat_dev",
+      "name": "Developer's Hat",
+      "slot": "Hat",
+      "rarity": "Unique",
+      "icon": "hat_dev.png",
+      "iconLarge": "hat_dev_large.png"
+    },
+    {
+      "id": 5,
+      "slug": "hat_playtest",
+      "name": "Playtester's Hat",
+      "slot": "Hat",
+      "rarity": "Unique",
+      "icon": "hat_playtest.png",
+      "iconLarge": "hat_playtest_large.png"
+    },
+    {
+      "id": 6,
+      "slug": "hat_sombrero",
+      "name": "Sombrero",
+      "slot": "Hat",
+      "rarity": "Common",
+      "icon": "hat_sombrero.png",
+      "iconLarge": "hat_sombrero_large.png"
+    },
+    {
+      "id": 7,
+      "slug": "ball",
+      "name": "The Baller",
+      "slot": "Hat",
+      "rarity": "Common",
+      "icon": "ball.png",
+      "iconLarge": "ball_large.png"
+    },
+    {
+      "id": 8,
+      "slug": "ball_gold",
+      "name": "The Baller (Gold)",
+      "slot": "Hat",
+      "rarity": "Unique",
+      "icon": "ball_gold.png",
+      "iconLarge": "ball_gold_large.png"
+    },
+    {
+      "id": 9,
+      "slug": "nuke_gold",
+      "name": "Golden Nuke",
+      "slot": "Hat",
+      "rarity": "Legendary",
+      "icon": "nuke_gold.png",
+      "iconLarge": "nuke_gold_large.png"
+    },
+    {
+      "id": 10,
+      "slug": "tophat_black",
+      "name": "Tophat (Black)",
+      "slot": "Hat",
+      "rarity": "Common",
+      "icon": "tophat_black.png",
+      "iconLarge": "tophat_black_large.png"
+    },
+    {
+      "id": 11,
+      "slug": "tophat_gold",
+      "name": "Tophat (Gold)",
+      "slot": "Hat",
+      "rarity": "Epic",
+      "icon": "tophat_gold.png",
+      "iconLarge": "tophat_gold_large.png"
+    },
+    {
+      "id": 12,
+      "slug": "tophat_white",
+      "name": "Tophat (White)",
+      "slot": "Hat",
+      "rarity": "Rare",
+      "icon": "tophat_white.png",
+      "iconLarge": "tophat_white_large.png"
+    },
+    {
+      "id": 13,
+      "slug": "tophat_red",
+      "name": "Tophat (Red)",
+      "slot": "Hat",
+      "rarity": "Rare",
+      "icon": "tophat_red.png",
+      "iconLarge": "tophat_red_large.png"
+    },
+    {
+      "id": 14,
+      "slug": "vest_black",
+      "name": "Military Vest",
+      "slot": "Vest",
+      "rarity": "Common",
+      "icon": "vest_black.png",
+      "iconLarge": "vest_black_large.png"
+    },
+    {
+      "id": 15,
+      "slug": "vest_camo",
+      "name": "Military Vest (Camo)",
+      "slot": "Vest",
+      "rarity": "Rare",
+      "icon": "vest_camo.png",
+      "iconLarge": "vest_camo_large.png"
+    },
+    {
+      "id": 16,
+      "slug": "vest_green",
+      "name": "Military Vest (Green)",
+      "slot": "Vest",
+      "rarity": "Rare",
+      "icon": "vest_green.png",
+      "iconLarge": "vest_green_large.png"
+    },
+    {
+      "id": 17,
+      "slug": "vest_khaki",
+      "name": "Military Vest (Khaki)",
+      "slot": "Vest",
+      "rarity": "Rare",
+      "icon": "vest_khaki.png",
+      "iconLarge": "vest_khaki_large.png"
+    },
+    {
+      "id": 18,
+      "slug": "vest_error",
+      "name": "Military Vest (Error)",
+      "slot": "Vest",
+      "rarity": "Epic",
+      "icon": "vest_error.png",
+      "iconLarge": "vest_error_large.png"
+    },
+    {
+      "id": 21,
+      "slug": "hat_venator",
+      "name": "VENATOR Helmet",
+      "slot": "Hat",
+      "rarity": "Rare",
+      "icon": "hat_venator.png",
+      "iconLarge": "hat_venator_large.png"
+    },
+    {
+      "id": 22,
+      "slug": "hat_venator_open",
+      "name": "VENATOR Open",
+      "slot": "Hat",
+      "rarity": "Rare",
+      "icon": "hat_venator_open.png",
+      "iconLarge": "hat_venator_open_large.png"
+    },
+    {
+      "id": 23,
+      "slug": "hat_venator_error",
+      "name": "VENATOR (Error)",
+      "slot": "Hat",
+      "rarity": "Epic",
+      "icon": "hat_venator_error.png",
+      "iconLarge": "hat_venator_error_large.png"
+    },
+    {
+      "id": 24,
+      "slug": "hat_venator_gold",
+      "name": "VENATOR (Gold)",
+      "slot": "Hat",
+      "rarity": "Legendary",
+      "icon": "hat_venator_gold.png",
+      "iconLarge": "hat_venator_gold_large.png"
+    },
+    {
+      "id": 25,
+      "slug": "hat_venator_open_error",
+      "name": "VENATOR Open (Error)",
+      "slot": "Hat",
+      "rarity": "Epic",
+      "icon": "hat_venator_open_error.png",
+      "iconLarge": "hat_venator_open_error_large.png"
+    },
+    {
+      "id": 26,
+      "slug": "hat_venator_open_gold",
+      "name": "VENATOR Open (Gold)",
+      "slot": "Hat",
+      "rarity": "Legendary",
+      "icon": "hat_venator_open_gold.png",
+      "iconLarge": "hat_venator_open_gold_large.png"
+    },
+    {
+      "id": 27,
+      "slug": "ge_stardust",
+      "name": "Stardust",
+      "slot": "Goal Explosion",
+      "rarity": "Common",
+      "icon": "ge_stardust.png",
+      "iconLarge": "ge_stardust_large.png"
+    },
+    {
+      "id": 28,
+      "slug": "ge_implosion",
+      "name": "Implosion",
+      "slot": "Goal Explosion",
+      "rarity": "Epic",
+      "icon": "ge_implosion.png",
+      "iconLarge": "ge_implosion_large.png"
+    },
+    {
+      "id": 29,
+      "slug": "ge_halo",
+      "name": "Halo",
+      "slot": "Goal Explosion",
+      "rarity": "Rare",
+      "icon": "ge_halo.png",
+      "iconLarge": "ge_halo_large.png"
+    },
+    {
+      "id": 30,
+      "slug": "ge_champagne",
+      "name": "Champagne",
+      "slot": "Goal Explosion",
+      "rarity": "Rare",
+      "icon": "ge_champagne.png",
+      "iconLarge": "ge_champagne_large.png"
+    },
+    {
+      "id": 31,
+      "slug": "ge_aurora",
+      "name": "Aurora",
+      "slot": "Goal Explosion",
+      "rarity": "Epic",
+      "icon": "ge_aurora.png",
+      "iconLarge": "ge_aurora_large.png"
+    }
+  ]
+}
