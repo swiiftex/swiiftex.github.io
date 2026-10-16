@@ -1,64 +1,96 @@
 ---
 /**
- * LUNARBALL cosmetic item art, laid out like a game inventory.
- * Click (or focus) an item to inspect it.
+ * LUNARBALL cosmetics, laid out like a game inventory and coloured by rarity.
+ * Driven by public/items/lunarball/items.json and the transparent renders next
+ * to it (the Steam item catalog links to those files, so they stay in public/).
+ * Click (or hover) an item to inspect it.
  */
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import catalog from '../../public/items/lunarball/items.json';
 
-const files = import.meta.glob<{ default: ImageMetadata }>('../assets/projects/lunarball/items/*.png', { eager: true });
+const renders = import.meta.glob<{ default: ImageMetadata }>(
+  ['../../public/items/lunarball/*.png', '!**/*_large.png'],
+  { eager: true },
+);
+const render = (file: string) => Object.entries(renders).find(([path]) => path.endsWith(`/${file}`))?.[1].default;
 
-const nice = (slug: string) =>
-  slug
-    .replace(/^tophat/, 'top hat')
-    .replace(/^goalexplosion/, 'goal explosion')
-    .replace(/_/g, ' ')
-    .replace(/\b(gold|error|open)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+const SLOTS = ['Hat', 'Vest', 'Goal Explosion', 'Anthem'];
+const RARITIES = ['Common', 'Rare', 'Epic', 'Legendary', 'Unique'];
+const slotRank = (s: string) => (SLOTS.includes(s) ? SLOTS.indexOf(s) : SLOTS.length);
+const plural = (s: string) => `${s[0]}${s.slice(1).toLowerCase()}s`;
+const key = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
 
-const items = Object.entries(files)
-  .map(([path, mod]) => {
-    const slug = path.split('/').pop()!.replace('.png', '');
-    const variant = slug.includes('gold') ? 'gold' : slug.includes('error') ? 'error' : 'standard';
-    const open = slug.includes('_open');
-    return { slug, img: mod.default, name: nice(slug) + (open ? ' (Open)' : ''), variant };
-  })
-  .sort((a, b) => a.slug.localeCompare(b.slug));
+const items = await Promise.all(
+  catalog.items
+    .map((it) => ({ ...it, img: render(it.icon) }))
+    .filter((it): it is typeof it & { img: ImageMetadata } => {
+      if (!it.img) console.warn(`[inventory] no render for ${it.slug} (${it.icon})`);
+      return !!it.img;
+    })
+    .sort((a, b) => slotRank(a.slot) - slotRank(b.slot) || a.id - b.id)
+    .map(async (it) => ({ ...it, big: (await getImage({ src: it.img, width: 480 })).src })),
+);
 const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
+
+const slots = [...new Set(items.map((i) => i.slot))].map((slot) => ({
+  slot,
+  count: items.filter((i) => i.slot === slot).length,
+}));
+const rarities = RARITIES.filter((r) => items.some((i) => i.rarity === r));
 ---
 
-<section class="inv panel" aria-labelledby="inv-title" data-inv>
+<section class="inv panel" aria-labelledby="inv-title" data-inv data-rarity={key(first.rarity)}>
   <header class="inv__head">
     <p class="mono inv__tag">Inventory</p>
     <h2 id="inv-title" class="display inv__title">Cosmetics &amp; items</h2>
-    <p class="inv__intro">Cosmetic item art made for LUNARBALL, including some VENATOR-themed helmets.</p>
+    <p class="inv__intro">The {items.length} cosmetics in LUNARBALL, rendered in-engine. A few of the helmets are based on VENATOR.</p>
   </header>
   <div class="inv__layout">
     <div class="inv__inspect" aria-live="polite">
-      <Image src={first.img} alt="" width={360} class="inv__big" data-inv-big />
+      <Image src={first.img} alt="" width={480} class="inv__big" data-inv-big />
       <p class="inv__name" data-inv-name>{first.name}</p>
-      <p class="inv__rarity mono" data-inv-rarity data-variant={first.variant}>{first.variant}</p>
+      <p class="inv__meta mono">
+        <span class="inv__rarity" data-inv-rarity>{first.rarity}</span>
+        <span class="inv__slotname" data-inv-slot>{first.slot}</span>
+      </p>
     </div>
-    <ul role="list" class="inv__grid">
-      {
-        items.map((it) => (
-          <li>
-            <button
-              type="button"
-              class="inv__slot"
-              data-variant={it.variant}
-              data-name={it.name}
-              aria-pressed={it === first ? 'true' : 'false'}
-              aria-label={`${it.name}, ${it.variant}`}
-            >
-              <Image src={it.img} alt="" width={128} loading="lazy" />
+    <div class="inv__browse">
+      <div class="inv__filters" role="group" aria-label="Filter by slot">
+        <button type="button" class="inv__filter" data-filter="all" aria-pressed="true">All <span>{items.length}</span></button>
+        {
+          slots.map((s) => (
+            <button type="button" class="inv__filter" data-filter={s.slot} aria-pressed="false">
+              {plural(s.slot)} <span>{s.count}</span>
             </button>
-          </li>
-        ))
-      }
-    </ul>
+          ))
+        }
+      </div>
+      <ul role="list" class="inv__grid">
+        {
+          items.map((it) => (
+            <li data-slot={it.slot}>
+              <button
+                type="button"
+                class="inv__slot"
+                data-rarity={key(it.rarity)}
+                data-name={it.name}
+                data-label={it.rarity}
+                data-slot={it.slot}
+                data-big={it.big}
+                aria-pressed={it === first ? 'true' : 'false'}
+                aria-label={`${it.name}, ${it.rarity} ${it.slot.toLowerCase()}`}
+              >
+                <Image src={it.img} alt="" width={160} loading="lazy" />
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+      <ul role="list" class="inv__legend mono" aria-label="Rarities">
+        {rarities.map((r) => <li data-rarity={key(r)}>{r}</li>)}
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -67,15 +99,19 @@ const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
     const big = root.querySelector<HTMLImageElement>('[data-inv-big]')!;
     const name = root.querySelector<HTMLElement>('[data-inv-name]')!;
     const rarity = root.querySelector<HTMLElement>('[data-inv-rarity]')!;
+    const slotName = root.querySelector<HTMLElement>('[data-inv-slot]')!;
     const slots = [...root.querySelectorAll<HTMLButtonElement>('.inv__slot')];
+    const filters = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+
     const select = (slot: HTMLButtonElement) => {
+      if (slot.getAttribute('aria-pressed') === 'true') return;
       slots.forEach((s) => s.setAttribute('aria-pressed', String(s === slot)));
-      const img = slot.querySelector('img')!;
       big.removeAttribute('srcset');
-      big.src = img.currentSrc || img.src;
+      big.src = slot.dataset.big!;
       name.textContent = slot.dataset.name!;
-      rarity.textContent = slot.dataset.variant!;
-      rarity.dataset.variant = slot.dataset.variant;
+      rarity.textContent = slot.dataset.label!;
+      slotName.textContent = slot.dataset.slot!;
+      root.dataset.rarity = slot.dataset.rarity;
       big.animate?.([{ transform: 'scale(.9) rotate(-4deg)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], {
         duration: 380,
         easing: 'cubic-bezier(.16,1,.3,1)',
@@ -85,15 +121,55 @@ const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
       s.addEventListener('click', () => select(s));
       s.addEventListener('pointerenter', () => window.matchMedia('(hover: hover)').matches && select(s));
     });
+
+    filters.forEach((f) =>
+      f.addEventListener('click', () => {
+        const want = f.dataset.filter!;
+        filters.forEach((x) => x.setAttribute('aria-pressed', String(x === f)));
+        slots.forEach((s) => (s.parentElement!.hidden = want !== 'all' && s.dataset.slot !== want));
+        const current = slots.find((s) => s.getAttribute('aria-pressed') === 'true');
+        if (current?.parentElement!.hidden) {
+          const next = slots.find((s) => !s.parentElement!.hidden);
+          if (next) select(next);
+        }
+      }),
+    );
   });
 </script>
 
 <style>
+  @property --r {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #7c8697;
+  }
   .inv {
+    --common: #9aa3b2;
+    --rare: #4b9bff;
+    --epic: #b47cff;
+    --legendary: var(--gold);
+    --unique: #ff5577;
     display: grid;
     gap: 24px;
     padding: clamp(22px, 3vw, 36px);
+    container-type: inline-size;
   }
+  [data-rarity='common'] {
+    --r: var(--common);
+  }
+  [data-rarity='rare'] {
+    --r: var(--rare);
+  }
+  [data-rarity='epic'] {
+    --r: var(--epic);
+  }
+  [data-rarity='legendary'] {
+    --r: var(--legendary);
+  }
+  [data-rarity='unique'] {
+    --r: var(--unique);
+  }
+
   .inv__tag {
     color: var(--tint, var(--accent));
   }
@@ -111,28 +187,38 @@ const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
     display: grid;
     gap: 20px;
   }
-  @media (min-width: 720px) {
+  @container (min-width: 600px) {
     .inv__layout {
       grid-template-columns: 240px 1fr;
       align-items: start;
     }
+    .inv__inspect {
+      position: sticky;
+      top: calc(var(--header-h, 64px) + 16px);
+    }
   }
+
+  /* ---------- inspector ---------- */
   .inv__inspect {
     display: grid;
     justify-items: center;
-    gap: 6px;
-    padding: 20px;
+    gap: 8px;
+    padding: 20px 20px 22px;
     border-radius: var(--radius);
     background:
-      radial-gradient(70% 60% at 50% 40%, color-mix(in oklab, var(--tint, var(--accent)) 18%, transparent), transparent 70%),
+      radial-gradient(70% 60% at 50% 42%, color-mix(in oklab, var(--r) 26%, transparent), transparent 72%),
       var(--bg-2);
-    border: 1px solid var(--line);
+    border: 1px solid color-mix(in oklab, var(--r) 35%, var(--line));
+    transition:
+      --r 0.35s,
+      border-color 0.35s;
   }
   .inv__inspect :global(.inv__big) {
     width: 100%;
-    max-width: 200px;
+    max-width: 220px;
     aspect-ratio: 1;
     object-fit: contain;
+    filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.45));
   }
   .inv__name {
     font-family: var(--font-display);
@@ -142,29 +228,82 @@ const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
     text-align: center;
     line-height: 1;
   }
+  .inv__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 12px;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   .inv__rarity {
+    color: var(--r);
+  }
+  .inv__slotname {
     color: var(--muted);
   }
-  .inv__rarity[data-variant='gold'] {
-    color: var(--gold);
+
+  /* ---------- filters ---------- */
+  .inv__browse {
+    display: grid;
+    gap: 14px;
   }
-  .inv__rarity[data-variant='error'] {
-    color: var(--live);
+  .inv__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
+  .inv__filter {
+    height: 34px;
+    padding: 0 13px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+  .inv__filter span {
+    margin-left: 4px;
+    opacity: 0.6;
+  }
+  .inv__filter:hover {
+    border-color: var(--tint, var(--accent));
+    color: var(--fg);
+  }
+  .inv__filter[aria-pressed='true'] {
+    background: var(--tint, var(--accent));
+    border-color: var(--tint, var(--accent));
+    color: var(--accent-ink, #000);
+  }
+
+  /* ---------- grid ---------- */
   .inv__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
     gap: 8px;
+  }
+  .inv__grid li[hidden] {
+    display: none;
   }
   .inv__slot {
     display: grid;
     place-items: center;
     width: 100%;
     aspect-ratio: 1;
-    padding: 8px;
+    padding: 7px;
     border-radius: 6px;
-    background: var(--bg-2);
-    border: 1px solid var(--line);
+    background:
+      linear-gradient(to top, color-mix(in oklab, var(--r) 24%, transparent), transparent 75%),
+      var(--bg-2);
+    border: 1px solid color-mix(in oklab, var(--r) 28%, var(--line));
+    box-shadow: inset 0 -3px 0 var(--r);
     transition:
       border-color 0.2s,
       transform 0.3s var(--ease-out),
@@ -175,18 +314,38 @@ const first = items.find((i) => i.slug === 'hat_venator_gold') ?? items[0];
     height: 100%;
     object-fit: contain;
   }
-  .inv__slot[data-variant='gold'] {
-    box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--gold) 70%, transparent);
-  }
-  .inv__slot[data-variant='error'] {
-    box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--live) 70%, transparent);
-  }
   .inv__slot:hover {
     transform: translateY(-3px);
-    border-color: var(--line-2);
+    border-color: color-mix(in oklab, var(--r) 65%, var(--line));
   }
   .inv__slot[aria-pressed='true'] {
-    border-color: var(--tint, var(--accent));
-    background: color-mix(in oklab, var(--tint, var(--accent)) 10%, var(--bg-2));
+    border-color: var(--r);
+    box-shadow:
+      inset 0 -3px 0 var(--r),
+      0 0 0 1px var(--r),
+      0 8px 24px -10px var(--r);
+  }
+
+  /* ---------- legend ---------- */
+  .inv__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .inv__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .inv__legend li::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--r);
   }
 </style>
