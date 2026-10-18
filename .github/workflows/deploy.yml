@@ -72,6 +72,8 @@ jobs:
 
   deploy:
     needs: build
+    # Spelled out because `check` is skipped on pushes, which would otherwise skip this too.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     # One deployment at a time. Set here rather than on the whole workflow, so an
     # hourly check that finds nothing can't take the place of a queued deploy.
     concurrency:
