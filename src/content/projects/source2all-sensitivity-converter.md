@@ -24,6 +24,9 @@ highlights:
   - Add any game yourself — open its config, highlight the value, and the app works out its type
   - Portable settings and CI-built single-file releases
 stack: [C#, .NET 9, WPF, MVVM, GitHub Actions]
+updates:
+  github: swiiftex/Source2AllSensitivityConverter
+  notes: commits
 links:
   - label: Download for Windows
     href: https://github.com/swiiftex/Source2AllSensitivityConverter/releases/latest

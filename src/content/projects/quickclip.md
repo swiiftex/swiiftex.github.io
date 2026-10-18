@@ -24,6 +24,8 @@ highlights:
   - Editor with waveforms, frame-accurate trimming, cropping, per-track volume and montage projects
   - Explorer "Edit with QuickClip" menu, an installer and an auto-updater
 stack: [C#, WPF, .NET 10, C++, FFmpeg, libmpv, WASAPI]
+updates:
+  github: swiiftex/QuickClip
 links:
   - label: Download installer
     href: https://github.com/swiiftex/QuickClip/releases/latest

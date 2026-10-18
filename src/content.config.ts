@@ -55,6 +55,18 @@ const projects = defineCollection({
         )
         .default([]),
       steamAppId: z.string().optional(),
+      /**
+       * Show the latest update posts on the project page: Steam event posts
+       * (from steamAppId) or a repo's GitHub releases. With `notes: commits`,
+       * each release lists its commits instead of its (automated) notes.
+       */
+      updates: z
+        .object({
+          steam: z.boolean().optional(),
+          github: z.string().optional(), // "owner/name"
+          notes: z.enum(['release', 'commits']).default('release'),
+        })
+        .optional(),
       youtube: z.array(z.object({ id: z.string(), title: z.string() })).default([]),
       featured: z.boolean().default(false),
       /** Accent tint for this project's cards and hero (hex). */

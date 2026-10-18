@@ -10,6 +10,10 @@ export default defineConfig({
   compressHTML: true,
   integrations: [sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // Images in Steam update posts are downloaded at build time and served as optimised WebP.
+  image: {
+    remotePatterns: [{ protocol: 'https', hostname: '**.steamstatic.com' }],
+  },
   // Old WordPress URLs, so links shared from swiift.co.uk keep working here.
   redirects: {
     '/my-games': '/games',

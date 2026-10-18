@@ -9,9 +9,12 @@ import YouTube from '../components/YouTube.astro';
 import SensCalc from '../components/SensCalc.astro';
 import SupportedGames from '../components/SupportedGames.astro';
 import Inventory from '../components/Inventory.astro';
+import Updates from '../components/Updates.astro';
 import { supportedGames } from '../lib/source2all';
 import { getProjects, projectHref, vtName, whenLabel, type Project } from '../lib/projects';
 import { latestAsset } from '../lib/releases';
+import { projectUpdates } from '../lib/updates';
+import { isRecent, updateDate } from '../lib/updates-view';
 import { CATEGORY_LABELS } from '../data/site';
 
 export async function getStaticPaths() {
@@ -79,6 +82,8 @@ const linkAttrs = (l: ResolvedLink) =>
 const [primary, ...secondary] = links;
 
 const s2aGames = project.id === 'source2all-sensitivity-converter' ? await supportedGames() : null;
+const updates = await projectUpdates(project);
+const latestUpdate = updates[0];
 ---
 
 <Base title={data.title} description={data.summary} image={ogImage}>
@@ -94,6 +99,16 @@ const s2aGames = project.id === 'source2all-sensitivity-converter' ? await suppo
       {data.kicker && <p class="eyebrow project__kicker" data-reveal style="--i:1"><span class="eyebrow__rule"></span>{data.kicker}</p>}
       <h1 class="display h1 project__title" data-reveal style="--i:2">{data.title}</h1>
       <p class="lede" data-reveal style="--i:3">{data.summary}</p>
+      {
+        latestUpdate && (
+          <a class="upd-chip" href="#updates" data-upd-chip data-reveal style="--i:3">
+            <span class="upd-chip__label mono" data-upd-chip-label>{isRecent(latestUpdate.date) ? 'New' : 'Latest'}</span>
+            <span class="upd-chip__title" data-upd-chip-title>{latestUpdate.title}</span>
+            <time class="upd-chip__date mono">{updateDate(latestUpdate.date)}</time>
+            <span aria-hidden="true">→</span>
+          </a>
+        )
+      }
       {
         primary && (
           <div class="btn-row" data-reveal style="--i:4">
@@ -226,6 +241,14 @@ const s2aGames = project.id === 'source2all-sensitivity-converter' ? await suppo
     </div>
 
     {
+      updates.length > 0 && (
+        <div class="container project__updates">
+          <Updates project={project} posts={updates} />
+        </div>
+      )
+    }
+
+    {
       data.gallery.length > 0 && (
         <section class="container project__gallery" aria-labelledby="gallery-title">
           <p class="eyebrow" id="gallery-title">
@@ -268,42 +291,13 @@ const s2aGames = project.id === 'source2all-sensitivity-converter' ? await suppo
 
 <script>
   // Re-check release download links against GitHub, so a new release is picked
-  // up straight away rather than at the next site build. Cached for 10 minutes.
-  type Rel = { tag: string; assets: { name: string; url: string }[] };
+  // up straight away rather than at the next site build.
+  import { latestRelease } from '../lib/github';
+  import { liveReleases } from '../scripts/github-live';
+
   const anchors = [...document.querySelectorAll<HTMLAnchorElement>('a[data-release-repo]')];
-  const repos = new Set(anchors.map((a) => a.dataset.releaseRepo!));
-
-  const latest = async (repo: string): Promise<Rel | null> => {
-    const key = `swiift:release:${repo}`;
-    try {
-      const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
-      if (cached && Date.now() - cached.t < 600_000) return cached.rel;
-    } catch {
-      /* storage unavailable */
-    }
-    try {
-      const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
-        headers: { Accept: 'application/vnd.github+json' },
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      const rel: Rel = {
-        tag: json.tag_name,
-        assets: (json.assets ?? []).map((a: any) => ({ name: a.name, url: a.browser_download_url })),
-      };
-      try {
-        sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), rel }));
-      } catch {
-        /* ignore */
-      }
-      return rel;
-    } catch {
-      return null; // offline or rate-limited: keep the build-time link
-    }
-  };
-
-  repos.forEach(async (repo) => {
-    const rel = await latest(repo);
+  new Set(anchors.map((a) => a.dataset.releaseRepo!)).forEach(async (repo) => {
+    const rel = latestRelease((await liveReleases(repo)) ?? []);
     if (!rel) return;
     anchors
       .filter((a) => a.dataset.releaseRepo === repo)
@@ -345,6 +339,48 @@ const s2aGames = project.id === 'source2all-sensitivity-converter' ? await suppo
   }
   .project__title {
     font-size: clamp(3.25rem, 10vw, 8rem);
+  }
+
+  .project__updates {
+    margin-top: clamp(48px, 7vw, 96px);
+  }
+
+  /* "New: <latest update>" link down to the patch notes */
+  .upd-chip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    max-width: 100%;
+    padding: 7px 14px 7px 7px;
+    border: 1px solid color-mix(in oklab, var(--tint) 45%, var(--line));
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--tint) 8%, transparent);
+    color: var(--fg);
+    font-size: 0.92rem;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+  .upd-chip:hover {
+    border-color: var(--tint);
+    background: color-mix(in oklab, var(--tint) 14%, transparent);
+  }
+  .upd-chip__label {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--tint);
+    color: #06080b;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .upd-chip__title {
+    font-weight: 600;
+  }
+  .upd-chip__date {
+    color: var(--muted);
+    font-size: 0.72rem;
   }
 
   /* ---------- banner ---------- */

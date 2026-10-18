@@ -41,6 +41,21 @@ youtube:
 Body text in Markdown.
 ```
 
+### Update posts
+
+A project can show its latest patch notes, taken straight from Steam or GitHub:
+
+```md
+updates:
+  steam: true                     # Steam event posts for the project's steamAppId
+# or
+updates:
+  github: swiiftex/QuickClip      # GitHub releases
+  notes: commits                  # optional: list each release's commits instead of its notes
+```
+
+GitHub releases also refresh in the browser, so a new release shows up as soon as it's published. Steam can't be read from the browser, so the deploy workflow checks Steam (and GitHub) every hour and rebuilds the site when a post is added or edited.
+
 All fields are defined in `src/content.config.ts`. Put images in `src/assets/projects/<slug>/`; the build converts them to responsive WebP automatically.
 
 Site-wide bits (nav, socials, mod.io total, older GitHub repos) live in `src/data/site.ts`.
@@ -61,7 +76,7 @@ public/               served as-is (favicon, og image, hatecodev.html…)
 
 ## Deploying
 
-`.github/workflows/deploy.yml` builds and deploys on every push to `main`. One-time setup: in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**.
+`.github/workflows/deploy.yml` builds and deploys on every push to `main`. It also rebuilds weekly, and hourly when a Steam post or GitHub release changes (it compares the live `/update-sources.json` with Steam and GitHub). GitHub turns off scheduled workflows in a repo with no activity for 60 days; re-enable it from the **Actions** tab if that happens. One-time setup: in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**.
 
 ## Notes
 

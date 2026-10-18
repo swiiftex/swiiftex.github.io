@@ -9,6 +9,10 @@ import ProjectCard from '../components/ProjectCard.astro';
 import ProjectFeed from '../components/ProjectFeed.astro';
 import { getProjects } from '../lib/projects';
 import { steamTrailer } from '../lib/steam';
+import { steamUpdates } from '../lib/steam-events';
+import { getReleases } from '../lib/releases';
+import { latestRelease } from '../lib/github';
+import { isRecent } from '../lib/updates-view';
 import { MODIO } from '../data/site';
 
 const all = await getProjects();
@@ -34,9 +38,18 @@ const mixer = [
   { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Coming soon', title: 'Night Crew', sub: 'Binary Spiders · co-op horror', video: await trailer('night-crew') },
 ];
 
+// Latest LUNARBALL update post and QuickClip release, looked up at build time.
+const lunarUpdate = (await steamUpdates(pick('lunarball').data.steamAppId!)).posts[0];
+const quickclipRelease = latestRelease((await getReleases(pick('quickclip').data.updates!.github!)) ?? []);
+
 const ticker = [
+  ...(lunarUpdate && isRecent(lunarUpdate.date, 60)
+    ? [{ text: `${lunarUpdate.title.replace(/\s+-\s+/, ': ')} is out now`, href: '/lunarball/#updates' }]
+    : []),
   { text: 'Directive 8020 — out now on Steam, PS5 & Xbox Series X|S', href: '/directive-8020/' },
-  { text: 'QuickClip v0.4.0 released', href: '/quickclip/' },
+  quickclipRelease
+    ? { text: `${quickclipRelease.name} released`, href: '/quickclip/#updates' }
+    : { text: 'QuickClip — free download', href: '/quickclip/' },
   { text: 'DesktopSplitter — in development', href: '/desktopsplitter/' },
   { text: `${MODIO.label} downloads on mod.io`, href: '/games/#mods' },
   { text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },

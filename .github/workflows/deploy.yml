@@ -4,22 +4,60 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Weekly rebuild to pick up new Steam trailers, GitHub releases and the
-  # Source2All games list, even when nothing has been pushed.
   schedule:
+    # Weekly rebuild to pick up new Steam trailers, GitHub releases and the
+    # Source2All games list, even when nothing has been pushed.
     - cron: '23 6 * * 1'
+    # Hourly check for new or edited update posts (Steam posts, GitHub
+    # releases); rebuilds only when one has changed.
+    - cron: '41 * * * *'
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
+  check:
+    if: github.event.schedule == '41 * * * *'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - name: Compare the live site's update posts with their sources
+        id: compare
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # The site publishes, for each source, a URL, a jq expression and the value it was built with.
+          if ! sources=$(curl -fsS https://www.swiift.co.uk/update-sources.json); then
+            echo "Couldn't read the live update sources; rebuilding."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=false
+          while read -r source; do
+            url=$(jq -r .url <<<"$source")
+            expr=$(jq -r .jq <<<"$source")
+            built=$(jq -r .value <<<"$source")
+            auth=()
+            [[ $url == https://api.github.com/* ]] && auth=(-H "Authorization: Bearer $GH_TOKEN")
+            if ! now=$(curl -fsS "${auth[@]}" "$url" | jq -r "$expr") || [[ -z $now ]]; then
+              echo "Skipping $(jq -r .project <<<"$source"): source unavailable."
+              continue
+            fi
+            if [[ $now != "$built" ]]; then
+              echo "$(jq -r .project <<<"$source"): '$built' -> '$now'"
+              changed=true
+            fi
+          done < <(jq -c '.[]' <<<"$sources")
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: check
+    # Every push, manual run and weekly rebuild; hourly runs only when something changed.
+    if: ${{ !cancelled() && (needs.check.result == 'skipped' || needs.check.outputs.changed == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,6 +72,11 @@ jobs:
 
   deploy:
     needs: build
+    # One deployment at a time. Set here rather than on the whole workflow, so an
+    # hourly check that finds nothing can't take the place of a queued deploy.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     environment:
       name: github-pages

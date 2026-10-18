@@ -1,0 +1,438 @@
+---
+/**
+ * A project's latest update in full, as posted on Steam or GitHub, with
+ * earlier ones folded away below. GitHub releases are re-fetched in the
+ * browser, so a new release appears without rebuilding the site.
+ */
+import type { Project } from '../lib/projects';
+import { renderUpdates, updatesSignature, type UpdatePost } from '../lib/updates-view';
+
+interface Props {
+  project: Project;
+  posts: UpdatePost[];
+}
+const { project, posts } = Astro.props;
+const u = project.data.updates!;
+const steam = !!u.steam;
+const all = steam
+  ? { href: `https://store.steampowered.com/news/app/${project.data.steamAppId}`, label: 'All news on Steam' }
+  : { href: `https://github.com/${u.github}/releases`, label: 'All releases on GitHub' };
+---
+
+<section
+  class="upd panel"
+  id="updates"
+  aria-labelledby="updates-title"
+  data-updates
+  data-repo={steam ? undefined : u.github}
+  data-notes={u.notes}
+  data-sig={updatesSignature(posts)}
+>
+  <header class="upd__head">
+    <p class="mono upd__eyebrow">Latest update</p>
+    <h2 id="updates-title" class="display upd__heading">{steam ? 'Patch notes' : 'Release notes'}</h2>
+  </header>
+  <div class="upd__list" data-upd-list set:html={renderUpdates(posts)} />
+  <a class="upd__all mono" href={all.href} target="_blank" rel="noopener">{all.label} <span aria-hidden="true">↗</span></a>
+</section>
+
+<script>
+  import { releasePosts } from '../lib/github';
+  import { isRecent, renderUpdates, updateDate, updatesSignature } from '../lib/updates-view';
+  import { liveCommits, liveReleases } from '../scripts/github-live';
+
+  // Long notes are folded to about this height until opened.
+  const FOLD = 1100;
+
+  const fold = (root: HTMLElement) =>
+    root.querySelectorAll<HTMLElement>('[data-upd-body]').forEach((body) => {
+      const more = body.parentElement!.querySelector<HTMLButtonElement>('[data-upd-more]');
+      if (!more) return;
+      const long = body.scrollHeight > FOLD + 300;
+      body.classList.toggle('is-folded', long);
+      more.hidden = !long;
+    });
+
+  document.querySelectorAll<HTMLElement>('[data-updates]').forEach(async (root) => {
+    fold(root);
+
+    root.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+
+      const more = target.closest<HTMLButtonElement>('[data-upd-more]');
+      if (more) {
+        const body = more.parentElement!.querySelector<HTMLElement>('[data-upd-body]')!;
+        const open = body.classList.toggle('is-folded') === false;
+        more.setAttribute('aria-expanded', String(open));
+        more.textContent = open ? 'Show less' : 'Show the full notes';
+        if (!open) body.closest('article')?.scrollIntoView({ block: 'start' });
+        return;
+      }
+
+      // Steam videos: load the (privacy-enhanced) player only when asked.
+      const play = target.closest<HTMLButtonElement>('[data-bb-yt] button');
+      if (play) {
+        const box = play.closest<HTMLElement>('[data-bb-yt]')!;
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube-nocookie.com/embed/${box.dataset.bbYt}?autoplay=1&rel=0`;
+        iframe.title = 'YouTube video';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        box.replaceChildren(iframe);
+        iframe.focus();
+      }
+    });
+
+    // GitHub releases: pick up anything published since the site was built.
+    const repo = root.dataset.repo;
+    if (!repo) return;
+    const wantCommits = root.dataset.notes === 'commits';
+    const [releases, commits] = await Promise.all([liveReleases(repo), wantCommits ? liveCommits(repo) : null]);
+    if (!releases || (wantCommits && !commits)) return;
+    const posts = releasePosts(repo, releases, commits);
+    const sig = updatesSignature(posts);
+    if (!posts.length || sig === root.dataset.sig) return;
+
+    root.querySelector('[data-upd-list]')!.innerHTML = renderUpdates(posts);
+    root.dataset.sig = sig;
+    fold(root);
+
+    const [latest] = posts;
+    document.querySelectorAll<HTMLElement>('[data-upd-chip]').forEach((chip) => {
+      chip.querySelector('[data-upd-chip-label]')!.textContent = isRecent(latest.date) ? 'New' : 'Latest';
+      chip.querySelector('[data-upd-chip-title]')!.textContent = latest.title;
+      chip.querySelector('time')!.textContent = updateDate(latest.date);
+    });
+  });
+</script>
+
+<style>
+  .upd {
+    display: grid;
+    gap: 22px;
+    padding: clamp(22px, 3vw, 36px);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+    container-type: inline-size;
+  }
+  .upd__head {
+    display: grid;
+    gap: 10px;
+  }
+  .upd__eyebrow {
+    color: var(--tint, var(--accent));
+  }
+  .upd__heading {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .upd__list {
+    display: grid;
+    gap: 28px;
+  }
+  .upd__all {
+    justify-self: start;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .upd__all:hover {
+    color: var(--tint, var(--accent));
+  }
+
+  /* ---------- the latest post (rendered from a string, hence :global) ---------- */
+  .upd :global(.upd__post) {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+  .upd :global(.upd__cover) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid var(--line);
+  }
+  .upd :global(.upd__inner) {
+    display: grid;
+    gap: 22px;
+    padding: clamp(18px, 3vw, 30px);
+  }
+  .upd :global(:is(.upd__post-head, .upd__content)) {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    align-content: start;
+    min-width: 0;
+  }
+  /* Wide: title and date in a column beside the notes, staying in view while reading. */
+  @container (min-width: 900px) {
+    .upd :global(.upd__inner) {
+      grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+      column-gap: clamp(32px, 4vw, 56px);
+      align-items: start;
+    }
+    .upd :global(.upd__post-head) {
+      position: sticky;
+      top: calc(var(--header-h) + 20px);
+    }
+  }
+  .upd :global(.upd__meta) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .upd :global(.upd__tag) {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--tint, var(--accent)) 50%, transparent);
+    background: color-mix(in oklab, var(--tint, var(--accent)) 12%, transparent);
+    color: var(--tint, var(--accent));
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .upd :global(.upd__title) {
+    font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+    line-height: 1;
+  }
+  .upd :global(.upd__sub) {
+    color: var(--fg);
+    font-size: 1.05rem;
+  }
+  .upd :global(.upd__source) {
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tint, var(--accent));
+  }
+  .upd :global(.upd__source:hover) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .upd :global(.upd__more) {
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg);
+    transition: border-color 0.2s;
+  }
+  .upd :global(.upd__more:hover) {
+    border-color: var(--tint, var(--accent));
+  }
+  .upd :global(.upd__more[hidden]) {
+    display: none;
+  }
+
+  /* ---------- post bodies: Steam BBCode and GitHub Markdown ---------- */
+  .upd :global(.upd__body) {
+    width: 100%;
+    max-width: 920px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* Text keeps a readable line length; images and videos use the full width. */
+  .upd :global(.upd__body > :not(.bb-carousel, .bb-yt, .bb-video, .bb-table, p:has(> img:only-child))) {
+    max-width: 72ch;
+  }
+  .upd :global(.upd__body.is-folded) {
+    max-height: 1100px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  }
+  .upd :global(.upd__body :is(h1, h2, h3, h4, h5, h6)) {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--fg);
+    line-height: 1.05;
+    margin-top: 1.6em;
+  }
+  .upd :global(.upd__body > :first-child) {
+    margin-top: 0;
+  }
+  .upd :global(.upd__body :is(h1, h2, .bb-h1)) {
+    font-size: 1.7rem;
+    padding-top: 0.9em;
+    border-top: 1px solid var(--line);
+  }
+  .upd :global(.upd__body :is(h3, .bb-h2)) {
+    font-size: 1.3rem;
+  }
+  .upd :global(.upd__body :is(h4:not(.bb-h1), h5:not(.bb-h2), h6, .bb-h3)) {
+    font-size: 1.1rem;
+  }
+  .upd :global(.upd__body li p) {
+    margin: 0;
+  }
+  .upd :global(.upd__body li > p + p) {
+    margin-top: 0.4em;
+  }
+  .upd :global(.upd__body :is(img.bb-img, p > img, a > img)) {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .upd :global(.upd__body .bb-carousel) {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+    max-width: none;
+  }
+  .upd :global(.upd__body .bb-carousel > img) {
+    flex: 0 0 88%;
+    width: 88%;
+    scroll-snap-align: start;
+  }
+  .upd :global(.upd__body :is(.bb-yt, .bb-video)) {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+  }
+  .upd :global(.bb-yt > img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.8);
+  }
+  .upd :global(.bb-yt > iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .upd :global(.bb-yt__play) {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #f00;
+  }
+  .upd :global(.bb-yt__play:hover svg) {
+    transform: scale(1.08);
+  }
+  .upd :global(.bb-yt__play svg) {
+    transition: transform 0.2s;
+  }
+  .upd :global(.upd__body .bb-table) {
+    overflow-x: auto;
+  }
+  .upd :global(.upd__body table) {
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .upd :global(.upd__body :is(td, th)) {
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    text-align: left;
+  }
+  .upd :global(.upd__body .bb-spoiler) {
+    background: var(--fg-2);
+    color: transparent;
+    border-radius: 3px;
+  }
+  .upd :global(.upd__body .bb-spoiler:hover) {
+    background: none;
+    color: inherit;
+  }
+  .upd :global(.upd__body pre) {
+    overflow-x: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+  }
+  .upd :global(.upd__body pre code) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .upd :global(.upd__sha) {
+    font-size: 0.75em;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .upd :global(.upd__sha:hover) {
+    color: var(--tint, var(--accent));
+  }
+
+  /* ---------- earlier updates ---------- */
+  .upd :global(.upd__earlier) {
+    display: grid;
+    gap: 8px;
+  }
+  .upd :global(.upd__earlier-title) {
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .upd :global(.upd__item) {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg-2);
+  }
+  .upd :global(.upd__item summary) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .upd :global(.upd__item summary::-webkit-details-marker) {
+    display: none;
+  }
+  .upd :global(.upd__item summary::after) {
+    content: '+';
+    margin-left: auto;
+    font-family: var(--font-mono);
+    color: var(--muted);
+  }
+  .upd :global(.upd__item[open] summary::after) {
+    content: '−';
+  }
+  .upd :global(.upd__item summary:hover .upd__item-title) {
+    color: var(--tint, var(--accent));
+  }
+  .upd :global(.upd__item-title) {
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .upd :global(.upd__item summary time) {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .upd :global(.upd__item-body) {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    padding: 4px 14px 16px;
+  }
+</style>
