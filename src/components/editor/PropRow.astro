@@ -1,0 +1,59 @@
+---
+/**
+ * A property row in the Details panel: name on the left, value widget on the
+ * right. `wide` rows give the value the full width (long text, buttons).
+ */
+interface Props {
+  label?: string;
+  wide?: boolean;
+  /** Extra words the Details search should match. */
+  keywords?: string;
+}
+const { label, wide = false, keywords } = Astro.props;
+---
+
+<div class:list={['dp-row', { 'dp-row--wide': wide }]} data-dp-row data-dp-keywords={keywords}>
+  {label && <div class="dp-row__name">{label}</div>}
+  <div class="dp-row__value"><slot /></div>
+</div>
+
+<style>
+  .dp-row {
+    display: grid;
+    grid-template-columns: minmax(84px, min(38%, 220px)) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    min-height: 30px;
+    padding: 3px 10px 3px 26px;
+    border-bottom: 1px solid #1d1d1d;
+  }
+  .dp-row:hover {
+    background: #2a2a2a;
+  }
+  .dp-row--wide {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 12px;
+  }
+  .dp-row--wide:has(.dp-row__name) {
+    gap: 4px;
+  }
+  .dp-row__name {
+    padding-top: 5px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+    overflow-wrap: anywhere;
+  }
+  .dp-row__value {
+    min-width: 0;
+    color: #e8e8e8;
+    font-size: var(--fs-ui);
+  }
+  /* Phones: long values (text boxes, lists, links) go under their name. */
+  @media (max-width: 640px) {
+    .dp-row:has(:global(.dp-text, .dp-list, .dp-links, .plugins)) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+      padding-left: 12px;
+    }
+  }
+</style>

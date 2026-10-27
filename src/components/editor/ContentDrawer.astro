@@ -1,0 +1,594 @@
+---
+/**
+ * The Content Drawer: Unreal's Content Browser, docked under the viewport.
+ * Folders open in place; Blueprints (projects) and Levels (pages) open in the
+ * editor, Hyperlinks open in a new tab. Every folder's tiles are rendered here
+ * and shown one at a time by scripts/editor/drawer.ts.
+ */
+import UeIcon from './UeIcon.astro';
+import Icon from '../Icon.astro';
+import { contentTree, allFolders, assetCount, type DrawerAsset, type DrawerFolder, type DrawerNode } from '../../lib/content-tree';
+import { getProjects } from '../../lib/projects';
+import type { IconName } from '../../data/site';
+
+interface Props {
+  folder: string;
+  asset?: string;
+}
+const { folder, asset } = Astro.props;
+
+const root = await contentTree();
+const folders = allFolders(root);
+const current = folders.find((f) => f.path === folder) ?? folders[0];
+const favourites = (await getProjects()).filter((p) => p.data.featured);
+const favAssets = favourites
+  .map((p) => folders.flatMap((f) => f.children).find((c): c is DrawerAsset => c.kind === 'asset' && c.id === p.id))
+  .filter(Boolean) as DrawerAsset[];
+
+const isOpen = (f: DrawerFolder) => f.path === '' || current.path === f.path || current.path.startsWith(`${f.path}/`);
+const subfolders = (f: DrawerFolder) => f.children.filter((c): c is DrawerFolder => c.kind === 'folder');
+const folderLabel = (f: DrawerFolder) => f.name || 'Content';
+
+/** Brand glyphs for hyperlink assets that have one. */
+const BRAND: Record<string, IconName> = {
+  'social:GitHub': 'github',
+  'social:LinkedIn': 'linkedin',
+  'social:Instagram': 'instagram',
+  'social:Discord': 'discord',
+  'social:mod.io': 'modio',
+  contact: 'mail',
+};
+const brandOf = (a: DrawerAsset): IconName | undefined =>
+  BRAND[a.id] ?? (a.id.startsWith('modio:') ? 'modio' : a.id.startsWith('github:') ? 'github' : undefined);
+
+const bool = (b: boolean) => (b ? 'true' : 'false') as 'true' | 'false';
+const crumbs = (path: string) => ['', ...path.split('/').filter(Boolean).map((_, i, all) => all.slice(0, i + 1).join('/'))];
+const sortNodes = (nodes: DrawerNode[]) => [...nodes.filter((n) => n.kind === 'folder'), ...nodes.filter((n) => n.kind === 'asset')];
+---
+
+<section
+  class="doc-panel cb"
+  id="panel-drawer"
+  role="tabpanel"
+  aria-labelledby="tab-drawer"
+  data-panel="drawer"
+  data-cb
+  data-folder={current.path}
+  data-asset={asset}
+  data-page-folder={folder}
+>
+  <div class="cb__toolbar">
+    <button type="button" class="ue-btn cb__add" data-action="contact" title="Got a project in mind? Get in touch">
+      <UeIcon name="plus" size={14} /> <span>Add</span>
+    </button>
+    <span class="ue-btn cb-static cb-desk" aria-hidden="true"><UeIcon name="import" size={14} /> Import</span>
+    <span class="ue-btn cb-static cb-desk" aria-hidden="true"><UeIcon name="save-all" size={14} /> Save All</span>
+    <nav class="cb__crumbs" aria-label="Folder path" data-cb-crumbs>
+      {
+        crumbs(current.path).map((p, i, all) => (
+          <>
+            {i > 0 && <UeIcon name="chevron-right" size={10} class="cb__crumb-sep" />}
+            <button type="button" class="cb__crumb" data-cb-go={p} aria-current={i === all.length - 1 ? 'location' : undefined}>
+              {i === 0 && <UeIcon name="folder" size={14} />}
+              {p === '' ? 'All' : p.split('/').pop()}
+            </button>
+          </>
+        ))
+      }
+    </nav>
+    <span class="ue-btn ue-btn--ghost cb-static cb-desk cb__settings" aria-hidden="true"><UeIcon name="settings" size={14} /> Settings</span>
+  </div>
+
+  <div class="cb__main">
+    <div class="cb__sources" aria-label="Folders">
+      <details class="cb__section">
+        <summary class="cb__section-title"><UeIcon name="chevron-right" size={10} class="cb__section-twisty" /> Favorites</summary>
+        <ul role="list" class="cb-tree">
+          {
+            favAssets.map((a) => (
+              <li>
+                <a class="cb-tree__row" href={a.href} style="--depth:0" aria-current={a.id === asset ? 'page' : undefined}>
+                  <span class="cb-tree__twisty" />
+                  <UeIcon name="star" size={13} class="cb-tree__star" />
+                  <span class="cb-tree__name">{a.name}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </details>
+      <details class="cb__section" open>
+        <summary class="cb__section-title"><UeIcon name="chevron-right" size={10} class="cb__section-twisty" /> swiift</summary>
+        <ul role="tree" class="cb-tree" aria-label="Content folders">
+          {
+            (function tree(f: DrawerFolder, depth: number): any {
+              const subs = subfolders(f);
+              return (
+                <li role="treeitem" aria-expanded={subs.length ? bool(isOpen(f)) : undefined} aria-selected={bool(f.path === current.path)} data-cb-node={f.path}>
+                  <div class="cb-tree__row" data-cb-go={f.path} style={`--depth:${depth}`}>
+                    {subs.length ? (
+                      <button type="button" class="cb-tree__twisty" data-cb-twisty aria-label={`Expand ${folderLabel(f)}`} tabindex="-1">
+                        <UeIcon name="chevron-right" size={10} />
+                      </button>
+                    ) : (
+                      <span class="cb-tree__twisty" />
+                    )}
+                    <UeIcon name={isOpen(f) && subs.length ? 'folder-open' : 'folder'} size={15} class="cb-tree__icon" />
+                    <span class="cb-tree__name">{folderLabel(f)}</span>
+                  </div>
+                  {subs.length > 0 && <ul role="group">{subs.map((s) => tree(s, depth + 1))}</ul>}
+                </li>
+              );
+            })(root, 0)
+          }
+        </ul>
+      </details>
+    </div>
+
+    <div class="cb__assets">
+      <div class="cb__filterbar">
+        <span class="ue-btn cb-static cb-desk" aria-hidden="true"><UeIcon name="filter" size={13} /><UeIcon name="chevron-down" size={10} /></span>
+        <label class="ue-search cb__search">
+          <UeIcon name="search" size={13} />
+          <span class="visually-hidden">Search assets</span>
+          <input class="ue-input" type="search" placeholder={`Search ${folderLabel(current)}`} autocomplete="off" data-cb-search />
+        </label>
+      </div>
+
+      <div class="cb__view" data-cb-view>
+        {
+          folders.map((f) => (
+            <ul role="list" class="cb__grid" data-cb-folder={f.path} hidden={f.path !== current.path} aria-label={`${folderLabel(f)} folder`}>
+              {f.path !== '' && (
+                <li>
+                  <button type="button" class="cb-tile cb-tile--up" data-cb-go={f.path.split('/').slice(0, -1).join('/')} aria-label="Up one folder">
+                    <span class="cb-tile__thumb">
+                      <UeIcon name="back" size={28} />
+                    </span>
+                    <span class="cb-tile__name">..</span>
+                  </button>
+                </li>
+              )}
+              {sortNodes(f.children).map((c) =>
+                c.kind === 'folder' ? (
+                  <li>
+                    <button type="button" class="cb-tile cb-tile--folder" data-cb-go={c.path} data-cb-name={c.name}>
+                      <span class="cb-tile__thumb">
+                        <UeIcon name="folder" size={64} class="cb-tile__folder" />
+                      </span>
+                      <span class="cb-tile__name">{c.name}</span>
+                      <span class="cb-tile__type cb-tile__type--folder">{assetCount(c)} {assetCount(c) === 1 ? 'item' : 'items'}</span>
+                    </button>
+                  </li>
+                ) : (
+                  <li>
+                    <a
+                      class="cb-tile"
+                      href={c.href}
+                      target={c.external && !c.href.startsWith('mailto:') ? '_blank' : undefined}
+                      rel={c.external ? 'noopener' : undefined}
+                      data-asset-id={c.id}
+                      data-cb-name={`${c.name} ${c.type} ${c.summary ?? ''}`}
+                      aria-current={c.id === asset ? 'page' : undefined}
+                      style={`--type:${c.color}${c.tint ? `;--tint:${c.tint}` : ''}`}
+                    >
+                      <span class:list={['cb-tile__thumb', !c.thumb && 'cb-tile__thumb--icon']}>
+                        {c.thumb ? (
+                          <img src={c.thumb} alt="" loading="lazy" decoding="async" />
+                        ) : brandOf(c) ? (
+                          <Icon name={brandOf(c)!} size={34} class="cb-tile__glyph" />
+                        ) : (
+                          <UeIcon name={c.icon} size={40} class="cb-tile__glyph" />
+                        )}
+                        {c.badge && <span class="cb-tile__badge">{c.badge}</span>}
+                        {c.external && <span class="cb-tile__ext" aria-label="Opens externally">↗</span>}
+                      </span>
+                      <span class="cb-tile__name">{c.name}</span>
+                      <span class="cb-tile__type">{c.type}</span>
+                      <span class="cb-tile__tip" hidden>
+                        <span class="cb-tip__name">{c.name}</span>
+                        <span class="cb-tip__type">{c.type}</span>
+                        {c.summary && <span class="cb-tip__summary">{c.summary}</span>}
+                        <span class="cb-tip__rows">
+                          {c.tip.map((r) => (
+                            <span class="cb-tip__row">
+                              <span class="cb-tip__k">{r.k}:</span> {r.v}
+                            </span>
+                          ))}
+                          <span class="cb-tip__row">
+                            <span class="cb-tip__k">Path:</span> {c.path}
+                          </span>
+                        </span>
+                      </span>
+                    </a>
+                  </li>
+                ),
+              )}
+            </ul>
+          ))
+        }
+        <ul role="list" class="cb__grid" data-cb-results hidden aria-label="Search results"></ul>
+        <p class="cb__empty" data-cb-empty hidden>No assets match your search.</p>
+      </div>
+
+      <div class="cb__status">
+        <span data-cb-count>{current.children.length} items</span>
+        <span class="cb-static cb-desk" aria-hidden="true"><UeIcon name="show" size={13} /> View Options</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  // Restore the last folder you browsed to before first paint (scripts/editor/drawer.ts does the rest).
+  (function () {
+    var cb = document.querySelector('[data-cb]');
+    if (!cb || cb.dataset.asset) return;
+    try {
+      var last = sessionStorage.getItem('swiift:cb-folder');
+      if (last === null || !cb.querySelector('[data-cb-folder="' + last + '"]')) return;
+      cb.querySelectorAll('[data-cb-folder]').forEach(function (g) {
+        g.hidden = g.getAttribute('data-cb-folder') !== last;
+      });
+      cb.dataset.folder = last;
+    } catch (e) {}
+  })();
+</script>
+
+<style>
+  .cb {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .cb__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    height: 40px;
+    padding: 0 8px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .cb__toolbar :global(.cb-desk),
+  .cb__filterbar :global(.cb-desk),
+  .cb__status :global(.cb-desk) {
+    display: none;
+  }
+  .cb-static {
+    cursor: default;
+  }
+  span.ue-btn.cb-static:hover {
+    background: var(--ue-dropdown);
+    color: var(--ue-fg);
+  }
+  .cb__add :global(.ue-icon) {
+    color: var(--ue-success);
+  }
+  .cb__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    margin-left: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cb__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 3px;
+    color: var(--ue-fg);
+    font-size: 13px;
+  }
+  .cb__crumb:hover {
+    background: var(--ue-dropdown);
+    color: #fff;
+  }
+  .cb__crumb[aria-current] {
+    color: #fff;
+    font-weight: 600;
+  }
+  .cb__crumbs :global(.cb__crumb-sep) {
+    flex: none;
+    color: var(--ue-fg-dim);
+  }
+  .cb__settings {
+    margin-left: auto;
+  }
+
+  .cb__main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+  .cb__sources {
+    display: none;
+  }
+  .cb__assets {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+  .cb__filterbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 8px;
+  }
+  .cb__search {
+    flex: 1;
+  }
+  .cb__search input {
+    min-height: 34px;
+    font-size: 14px;
+  }
+  .cb__view {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 12px;
+    background: var(--ue-recessed);
+  }
+  .cb__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 6px 0 0;
+    list-style: none;
+  }
+  .cb__empty {
+    padding: 24px 8px;
+    color: var(--ue-fg-dim);
+    text-align: center;
+  }
+  .cb__status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: none;
+    height: 26px;
+    padding: 0 10px;
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+  }
+
+  /* ---------- tiles ---------- */
+  .cb-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: 4px 4px 6px;
+    border-radius: 4px;
+    color: var(--ue-fg);
+    text-align: left;
+    transition: background-color 0.1s;
+  }
+  .cb-tile:hover {
+    background: #303030;
+  }
+  .cb-tile:focus-visible {
+    outline: 1px solid var(--ue-primary-hover);
+    outline-offset: 0;
+  }
+  .cb-tile[aria-current='page'] {
+    background: color-mix(in oklab, var(--ue-primary) 70%, black);
+    color: #fff;
+  }
+  .cb-tile__thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 3px 3px 0 0;
+    background: #0e0e0e;
+    box-shadow: inset 0 -3px 0 var(--type, transparent);
+  }
+  .cb-tile__thumb img {
+    position: absolute;
+    inset: 0 0 3px;
+    width: 100%;
+    height: calc(100% - 3px);
+    object-fit: cover;
+  }
+  .cb-tile__thumb--icon {
+    background:
+      radial-gradient(90% 80% at 50% 30%, color-mix(in oklab, var(--tint, var(--type)) 22%, transparent), transparent 70%),
+      #121212;
+  }
+  .cb-tile__thumb :global(.cb-tile__glyph) {
+    color: color-mix(in oklab, var(--type) 70%, white);
+  }
+  .cb-tile--folder .cb-tile__thumb,
+  .cb-tile--up .cb-tile__thumb {
+    background: transparent;
+    box-shadow: none;
+  }
+  .cb-tile--up .cb-tile__thumb {
+    color: var(--ue-fg-dim);
+  }
+  .cb-tile__thumb :global(.cb-tile__folder) {
+    width: 78%;
+    height: auto;
+  }
+  .cb-tile__badge {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgb(0 0 0 / 0.72);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .cb-tile__ext {
+    position: absolute;
+    right: 4px;
+    top: 3px;
+    color: #fff;
+    font-size: 12px;
+    text-shadow: 0 1px 3px #000;
+  }
+  .cb-tile__name {
+    display: -webkit-box;
+    margin-top: 6px;
+    overflow: hidden;
+    color: #fff;
+    font-size: var(--fs-ui);
+    font-weight: 500;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .cb-tile--folder .cb-tile__name,
+  .cb-tile--up .cb-tile__name,
+  .cb-tile__type--folder {
+    margin-top: 0;
+    text-align: center;
+  }
+  .cb-tile__type {
+    margin-top: 2px;
+    color: var(--ue-fg-dim);
+    font-size: 10.5px;
+  }
+  .cb-tile[aria-current='page'] .cb-tile__type {
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  /* ---------- tree ---------- */
+  .cb__section + .cb__section {
+    margin-top: 6px;
+  }
+  .cb__section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 3px;
+    color: var(--ue-fg-header);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+  .cb__section-title::-webkit-details-marker {
+    display: none;
+  }
+  .cb__section-title:hover {
+    background: #303030;
+  }
+  .cb__section-title :global(.cb__section-twisty) {
+    transition: transform 0.12s;
+  }
+  .cb__section[open] > .cb__section-title :global(.cb__section-twisty) {
+    transform: rotate(90deg);
+  }
+  .cb-tree,
+  .cb-tree ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cb-tree li[aria-expanded='false'] > ul {
+    display: none;
+  }
+  .cb-tree__row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 8px 0 calc(6px + var(--depth) * 14px);
+    border-radius: 3px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cb-tree__row:hover {
+    background: #303030;
+    color: #fff;
+  }
+  .cb-tree li[aria-selected='true'] > .cb-tree__row,
+  .cb-tree__row[aria-current='page'] {
+    background: var(--ue-primary);
+    color: #fff;
+  }
+  .cb-tree__twisty {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 14px;
+    height: 14px;
+    color: var(--ue-fg-dim);
+    transition: transform 0.12s;
+  }
+  li[aria-expanded='true'] > .cb-tree__row .cb-tree__twisty {
+    transform: rotate(90deg);
+  }
+  .cb-tree__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cb-tree :global(.cb-tree__star) {
+    color: var(--ue-yellow);
+  }
+
+  /* ---------- desk ---------- */
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .cb__toolbar {
+      height: 34px;
+      padding: 0 6px;
+    }
+    .cb__toolbar :global(.cb-desk),
+    .cb__filterbar :global(.cb-desk),
+    .cb__status :global(.cb-desk) {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cb__crumb {
+      height: 22px;
+      font-size: var(--fs-ui);
+    }
+    .cb__sources {
+      display: block;
+      flex: 0 0 clamp(170px, 17%, 240px);
+      overflow-y: auto;
+      padding: 4px;
+      border-right: 1px solid #151515;
+    }
+    .cb__filterbar {
+      padding: 5px 6px;
+    }
+    .cb__search input {
+      min-height: 24px;
+      font-size: var(--fs-ui);
+    }
+    .cb__view {
+      padding: 2px 8px 10px;
+    }
+    .cb__grid {
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 6px;
+    }
+    .cb__status {
+      height: 22px;
+    }
+  }
+</style>

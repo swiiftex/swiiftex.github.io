@@ -14,7 +14,7 @@ Portfolio site for games, mods, software and live events. Built with [Astro](htt
 
 ## Adding or editing a project
 
-Every game, mod, piece of software and event is a Markdown file in `src/content/projects/`. The file name becomes the URL (`lunarball.md` → `/lunarball/`), and the page, cards, lists and stats all update automatically.
+Every game, mod, piece of software and event is a Markdown file in `src/content/projects/`. The file name becomes the URL (`lunarball.md` → `/lunarball/`), and the page, the Content Drawer, lists and stats all update automatically.
 
 ```md
 ---
@@ -29,7 +29,7 @@ gallery:
   - src: ../../assets/projects/my-project/shot-1.jpg
     alt: What the screenshot shows.
 highlights:
-  - A bullet for the sidebar
+  - Each one becomes a node in the project's Blueprint graph
 links:
   - label: Steam
     href: https://store.steampowered.com/app/123/
@@ -60,17 +60,36 @@ All fields are defined in `src/content.config.ts`. Put images in `src/assets/pro
 
 Site-wide bits (nav, socials, mod.io total, older GitHub repos) live in `src/data/site.ts`.
 
+## The editor layout
+
+The site is laid out like the Unreal Engine 5 level editor, in the default dark editor theme:
+
+| Editor part | What it shows |
+| --- | --- |
+| Title bar | The animated logo (plays once per visit, replays on hover) and the open "level" |
+| Menu bar | File / Edit / Window / Tools / Build / Select / Actor / Help: navigation, contact and shortcuts |
+| Toolbar | ▶ ⏭ ⏹ drive the viewport gallery; **Platforms** lists where to get the open project |
+| Viewport | An auto-playing gallery of the project's Steam trailer, clips, YouTube videos and screenshots (or a reel of projects). View modes (Lit, Unlit, Wireframe…), Game View (G) and Immersive mode work |
+| Details tab | A Blueprint graph: Event BeginPlay → Sequence → one node per `highlights` entry |
+| Details panel | Everything in the viewport (select one to show it), then the project's facts, links and write-up |
+| Content Drawer | Every project as a Blueprint in `Projects/Games`, `Mods`, `Software` and `Events`, plus `About` and `Guides`. Click one to open it |
+| Output Log | News and patch notes as log lines, and the console (try `help`, `open lunarball`, `stat fps`) |
+
+Viewport items come from a project's `steamAppId` trailer, `cover`, `hero`, `clip`, `youtube` and `gallery`; see `src/lib/viewport.ts`. Projects with update posts get a **Patch Notes** tab, and a few have tool tabs (the LUNARBALL inventory, the Source2All calculator and supported-games table). On phones the panels stack, and the Content Drawer and Output Log open as sheets from the bottom bar.
+
 ## Structure
 
 ```
 src/
   content/projects/   one Markdown file per project
   assets/             images (optimised at build time)
-  components/         cards, feed, vision mixer, gallery, calculators…
-  layouts/Base.astro  page shell: head, header, footer, cursor
-  pages/              routes (index, games, software, events, about, [slug]…)
-  scripts/            custom cursor + shared interaction effects
-  styles/global.css   design tokens and global styles
+  components/editor/  the editor: title bar, menus, toolbar, viewport, graph, details, content drawer…
+  components/         the logo and the tools shown in tabs (inventory, calculators, patch notes…)
+  layouts/Base.astro  the editor window every page opens in
+  lib/                content drawer tree, viewport items, Blueprint graphs, Steam/GitHub lookups
+  pages/              routes (index, games, mods, software, events, about, [slug]…)
+  scripts/editor/     tabs, menus, panels, gallery, graph, drawer and console behaviour
+  styles/             UE5 colour tokens (global.css) and the editor shell (editor.css)
 public/               served as-is (favicon, og image, hatecodev.html…)
 ```
 
@@ -81,5 +100,5 @@ public/               served as-is (favicon, og image, hatecodev.html…)
 ## Notes
 
 - `public/hatecodev.html` (plus `public/audio` and `public/images/travis.png`) is kept as-is, so its URL still works.
-- Old URLs (`games.html`, `events.html`, the WordPress `/my-games/` and `/mods/` pages, `/simple-sensitivity-converter/`) redirect to their new pages.
-- The custom cursor only runs on mouse/trackpad devices, and motion effects respect `prefers-reduced-motion`.
+- Old URLs (`games.html`, `events.html`, the WordPress `/my-games/` page, `/games/#mods`, `/simple-sensitivity-converter/`) redirect to their new pages.
+- The viewport gallery doesn't auto-play for visitors who prefer reduced motion, and panel sizes are remembered per browser (Window → Reset Layout puts them back).

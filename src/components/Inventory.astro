@@ -174,7 +174,7 @@ const rarities = RARITIES.filter((r) => items.some((i) => i.rarity === r));
     color: var(--tint, var(--accent));
   }
   .inv__title {
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-size: 20px;
   }
   .inv__intro {
     color: var(--fg-2);
@@ -258,7 +258,7 @@ const rarities = RARITIES.filter((r) => items.some((i) => i.rarity === r));
     height: 34px;
     padding: 0 13px;
     border: 1px solid var(--line-2);
-    border-radius: 999px;
+    border-radius: var(--radius);
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.06em;
@@ -278,9 +278,9 @@ const rarities = RARITIES.filter((r) => items.some((i) => i.rarity === r));
     color: var(--fg);
   }
   .inv__filter[aria-pressed='true'] {
-    background: var(--tint, var(--accent));
-    border-color: var(--tint, var(--accent));
-    color: var(--accent-ink, #000);
+    background: var(--ue-primary);
+    border-color: var(--ue-primary);
+    color: #fff;
   }
 
   /* ---------- grid ---------- */

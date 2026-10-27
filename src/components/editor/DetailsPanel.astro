@@ -1,0 +1,152 @@
+---
+/**
+ * The Details panel: the selected actor's name and class, a search box that
+ * filters the properties below, and the page's categories (slot).
+ */
+import UeIcon from './UeIcon.astro';
+import type { UeIconName } from '../../lib/editor';
+
+interface Props {
+  /** Selected actor, e.g. "LUNARBALL". */
+  name: string;
+  icon?: UeIconName;
+  /** Its class and path, shown under the name. */
+  type?: string;
+  path?: string;
+}
+const { name, icon = 'blueprint', type, path } = Astro.props;
+---
+
+<div class="dock__tabs" role="tablist" aria-label="Details">
+  <button type="button" role="tab" class="dock__tab" id="tab-details" aria-controls="panel-details" aria-selected="true">
+    <UeIcon name="details" size={14} /><span>Details</span>
+  </button>
+</div>
+<div class="dock__body">
+  <div class="doc-panel dp" id="panel-details" role="tabpanel" aria-labelledby="tab-details" data-details>
+    <div class="dp__top">
+      <div class="dp__actor">
+        <span class="dp__actor-icon"><UeIcon name={icon} size={18} /></span>
+        <h1 class="dp__actor-name">{name}</h1>
+        <span class="ue-btn dp__add" aria-hidden="true"><UeIcon name="plus" size={13} /> Add</span>
+      </div>
+      {
+        (type || path) && (
+          <p class="dp__class">
+            {type && <span>{type}</span>}
+            {path && <span class="dp__path">{path}</span>}
+          </p>
+        )
+      }
+      <div class="dp__search">
+        <label class="ue-search">
+          <UeIcon name="search" size={13} />
+          <span class="visually-hidden">Search details</span>
+          <input class="ue-input" type="search" placeholder="Search" autocomplete="off" data-dp-search />
+        </label>
+        <span class="dp__gear" aria-hidden="true"><UeIcon name="settings" size={14} /></span>
+      </div>
+    </div>
+    <div class="dp__body" data-dp-body>
+      <slot />
+      <p class="dp__none" data-dp-none hidden>No properties match your search.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dp {
+    display: flex;
+    flex-direction: column;
+  }
+  .dp__top {
+    flex: none;
+    padding: 8px 8px 6px;
+    background: var(--ue-bg);
+  }
+  .dp__actor {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dp__actor-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--ue-recessed);
+    color: var(--ue-blue);
+  }
+  .dp__actor-name {
+    flex: 1;
+    min-width: 0;
+    min-height: 28px;
+    padding: 5px 9px;
+    border: 1px solid var(--ue-input-line);
+    border-radius: var(--radius);
+    background: var(--ue-input);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .dp__add {
+    flex: none;
+    cursor: default;
+  }
+  .dp__add :global(.ue-icon) {
+    color: var(--ue-success);
+  }
+  span.dp__add:hover {
+    background: var(--ue-dropdown);
+    color: var(--ue-fg);
+  }
+  .dp__class {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    margin: 6px 0 0 34px;
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+  }
+  .dp__path {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    overflow-wrap: anywhere;
+  }
+  .dp__search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .dp__search .ue-search {
+    flex: 1;
+  }
+  .dp__gear {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: var(--ue-fg-dim);
+  }
+  .dp__body {
+    padding-bottom: 12px;
+  }
+  .dp__none {
+    padding: 16px 12px;
+    color: var(--ue-fg-dim);
+  }
+  @media (max-width: 999px), (max-height: 559px) {
+    .dp__add {
+      display: none;
+    }
+    .dp__search input {
+      min-height: 32px;
+      font-size: 14px;
+    }
+  }
+</style>

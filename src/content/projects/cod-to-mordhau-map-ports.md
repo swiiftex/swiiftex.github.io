@@ -14,6 +14,10 @@ gallery:
     alt: Hijacked from Black Ops 2, recreated in MORDHAU.
   - src: ../../assets/projects/cod-to-mordhau-map-ports/highrise.jpg
     alt: Highrise from Modern Warfare 2 (2009), recreated in MORDHAU.
+highlightsTitle: The maps
+highlights:
+  - Hijacked from Black Ops 2, rebuilt in MORDHAU
+  - Highrise from Modern Warfare 2 (2009), rebuilt in MORDHAU
 stack: [Unreal Engine, MORDHAU SDK]
 links:
   - label: Hijacked on mod.io

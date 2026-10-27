@@ -43,6 +43,8 @@ export const MODIO = {
   profile: 'https://mod.io/u/swiift1/',
   totalDownloads: 133_834,
   label: '130K+',
+  /** Mods published, including ones not listed on this site. */
+  published: 14,
   /** Mods on mod.io that don't have their own page here. */
   more: [
     { title: "swiift's BR Extras", href: 'https://mod.io/g/mordhau/m/swiifts-br-extras', downloads: 17_816 },
@@ -83,3 +85,67 @@ export const CATEGORY_LABELS = {
   software: 'Software',
   events: 'Events',
 } as const;
+
+/** What I do: the home page's Blueprint and the About page's plugins. */
+export const DISCIPLINES = [
+  {
+    title: 'Unreal Engine',
+    body: 'Gameplay, UI and multiplayer programming in UE4 and UE5, on commercial projects and my own games. I also make mods for MORDHAU.',
+    tags: ['Blueprints', 'UMG', 'Multiplayer', 'Steamworks', 'Mod SDKs'],
+  },
+  {
+    title: 'Software',
+    body: 'Windows apps and utilities, plus tools that connect OBS, game APIs and Stream Decks for live broadcasts.',
+    tags: ['C#', '.NET / WPF', 'C++', 'Python', 'OBS WebSocket'],
+  },
+  {
+    title: 'Events',
+    body: 'Broadcast graphics and live production for in-person VR esports events, most recently as Production Lead at VRLAN.',
+    tags: ['OBS', 'Stream Deck', 'Companion', 'Vision mixing', 'Tournament ops'],
+  },
+];
+
+/** Career log, newest first (About page). */
+export const CAREER: { year: string; items: { text: string; href?: string }[] }[] = [
+  {
+    year: '2026',
+    items: [
+      { text: 'Shipped Directive 8020 with Supermassive Games — my first AAA credit', href: '/directive-8020/' },
+      { text: 'Production Lead and company director for VRLAN 2026 in the Netherlands', href: '/vrlan-2026/' },
+      { text: 'Released Source2All Sensitivity Converter and QuickClip', href: '/software/' },
+    ],
+  },
+  {
+    year: '2025',
+    items: [
+      { text: 'Graduated from Futureworks with first-class honours in Games Design' },
+      { text: 'Goldrush: Revived, BetterPUGs and the WMMR scoreboard for MORDHAU', href: '/mods/' },
+    ],
+  },
+  {
+    year: '2024',
+    items: [
+      { text: 'Released LUNARBALL on Steam', href: '/lunarball/' },
+      { text: 'Led production at VRLAN 2024, including the first public broadcast of Orion Drift', href: '/vrlan-2024/' },
+      { text: "Released swiift's Comp Mod and the battle royale map packs", href: '/mods/' },
+    ],
+  },
+  {
+    year: '2023',
+    items: [
+      { text: 'Rebuilt the broadcast package from scratch for Duckman LAN 2', href: '/duckman-lan-2023/' },
+      { text: 'Ported Chivalry weapons into Hellsplit Arena', href: '/chivalry-mw-weapon-ports/' },
+    ],
+  },
+  {
+    year: '2022',
+    items: [
+      { text: 'Produced and presented the broadcast for Duckman LAN, Europe’s first community Echo Arena LAN', href: '/duckman-lan-2022/' },
+      { text: 'First MORDHAU mods: Hijacked and Highrise', href: '/cod-to-mordhau-map-ports/' },
+    ],
+  },
+  {
+    year: '2021',
+    items: [{ text: 'Built the Broadcast Tool for the first Redshift Contender Series', href: '/broadcast-tool/' }],
+  },
+];

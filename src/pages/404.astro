@@ -1,57 +1,136 @@
 ---
+/** Not found: the editor failed to load the map, with a way back. */
 import Base from '../layouts/Base.astro';
-import Icon from '../components/Icon.astro';
+import DocPanel from '../components/editor/DocPanel.astro';
+import DetailsPanel from '../components/editor/DetailsPanel.astro';
+import DetailsCategory from '../components/editor/DetailsCategory.astro';
+import PropRow from '../components/editor/PropRow.astro';
+import UeIcon from '../components/editor/UeIcon.astro';
+import type { DockTab } from '../lib/editor';
+
+const tabs: DockTab[] = [{ id: 'viewport', label: 'Viewport', icon: 'camera' }];
 ---
 
-<Base title="Page not found">
-  <section class="lost container">
-    <p class="eyebrow">Error 404</p>
-    <h1 class="display lost__code" aria-label="404">
-      <span>4</span><span class="outline-text">0</span><span>4</span>
-    </h1>
-    <p class="display lost__title">Page not found</p>
-    <p class="lede">This page doesn't exist. It may have moved when the site was rebuilt.</p>
-    <div class="btn-row">
-      <a class="btn btn--primary" href="/" data-magnetic>Back to home <Icon name="arrow" class="arrow" /></a>
-      <a class="btn btn--ghost" href="/games/">Games &amp; mods</a>
+<Base
+  title="Page not found"
+  level="Untitled"
+  levelIcon="error"
+  tabs={tabs}
+  log={[{ cat: 'Load', verbosity: 'Error', text: 'Failed to load map: the asset could not be found. It may have moved when the site was rebuilt.' }]}
+>
+  <DocPanel id="viewport" active wide>
+    <div class="lost">
+      <p class="lost__check">MAP CHECK: <span data-lost-path>/Game/…</span> could not be found</p>
+      <p class="lost__check lost__check--dim">LIGHTING NEEDS TO BE REBUILT (404 unbuilt objects)</p>
+      <div class="lost__dialog" role="alertdialog" aria-labelledby="lost-title" aria-describedby="lost-text">
+        <p class="lost__bar"><UeIcon name="error" size={14} /> Message</p>
+        <div class="lost__body">
+          <UeIcon name="warning" size={36} class="lost__icon" />
+          <div>
+            <h1 id="lost-title" class="lost__title">Failed to load map</h1>
+            <p id="lost-text">This page doesn't exist. It may have moved when the site was rebuilt.</p>
+          </div>
+        </div>
+        <div class="lost__btns">
+          <a class="ue-btn ue-btn--primary" href="/">Open Main</a>
+          <button type="button" class="ue-btn" data-action="open-drawer:Projects">Open Content Drawer</button>
+        </div>
+      </div>
     </div>
-  </section>
+  </DocPanel>
+
+  <DetailsPanel slot="details" name="Untitled" icon="error" type="Level (not found)">
+    <DetailsCategory title="Where next">
+      <PropRow wide>
+        <div class="dp-links">
+          <a class="dp-link dp-link--primary" href="/"><UeIcon name="level" size={14} /><span>Main</span></a>
+          <a class="dp-link" href="/games/"><UeIcon name="folder" size={14} /><span>Games</span></a>
+          <a class="dp-link" href="/mods/"><UeIcon name="folder" size={14} /><span>Mods</span></a>
+          <a class="dp-link" href="/software/"><UeIcon name="folder" size={14} /><span>Software</span></a>
+          <a class="dp-link" href="/events/"><UeIcon name="folder" size={14} /><span>Events</span></a>
+          <a class="dp-link" href="/about/"><UeIcon name="user" size={14} /><span>About</span></a>
+        </div>
+      </PropRow>
+    </DetailsCategory>
+  </DetailsPanel>
 </Base>
+
+<script>
+  const el = document.querySelector('[data-lost-path]');
+  if (el) el.textContent = `/Game${location.pathname.replace(/\/$/, '')}`;
+</script>
 
 <style>
   .lost {
-    min-height: 80vh;
+    position: relative;
     display: grid;
-    align-content: center;
-    gap: 20px;
-    justify-items: start;
-    padding-top: calc(var(--header-h) + 40px);
+    place-items: center;
+    min-height: min(70vh, 520px);
+    padding: 70px 12px 24px;
+    background:
+      radial-gradient(120% 80% at 50% 120%, #2a2a2a, transparent 60%),
+      linear-gradient(#3d4652, #1b1f24 55%, #141414);
+    border-radius: 4px;
   }
-  .lost__code {
+  .lost__check {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: var(--ue-error);
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .lost__check--dim {
+    top: 32px;
+    color: #ff7b7b;
+    font-weight: 500;
+  }
+  .lost__dialog {
+    width: min(440px, 100%);
+    border: 1px solid #0a0a0a;
+    border-radius: 6px;
+    background: var(--ue-bg);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+    overflow: hidden;
+  }
+  .lost__bar {
     display: flex;
-    font-size: clamp(8rem, 30vw, 22rem);
-    line-height: 0.8;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: var(--ue-title);
+    color: var(--ue-fg);
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .lost__code span:nth-child(2) {
-      animation: glitch 2.4s steps(1) infinite;
-    }
+  .lost__body {
+    display: flex;
+    gap: 14px;
+    padding: 18px 16px 8px;
+    color: var(--ue-fg);
+    font-size: 13px;
   }
-  @keyframes glitch {
-    0%,
-    92%,
-    100% {
-      transform: none;
-    }
-    94% {
-      transform: translate(6px, -3px) skewX(-8deg);
-    }
-    96% {
-      transform: translate(-5px, 2px);
-    }
+  .lost__body :global(.lost__icon) {
+    flex: none;
+    color: var(--ue-warning);
   }
   .lost__title {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    color: var(--accent);
+    margin-bottom: 4px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .lost__btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 12px 16px 16px;
+  }
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .lost {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      border-radius: 0;
+    }
   }
 </style>

@@ -1,0 +1,99 @@
+---
+/**
+ * A Content Drawer folder (Games, Mods, Software, Events) opened as a level:
+ * the Viewport plays a reel of everything in it, the graph has a node per
+ * project, and the Details panel lists them. Extra categories go in the slot.
+ */
+import Base from '../../layouts/Base.astro';
+import Viewport from './Viewport.astro';
+import BlueprintGraph from './BlueprintGraph.astro';
+import DetailsPanel from './DetailsPanel.astro';
+import DetailsCategory from './DetailsCategory.astro';
+import PropRow from './PropRow.astro';
+import MediaList from './MediaList.astro';
+import UeIcon from './UeIcon.astro';
+import { getProjects, projectHref, whenLabel } from '../../lib/projects';
+import { reelItem } from '../../lib/viewport';
+import { folderGraph } from '../../lib/graph';
+import { CATEGORY_FOLDER, assetPath, type DockTab, type LogLine } from '../../lib/editor';
+import { CATEGORY_LABELS } from '../../data/site';
+import type { Category } from '../../content.config';
+
+interface Props {
+  category: Category;
+  title: string;
+  description: string;
+  lede: string;
+  /** Play Steam trailers in the reel. */
+  trailers?: boolean;
+  /** Override the reel order (project ids); defaults to newest first. */
+  order?: string[];
+}
+const { category, title, description, lede, trailers = false, order } = Astro.props;
+
+let projects = await getProjects(category);
+if (order) projects = order.map((id) => projects.find((p) => p.id === id)!).filter(Boolean).concat(projects.filter((p) => !order.includes(p.id)));
+const items = await Promise.all(projects.map((p) => reelItem(p, { trailer: trailers })));
+const name = CATEGORY_LABELS[category];
+const folder = CATEGORY_FOLDER[category];
+const graph = folderGraph(name, projects);
+const tabs: DockTab[] = [
+  { id: 'viewport', label: 'Viewport', icon: 'camera' },
+  { id: 'graph', label: 'Details', icon: 'graph', title: `Blueprint: every ${name.toLowerCase().replace(/s$/, '')}` },
+];
+const log: LogLine[] = [{ cat: 'ContentBrowser', text: `${projects.length} assets in ${assetPath(folder, '')}` }];
+---
+
+<Base title={title} description={description} level={name} levelIcon="folder" folder={folder} tabs={tabs} log={log}>
+  <link slot="head" rel="preconnect" href="https://video.akamai.steamstatic.com" crossorigin />
+  <Viewport items={items} level={name} />
+  <BlueprintGraph graph={graph} />
+
+  <DetailsPanel slot="details" name={name} icon="folder-open" type="Folder" path={`/Game/${folder}`}>
+    <MediaList items={items} />
+    <DetailsCategory title="Description">
+      <PropRow wide>
+        <div class="dp-text prose"><p>{lede}</p></div>
+      </PropRow>
+    </DetailsCategory>
+    <slot />
+    <DetailsCategory title="Assets" meta={`${projects.length} Blueprints`}>
+      {
+        projects.map((p) => (
+          <PropRow label={whenLabel(p)} keywords={`${p.data.summary} ${p.data.kicker ?? ''}`}>
+            <a class="dp-field folder-asset" href={projectHref(p)}>
+              <UeIcon name="blueprint" size={13} />
+              <span>
+                <strong>{p.data.title}</strong>
+                {p.data.kicker && <span class="folder-asset__kicker">{p.data.kicker}</span>}
+              </span>
+            </a>
+          </PropRow>
+        ))
+      }
+    </DetailsCategory>
+  </DetailsPanel>
+</Base>
+
+<style>
+  .folder-asset {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+  }
+  .folder-asset :global(.ue-icon) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--asset-blueprint);
+  }
+  .folder-asset strong {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+  }
+  .folder-asset__kicker {
+    display: block;
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+  }
+</style>

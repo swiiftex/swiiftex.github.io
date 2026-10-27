@@ -73,14 +73,47 @@ const { size = 32, class: className, draw = false, intro = false, tight = false 
     document.addEventListener('visibilitychange', onShow);
   };
 
-  document.querySelectorAll<SVGSVGElement>('.logo-mark--intro').forEach((svg) => whenVisible(() => intro(svg)));
+  // The intro plays once per visit (the page head marks the root `logo-played`
+  // afterwards); hovering a [data-logo-replay] host plays it again.
+  const PLAYED = 'swiift:logo-played';
+  const running = new WeakSet<SVGSVGElement>();
 
-  function intro(svg: SVGSVGElement) {
+  async function play(svg: SVGSVGElement) {
+    if (running.has(svg)) return;
+    running.add(svg);
+    svg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+    svg.classList.add('is-playing');
+    // intro() sets up its (backwards-filling) animations synchronously, so the
+    // CSS that hides the logo before its first play can be dropped straight away.
+    const done = intro(svg);
+    document.documentElement.classList.add('logo-played');
+    await done;
+    svg.classList.remove('is-playing');
+    svg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+    running.delete(svg);
+  }
+
+  document.querySelectorAll<SVGSVGElement>('.logo-mark--intro').forEach((svg) => {
+    if (!document.documentElement.classList.contains('logo-played'))
+      whenVisible(() => {
+        play(svg);
+        try {
+          sessionStorage.setItem(PLAYED, '1');
+        } catch {
+          /* private mode */
+        }
+      });
+    svg.closest('[data-logo-replay]')?.addEventListener('pointerenter', () => {
+      if (!reduce) play(svg);
+    });
+  });
+
+  function intro(svg: SVGSVGElement): Promise<void> {
     const shield = svg.querySelector<SVGGElement>('.logo-mark__shield')!;
     const sword = svg.querySelector<SVGGElement>('.logo-mark__sword')!;
     const fx = svg.querySelector<SVGGElement>('.logo-mark__fx')!;
     const seal = (k: string) => svg.querySelector<SVGPathElement>(`[data-seal="${k}"]`)!;
-    if (reduce || !sword.animate) return;
+    if (reduce || !sword.animate) return Promise.resolve();
 
     // 1. The whole logo fades in (shield whole, sword still hidden).
     shield.animate(
@@ -192,9 +225,10 @@ const { size = 32, class: className, draw = false, intro = false, tight = false 
     };
     requestAnimationFrame(watch);
     // Safety net: if frames were skipped (e.g. a background tab), still finish the break.
-    swordAnim.finished.then(() => {
+    return swordAnim.finished.then(() => {
       if (!top) pierceTop();
       if (!bottom) pierceBottom();
+      return new Promise<void>((done) => setTimeout(done, 520));
     });
   }
 </script>
@@ -264,12 +298,13 @@ const { size = 32, class: className, draw = false, intro = false, tight = false 
   }
   @media (prefers-reduced-motion: no-preference) {
     /* Hidden until the script fades them in, so there's no flash of the finished logo. */
-    :global(.js) .logo-mark--intro .logo-mark__shield,
-    :global(.js) .logo-mark--intro .logo-mark__sword {
+    :global(.js:not(.logo-played)) .logo-mark--intro .logo-mark__shield,
+    :global(.js:not(.logo-played)) .logo-mark--intro .logo-mark__sword {
       opacity: 0;
       animation: logo-failsafe 0s 2.5s forwards; /* if the script never runs, show it anyway */
     }
-    :global(.js) .logo-mark--intro .logo-mark__seal {
+    :global(.js:not(.logo-played)) .logo-mark--intro .logo-mark__seal,
+    .logo-mark--intro.is-playing .logo-mark__seal {
       display: inline;
     }
   }

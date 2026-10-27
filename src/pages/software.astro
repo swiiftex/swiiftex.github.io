@@ -1,145 +1,37 @@
 ---
-import Base from '../layouts/Base.astro';
-import PageHeader from '../components/PageHeader.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import Icon from '../components/Icon.astro';
-import { getProjects } from '../lib/projects';
+import FolderLevel from '../components/editor/FolderLevel.astro';
+import DetailsCategory from '../components/editor/DetailsCategory.astro';
+import PropRow from '../components/editor/PropRow.astro';
+import UeIcon from '../components/editor/UeIcon.astro';
 import { MORE_ON_GITHUB } from '../data/site';
-
-const all = await getProjects('software');
-const byId = (id: string) => all.find((p) => p.id === id)!;
-// QuickClip and DesktopSplitter lead; everything else follows.
-const featured = ['quickclip', 'desktopsplitter'].map(byId);
-const rest = ['source2all-sensitivity-converter', 'fgswidgets', 'revolt', 'broadcast-tool'].map(byId);
 ---
 
-<Base title="Software" description="Windows apps, an Unreal Engine plugin and broadcast tools by Owen Bladen-Kay — QuickClip, DesktopSplitter, Source2All Sensitivity Converter and more.">
-  <PageHeader
-    index="02"
-    eyebrow="Portfolio"
-    title="Software"
-    lede="Windows apps, a virtual display driver, an Unreal Engine plugin and broadcast tools."
-  />
-
-  <section class="container section--tight" aria-label="Software projects">
-    <ul role="list" class="grid grid--featured">
-      {
-        featured.map((p, i) => (
-          <li>
-            <ProjectCard project={p} size="feature" index={i} sizes="(min-width: 800px) 50vw, 100vw" />
-          </li>
-        ))
-      }
-    </ul>
-    <ul role="list" class="grid grid--rest">
-      {
-        rest.map((p, i) => (
-          <li>
-            <ProjectCard project={p} size="compact" index={i + 2} />
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <section class="section container" aria-labelledby="gh-title">
-    <div class="section-head section-head--split">
-      <div>
-        <p class="eyebrow" data-reveal><span class="eyebrow__index">{String(MORE_ON_GITHUB.length).padStart(2, '0')}</span><span class="eyebrow__rule"></span>Older projects</p>
-        <h2 id="gh-title" class="display h2" data-reveal style="--i:1">More on GitHub</h2>
-      </div>
-      <div class="btn-row" data-reveal style="--i:2">
-        <a class="btn" href="https://github.com/swiiftex" target="_blank" rel="noopener" data-magnetic>
-          <Icon name="github" /> github.com/swiiftex
+<FolderLevel
+  category="software"
+  title="Software"
+  description="Windows apps, an Unreal Engine plugin and broadcast tools by Owen Bladen-Kay — QuickClip, DesktopSplitter, Source2All Sensitivity Converter and more."
+  lede="Windows apps, a virtual display driver, an Unreal Engine plugin and broadcast tools."
+  order={['quickclip', 'desktopsplitter', 'source2all-sensitivity-converter', 'fgswidgets', 'revolt', 'broadcast-tool']}
+>
+  <DetailsCategory title="More on GitHub" meta={`${MORE_ON_GITHUB.length} older projects`}>
+    {
+      MORE_ON_GITHUB.map((r) => (
+        <PropRow label={r.year} keywords={`${r.tech} ${r.blurb}`}>
+          <a class="dp-field" href={r.href} target="_blank" rel="noopener">
+            <strong>{r.title}</strong> ↗<br />
+            <span class="muted">{r.tech}</span>
+            <br />
+            {r.blurb}
+          </a>
+        </PropRow>
+      ))
+    }
+    <PropRow wide>
+      <div class="dp-links">
+        <a class="dp-link" href="https://github.com/swiiftex" target="_blank" rel="noopener">
+          <UeIcon name="branch" size={14} /><span>github.com/swiiftex</span>
         </a>
       </div>
-    </div>
-    <ul role="list" class="repos">
-      {
-        MORE_ON_GITHUB.map((r, i) => (
-          <li data-reveal style={`--i:${i}`}>
-            <a class="repo panel" href={r.href} target="_blank" rel="noopener" data-tilt="3">
-              <span class="repo__top mono">
-                <Icon name="github" size={16} /> {r.year} · {r.tech}
-              </span>
-              <span class="repo__name">{r.title}</span>
-              <span class="repo__blurb">{r.blurb}</span>
-              <Icon name="external" size={16} class="repo__ext" />
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-</Base>
-
-<style>
-  .grid {
-    display: grid;
-    gap: 20px;
-  }
-  .grid--rest {
-    margin-top: 20px;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  }
-  @media (min-width: 800px) {
-    .grid--featured {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  .repos {
-    display: grid;
-    gap: 20px;
-  }
-  @media (min-width: 900px) {
-    .repos {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  .repo {
-    --rx: 0deg;
-    --ry: 0deg;
-    --mx: 50%;
-    --my: 50%;
-    position: relative;
-    display: grid;
-    gap: 10px;
-    height: 100%;
-    padding: 24px;
-    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
-    transition:
-      transform 0.6s var(--ease-out),
-      border-color 0.3s;
-  }
-  .repo:hover {
-    border-color: var(--accent);
-  }
-  .repo__top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-  }
-  .repo__name {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.75rem;
-    line-height: 1;
-    text-transform: uppercase;
-    overflow-wrap: anywhere;
-  }
-  .repo__blurb {
-    color: var(--fg-2);
-    font-size: 0.95rem;
-  }
-  .repo :global(.repo__ext) {
-    position: absolute;
-    top: 22px;
-    right: 22px;
-    color: var(--muted);
-    transition: color 0.2s;
-  }
-  .repo:hover :global(.repo__ext) {
-    color: var(--accent);
-  }
-</style>
+    </PropRow>
+  </DetailsCategory>
+</FolderLevel>

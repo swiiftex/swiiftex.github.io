@@ -1,0 +1,230 @@
+---
+/**
+ * The Details panel's "Viewport" category: everything in the viewport, like
+ * an Outliner list. Selecting a row shows that item in the viewport.
+ */
+import UeIcon from './UeIcon.astro';
+import DetailsCategory from './DetailsCategory.astro';
+import type { ViewportItem } from '../../lib/viewport';
+
+interface Props {
+  items: ViewportItem[];
+  title?: string;
+}
+const { items, title = 'Viewport' } = Astro.props;
+---
+
+<DetailsCategory title={title} meta={`${items.length} ${items.length === 1 ? 'item' : 'items'}`} id="viewport-items">
+  <div class="ml" data-dp-row data-dp-keywords={items.map((i) => `${i.name} ${i.type}`).join(' ')}>
+    <div class="ml__cols" aria-hidden="true">
+      <span>Item Label <UeIcon name="chevron-down" size={9} /></span>
+      <span>Type</span>
+    </div>
+    <ul role="list" class="ml__list" data-vp-list aria-label="Items in the viewport">
+      {
+        items.map((it, i) => (
+          <li>
+            <button
+              type="button"
+              class="ml__item"
+              data-vp-select={i}
+              aria-current={i === 0 ? 'true' : undefined}
+              aria-label={`Show ${it.name} in the viewport`}
+              title={it.caption}
+            >
+              <span class="ml__thumb">
+                {it.thumb ? <img src={it.thumb} alt="" loading="lazy" decoding="async" /> : <UeIcon name={it.icon} size={16} />}
+                {(it.kind === 'video' || it.kind === 'clip' || it.kind === 'youtube') && (
+                  <span class="ml__play" aria-hidden="true">
+                    <UeIcon name="play" size={10} />
+                  </span>
+                )}
+              </span>
+              <span class="ml__name">{it.name}</span>
+              <span class="ml__type">
+                <UeIcon name={it.icon} size={12} />
+                <span>{it.type}</span>
+              </span>
+              <span class="ml__bar" aria-hidden="true">
+                <span />
+              </span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</DetailsCategory>
+
+<style>
+  .ml__cols {
+    display: none;
+  }
+  /* Small screens: a filmstrip under the viewport. */
+  .ml__list {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 10px 10px;
+    overflow-x: auto;
+    list-style: none;
+    scroll-snap-type: x proximity;
+    scroll-padding: 10px;
+  }
+  .ml__list > li {
+    flex: 0 0 132px;
+    scroll-snap-align: start;
+  }
+  .ml__item {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    padding: 4px;
+    border-radius: 6px;
+    color: var(--ue-fg);
+    text-align: left;
+  }
+  .ml__item[aria-current='true'] {
+    background: var(--ue-primary);
+    color: #fff;
+  }
+  .ml__thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #0e0e0e;
+    color: var(--ue-fg-dim);
+  }
+  .ml__thumb img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ml__play {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.75);
+    --play: #fff;
+  }
+  .ml__name {
+    overflow: hidden;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ml__type {
+    display: none;
+  }
+  .ml__bar {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 0;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .ml__bar > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  :global(.vp-playing) .ml__item[aria-current='true'] .ml__bar > span {
+    animation: ml-progress var(--vp-dur, 6s) linear forwards;
+  }
+  @keyframes ml-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* ---------- desk: Outliner-style rows ---------- */
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .ml__cols {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42%;
+      gap: 8px;
+      padding: 4px 10px 4px 12px;
+      color: var(--ue-fg-dim);
+      font-size: 11px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .ml__cols > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ml__list {
+      display: block;
+      padding: 2px 0 4px;
+      overflow: visible;
+    }
+    .ml__item {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 42%;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 3px 10px 3px 12px;
+      border-radius: 0;
+      font-size: var(--fs-ui);
+    }
+    .ml__item:hover {
+      background: #303030;
+      color: #fff;
+    }
+    .ml__item[aria-current='true'] {
+      background: var(--ue-primary);
+    }
+    .ml__thumb {
+      border-radius: 2px;
+    }
+    .ml__play {
+      left: 50%;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translate(-50%, -50%);
+    }
+    .ml__name {
+      font-size: var(--fs-ui);
+    }
+    .ml__type {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      color: var(--ue-fg-dim);
+      font-size: 11px;
+    }
+    .ml__type > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ml__item[aria-current='true'] .ml__type {
+      color: rgb(255 255 255 / 0.8);
+    }
+    .ml__bar {
+      left: 0;
+      right: 0;
+      border-radius: 0;
+    }
+  }
+</style>

@@ -17,7 +17,6 @@ export default defineConfig({
   // Old WordPress URLs, so links shared from swiift.co.uk keep working here.
   redirects: {
     '/my-games': '/games',
-    '/mods': '/games#mods',
     '/all-projects': '/',
     '/simple-sensitivity-converter': '/source2all-sensitivity-converter',
   },

@@ -9,6 +9,10 @@ downloads: 3376
 summary: Chivalry — Medieval Warfare's two-handed weapons, ported into the VR sword game Hellsplit Arena.
 cover: ../../assets/projects/chivalry-mw-weapon-ports/cover.png
 coverAlt: A lineup of Chivalry two-handed weapons ported into Hellsplit Arena.
+highlightsTitle: The mod
+highlights:
+  - "Ported Chivalry: Medieval Warfare's two-handed weapons into Hellsplit Arena"
+  - 370+ subscribers on mod.io
 links:
   - label: mod.io
     href: https://mod.io/g/hellsplit-arena/m/chivalry-mw-2-handers1

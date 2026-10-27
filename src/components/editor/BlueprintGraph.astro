@@ -1,0 +1,459 @@
+---
+/**
+ * The "Details" tab: a Blueprint Event Graph where each node is something I
+ * did on the project. Nodes are laid out, wired up, dragged, panned and
+ * zoomed by scripts/editor/graph.ts.
+ */
+import UeIcon from './UeIcon.astro';
+import type { BpGraph, BpPin } from '../../lib/graph';
+
+interface Props {
+  graph: BpGraph;
+  active?: boolean;
+}
+const { graph, active = false } = Astro.props;
+const linked = new Set(graph.links.flat());
+const headIcon = { event: 'event', function: 'function', sequence: 'sequence' } as const;
+const pinsOf = (pins: BpPin[], dir: 'in' | 'out') => pins.filter((p) => p.dir === dir);
+---
+
+<section class="doc-panel bp-panel" id="panel-graph" role="tabpanel" aria-labelledby="tab-graph" data-panel="graph" hidden={!active}>
+  <div class="bp" data-bp data-links={JSON.stringify(graph.links)} style={graph.tint ? `--tint:${graph.tint}` : undefined}>
+    <div class="bp__head">
+      <span class="bp__navbtn" aria-hidden="true"><UeIcon name="back" size={13} /></span>
+      <span class="bp__navbtn" aria-hidden="true"><UeIcon name="forward" size={13} /></span>
+      <span class="bp__crumb"><UeIcon name="blueprint" size={13} /> {graph.asset}</span>
+      <UeIcon name="chevron-right" size={10} class="bp__crumb-sep" />
+      <span class="bp__crumb bp__crumb--current"><UeIcon name="graph" size={13} /> Event Graph</span>
+      <span class="bp__zoom" data-bp-zoom aria-hidden="true">Zoom 1:1</span>
+    </div>
+    <div class="bp__canvas" data-bp-canvas>
+      <div class="bp__world" data-bp-world>
+        <svg class="bp__wires" data-bp-wires aria-hidden="true"></svg>
+        {
+          graph.comment && (
+            <div class="bp-comment" data-bp-comment aria-hidden="true">
+              <div class="bp-comment__head">{graph.comment}</div>
+            </div>
+          )
+        }
+        <ol role="list" class="bp__nodes" aria-label={`${graph.asset} event graph`}>
+          {
+            graph.nodes.map((node) => (
+              <li class:list={['bp-node', `bp-node--${node.kind}`]} data-bp-node={node.id} tabindex="0">
+                <div class="bp-node__head" data-bp-drag>
+                  <UeIcon name={headIcon[node.kind]} size={node.kind === 'event' ? 12 : 14} class="bp-node__icon" />
+                  <span class="bp-node__title">{node.title}</span>
+                  {node.kind === 'event' && <span class="bp-node__delegate" aria-hidden="true" />}
+                </div>
+                <div class="bp-node__body">
+                  <div class="bp-node__pins">
+                    <div class="bp-node__col">
+                      {pinsOf(node.pins, 'in').map((p) => (
+                        <span class="bp-pin" data-type={p.type}>
+                          <span class:list={['bp-pin__icon', linked.has(p.id) && 'is-linked']} data-pin={p.id} aria-hidden="true" />
+                          {p.label && <span class="bp-pin__label">{p.label}</span>}
+                          {p.type === 'bool' && p.value && (
+                            <span class="bp-pin__check" aria-label={p.value === 'true' ? 'yes' : 'no'}>
+                              {p.value === 'true' && <UeIcon name="check" size={10} />}
+                            </span>
+                          )}
+                          {p.type !== 'bool' && p.value && <span class="bp-pin__value">{p.value}</span>}
+                        </span>
+                      ))}
+                    </div>
+                    <div class="bp-node__col bp-node__col--out">
+                      {pinsOf(node.pins, 'out').map((p) => (
+                        <span class="bp-pin bp-pin--out" data-type={p.type}>
+                          {p.label && <span class="bp-pin__label">{p.label}</span>}
+                          <span class:list={['bp-pin__icon', linked.has(p.id) && 'is-linked']} data-pin={p.id} aria-hidden="true" />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {node.detail && <p class="bp-node__detail">{node.detail}</p>}
+                  {node.href && (
+                    <a class="bp-node__open" href={node.href}>
+                      Open <UeIcon name="chevron-right" size={10} />
+                    </a>
+                  )}
+                </div>
+                {node.footer && <p class="bp-node__foot">{node.footer}</p>}
+                {node.kind === 'sequence' && <p class="bp-node__foot bp-node__foot--add">Add pin <UeIcon name="plus" size={10} /></p>}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+      <p class="bp__watermark" aria-hidden="true">BLUEPRINT</p>
+      <p class="bp__hint" aria-hidden="true">Drag to pan · Scroll to zoom · Drag nodes · Double-click to fit</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bp {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--bp-bg);
+    border-radius: 0 4px 4px 4px;
+    overflow: hidden;
+  }
+  .bp__head {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    height: 34px;
+    padding: 0 10px;
+    background: rgb(22 22 22 / 0.92);
+    border-bottom: 1px solid #0f0f0f;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .bp__navbtn {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    color: var(--ue-fg-dim);
+  }
+  .bp__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ue-fg);
+  }
+  .bp__crumb--current {
+    color: #fff;
+    font-weight: 600;
+  }
+  .bp__head :global(.bp__crumb-sep) {
+    color: var(--ue-fg-dim);
+  }
+  .bp__zoom {
+    margin-left: auto;
+    color: var(--ue-fg-dim);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .bp__canvas {
+    position: relative;
+    flex: none; /* phones: the script sets its height to fit the graph */
+    min-height: 0;
+    overflow: hidden;
+    touch-action: pan-y;
+    --g: 16px;
+    --gx: 0px;
+    --gy: 0px;
+    background-color: var(--bp-bg);
+    background-image:
+      linear-gradient(to right, var(--bp-grid-major) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--bp-grid-major) 1px, transparent 1px),
+      linear-gradient(to right, var(--bp-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--bp-grid) 1px, transparent 1px);
+    background-size:
+      calc(var(--g) * 8) calc(var(--g) * 8),
+      calc(var(--g) * 8) calc(var(--g) * 8),
+      var(--g) var(--g),
+      var(--g) var(--g);
+    background-position: var(--gx) var(--gy);
+  }
+  .bp__canvas.is-panning {
+    cursor: grabbing;
+  }
+  /* Without scripts the nodes simply wrap; with them they're laid out as a graph. */
+  .bp__world {
+    position: relative;
+    transform-origin: 0 0;
+  }
+  :global(.js) .bp__world {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  /* 1px, not 0: a zero-sized <svg> doesn't render at all. */
+  .bp__wires {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    max-width: none;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .bp__wires :global(path) {
+    fill: none;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+  .bp__nodes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0;
+    padding: 16px;
+    list-style: none;
+  }
+  :global(.js) .bp__nodes {
+    display: block;
+    padding: 0;
+  }
+
+  /* ---------- comment box ---------- */
+  .bp-comment {
+    position: absolute;
+    border-radius: 4px;
+    background: color-mix(in oklab, var(--tint, #ffffff) 9%, rgb(255 255 255 / 0.03));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tint, #ffffff) 22%, transparent);
+  }
+  .bp-comment__head {
+    padding: 6px 12px;
+    border-radius: 4px 4px 0 0;
+    background: color-mix(in oklab, var(--tint, #ffffff) 26%, rgb(0 0 0 / 0.3));
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+  }
+
+  /* ---------- nodes ---------- */
+  .bp-node {
+    position: relative;
+    width: max-content;
+    min-width: 150px;
+    max-width: 240px;
+    border: 1px solid #050505;
+    border-radius: 8px;
+    background: rgb(14 14 14 / 0.9);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.45);
+    color: #fff;
+    font-size: 12px;
+  }
+  :global(.js) .bp-node {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+  }
+  :global(.js) .bp.bp-ready .bp-node {
+    visibility: visible;
+  }
+  .bp-node:focus-visible {
+    outline: none;
+  }
+  .bp-node.is-selected,
+  .bp-node:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--bp-select),
+      0 4px 14px rgb(0 0 0 / 0.45);
+  }
+  .bp-node__head {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 6px 12px 7px 9px;
+    border-radius: 7px 7px 0 0;
+    background: linear-gradient(90deg, var(--head) 0%, color-mix(in oklab, var(--head) 55%, transparent) 70%, transparent 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+    cursor: grab;
+    user-select: none;
+  }
+  .bp-node--event {
+    --head: var(--bp-event);
+  }
+  .bp-node--function {
+    --head: var(--bp-function);
+  }
+  .bp-node--sequence {
+    --head: var(--bp-macro);
+    min-width: 104px;
+  }
+  .bp-node__head :global(.bp-node__icon) {
+    flex: none;
+    margin-top: 2px;
+    color: #fff;
+  }
+  .bp-node--event .bp-node__head :global(.bp-node__icon) {
+    color: #fff;
+    margin-top: 3px;
+  }
+  .bp-node__title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.7);
+  }
+  .bp-node__delegate {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    margin: 4px 0 0 auto;
+    border: 1.5px solid #ff4b4b;
+    border-radius: 1px;
+  }
+  .bp-node__body {
+    display: grid;
+    gap: 6px;
+    padding: 7px 0 8px;
+  }
+  .bp-node__pins {
+    display: flex;
+    justify-content: space-between;
+    gap: 22px;
+  }
+  .bp-node__col {
+    display: grid;
+    gap: 7px;
+    align-content: start;
+    padding-left: 7px;
+  }
+  .bp-node__col--out {
+    justify-items: end;
+    padding: 0 7px 0 0;
+  }
+  .bp-pin {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 14px;
+    color: #e8e8e8;
+    font-size: 12px;
+  }
+  .bp-pin__icon {
+    position: relative;
+    flex: none;
+    width: 12px;
+    height: 12px;
+  }
+  /* exec pins: white arrow outlines (filled once wired) */
+  .bp-pin[data-type='exec'] .bp-pin__icon {
+    width: 13px;
+    height: 13px;
+    background: #fff;
+    clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%);
+  }
+  .bp-pin[data-type='exec'] .bp-pin__icon:not(.is-linked)::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: rgb(14 14 14);
+    clip-path: polygon(0 0, 50% 0, 92% 50%, 50% 100%, 0 100%);
+  }
+  /* data pins: coloured rings (filled once wired) */
+  .bp-pin:not([data-type='exec']) .bp-pin__icon {
+    border: 2px solid var(--pin);
+    border-radius: 50%;
+  }
+  .bp-pin:not([data-type='exec']) .bp-pin__icon.is-linked {
+    background: var(--pin);
+  }
+  .bp-pin[data-type='object'] {
+    --pin: var(--bp-object);
+  }
+  .bp-pin[data-type='string'] {
+    --pin: var(--bp-string);
+  }
+  .bp-pin[data-type='text'] {
+    --pin: var(--bp-text);
+  }
+  .bp-pin[data-type='bool'] {
+    --pin: #c01a1a;
+  }
+  .bp-pin[data-type='int'] {
+    --pin: var(--bp-int);
+  }
+  .bp-pin[data-type='float'] {
+    --pin: var(--bp-float);
+  }
+  .bp-pin__value {
+    color: #9a9a9a;
+  }
+  .bp-pin__check {
+    display: grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #555;
+    border-radius: 2px;
+    background: #0a0a0a;
+    color: #fff;
+  }
+  .bp-node__detail {
+    max-width: 236px;
+    white-space: pre-line;
+    padding: 0 12px;
+    color: #cfcfcf;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .bp-node__open {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin: 0 12px;
+    color: var(--ue-blue);
+    font-size: 12px;
+  }
+  .bp-node__open:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  .bp-node__foot {
+    padding: 0 12px 7px;
+    color: #8c8c8c;
+    font-size: 11px;
+  }
+  .bp-node__foot--add {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .bp__watermark {
+    position: absolute;
+    right: 18px;
+    bottom: 8px;
+    z-index: 2;
+    color: rgb(255 255 255 / 0.1);
+    font-size: clamp(28px, 6vw, 56px);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+  }
+  .bp__hint {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 2;
+    display: none;
+    color: rgb(255 255 255 / 0.35);
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .bp {
+      position: absolute;
+      inset: 0;
+    }
+    .bp__canvas {
+      flex: 1;
+      touch-action: none;
+      cursor: default;
+    }
+    .bp__hint {
+      display: block;
+    }
+  }
+</style>

@@ -1,0 +1,70 @@
+---
+/** A collapsible category in the Details panel, e.g. "Transform". */
+import UeIcon from './UeIcon.astro';
+
+interface Props {
+  title: string;
+  open?: boolean;
+  /** Shown at the right of the header, e.g. "12 items". */
+  meta?: string;
+  id?: string;
+}
+const { title, open = true, meta, id } = Astro.props;
+---
+
+<details class="dp-cat" open={open} id={id} data-dp-cat>
+  <summary class="dp-cat__head">
+    <UeIcon name="chevron-right" size={10} class="dp-cat__twisty" />
+    <span class="dp-cat__title">{title}</span>
+    {meta && <span class="dp-cat__meta">{meta}</span>}
+  </summary>
+  <div class="dp-cat__body">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .dp-cat {
+    border-top: 1px solid #151515;
+  }
+  .dp-cat__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 10px 0 8px;
+    background: var(--ue-header);
+    color: var(--ue-fg-header);
+    font-size: var(--fs-ui);
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .dp-cat__head::-webkit-details-marker {
+    display: none;
+  }
+  .dp-cat__head:hover {
+    background: #363636;
+    color: #fff;
+  }
+  .dp-cat__head :global(.dp-cat__twisty) {
+    flex: none;
+    color: var(--ue-fg-dim);
+    transition: transform 0.12s;
+  }
+  .dp-cat[open] > .dp-cat__head :global(.dp-cat__twisty) {
+    transform: rotate(90deg);
+  }
+  .dp-cat__title {
+    flex: 1;
+  }
+  .dp-cat__meta {
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+    font-weight: 400;
+  }
+  .dp-cat__body {
+    padding: 2px 0 6px;
+  }
+</style>

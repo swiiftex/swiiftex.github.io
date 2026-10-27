@@ -1,0 +1,355 @@
+---
+/**
+ * File · Edit · Window · Tools · Build · Select · Actor · Help — the site's
+ * navigation and shortcuts, as the editor's main menu. On small screens the
+ * same menus open as a sheet from the title bar's menu button.
+ */
+import UeIcon from './UeIcon.astro';
+import { getProjects, projectHref } from '../../lib/projects';
+import { SITE, SOCIALS } from '../../data/site';
+import type { UeIconName } from '../../lib/editor';
+
+type Item = {
+  label: string;
+  icon?: UeIconName;
+  href?: string;
+  external?: boolean;
+  action?: string;
+  key?: string;
+  desc?: string;
+};
+type Section = { heading?: string; items: Item[] };
+type Menu = { label: string; sections: Section[] };
+
+const recent = (await getProjects()).slice(0, 5);
+const socialIcon: Record<string, UeIconName> = { GitHub: 'branch', LinkedIn: 'user', Instagram: 'texture', Discord: 'terminal', 'mod.io': 'plugin' };
+
+const MENUS: Menu[] = [
+  {
+    label: 'File',
+    sections: [
+      {
+        heading: 'Open',
+        items: [
+          { label: 'Main', icon: 'level', href: '/', desc: 'Featured projects and what I do' },
+          { label: 'Games', icon: 'folder', href: '/games/' },
+          { label: 'Mods', icon: 'folder', href: '/mods/' },
+          { label: 'Software', icon: 'folder', href: '/software/' },
+          { label: 'Events', icon: 'folder', href: '/events/' },
+          { label: 'About', icon: 'user', href: '/about/' },
+        ],
+      },
+      { heading: 'Recent projects', items: recent.map((p) => ({ label: p.data.title, icon: 'blueprint' as const, href: projectHref(p) })) },
+    ],
+  },
+  {
+    label: 'Edit',
+    sections: [
+      {
+        heading: 'Edit',
+        items: [
+          { label: 'Copy Email Address', icon: 'copy', action: 'copy-email', desc: SITE.email },
+          { label: 'Copy Link to This Page', icon: 'link', action: 'copy-link' },
+        ],
+      },
+      {
+        heading: 'Configuration',
+        items: [
+          { label: 'Project Settings…', icon: 'settings', href: '/about/', desc: 'About me' },
+          { label: 'Plugins', icon: 'plugin', href: '/about/#plugins', desc: 'Skills and tools' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Window',
+    sections: [
+      {
+        heading: 'Level editor',
+        items: [
+          { label: 'Viewport', icon: 'camera', action: 'tab:viewport' },
+          { label: 'Details', icon: 'graph', action: 'tab:graph', desc: 'Blueprint of what I did' },
+          { label: 'Content Drawer', icon: 'drawer', action: 'drawer', key: 'Ctrl+Space' },
+          { label: 'Output Log', icon: 'log', action: 'log' },
+        ],
+      },
+      {
+        heading: 'Layout',
+        items: [
+          { label: 'Reset Layout', icon: 'history', action: 'reset-layout' },
+          { label: 'Enable Fullscreen', icon: 'fullscreen', action: 'fullscreen', key: 'Shift+F11' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Tools',
+    sections: [
+      {
+        heading: 'Tools',
+        items: [
+          { label: 'Sensitivity Converter', icon: 'utility', href: '/source2all-sensitivity-converter/#calculator' },
+          { label: 'Parry Trainer', icon: 'game', href: '/melee-slashers/' },
+          { label: 'LUNARBALL Inventory', icon: 'data', href: '/lunarball/#inventory' },
+        ],
+      },
+      { heading: 'Debug', items: [{ label: 'Console', icon: 'terminal', action: 'console', key: '`' }] },
+    ],
+  },
+  {
+    label: 'Build',
+    sections: [
+      { heading: 'Build', items: [{ label: 'Build All Levels', icon: 'quickadd', action: 'build' }] },
+      {
+        heading: 'Source',
+        items: [{ label: 'View Site Source', icon: 'branch', href: 'https://github.com/swiiftex/swiiftex.github.io', external: true }],
+      },
+    ],
+  },
+  {
+    label: 'Select',
+    sections: [
+      {
+        heading: 'Viewport',
+        items: [
+          { label: 'Next Item', icon: 'next', action: 'vp-next', key: '→' },
+          { label: 'Previous Item', icon: 'prev', action: 'vp-prev', key: '←' },
+          { label: 'Play / Stop Gallery', icon: 'play', action: 'vp-toggle', key: 'Alt+P' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Actor',
+    sections: [
+      {
+        heading: 'Asset',
+        items: [
+          { label: 'Browse to Asset', icon: 'search', action: 'browse-asset', key: 'Ctrl+B', desc: 'Find this page in the Content Drawer' },
+          { label: 'Open Blueprint', icon: 'blueprint', action: 'tab:graph' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Help',
+    sections: [
+      {
+        heading: 'Help',
+        items: [
+          { label: 'About swiift', icon: 'info', href: '/about/' },
+          { label: 'Melee Slashers Guide', icon: 'game', href: '/melee-slashers/' },
+        ],
+      },
+      {
+        heading: 'Contact',
+        items: [
+          { label: 'Email', icon: 'mail', href: `mailto:${SITE.email}`, desc: SITE.email },
+          ...SOCIALS.map((s) => ({ label: s.label, icon: socialIcon[s.label] ?? 'link', href: s.href, external: true })),
+        ],
+      },
+    ],
+  },
+];
+
+const path = Astro.url.pathname;
+---
+
+{/* Desktop menu bar */}
+<nav class="menubar" aria-label="Main menu">
+  <ul role="menubar" class="menubar__list">
+    {
+      MENUS.map((m, i) => (
+        <li role="none">
+          <button
+            type="button"
+            role="menuitem"
+            class="menubar__item"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls={`menu-${m.label.toLowerCase()}`}
+            data-menu-trigger={`menu-${m.label.toLowerCase()}`}
+            tabindex={i === 0 ? 0 : -1}
+          >
+            {m.label}
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+{
+  MENUS.map((m) => (
+    <div class="ue-menu" role="menu" id={`menu-${m.label.toLowerCase()}`} aria-label={m.label} data-menu hidden>
+      {m.sections.map((s, si) => (
+        <>
+          {si > 0 && <div class="ue-menu__sep" role="separator" />}
+          {s.heading && <p class="ue-menu__heading">{s.heading}</p>}
+          {s.items.map((it) =>
+            it.href ? (
+              <a
+                class="ue-menu__item"
+                role="menuitem"
+                tabindex="-1"
+                href={it.href}
+                target={it.external ? '_blank' : undefined}
+                rel={it.external ? 'noopener' : undefined}
+                aria-current={it.href === path ? 'page' : undefined}
+              >
+                {it.icon ? <UeIcon name={it.icon} size={16} /> : <span />}
+                <span class="ue-menu__label">
+                  {it.label}
+                  {it.desc && <span class="ue-menu__desc">{it.desc}</span>}
+                </span>
+                <span class:list={['ue-menu__key', it.external && 'ue-menu__key--ext']}>{it.external ? '↗' : it.key}</span>
+              </a>
+            ) : (
+              <button type="button" class="ue-menu__item" role="menuitem" tabindex="-1" data-action={it.action}>
+                {it.icon ? <UeIcon name={it.icon} size={16} /> : <span />}
+                <span class="ue-menu__label">
+                  {it.label}
+                  {it.desc && <span class="ue-menu__desc">{it.desc}</span>}
+                </span>
+                <span class="ue-menu__key">{it.key}</span>
+              </button>
+            ),
+          )}
+        </>
+      ))}
+    </div>
+  ))
+}
+
+{/* Small screens: every menu in one sheet */}
+<div class="menu-sheet" id="menu-sheet" data-menu-sheet hidden>
+  {
+    MENUS.filter((m) => !['Build', 'Select', 'Actor'].includes(m.label)).map((m) => (
+      <section class="menu-sheet__group" aria-label={m.label}>
+        <h2 class="menu-sheet__title">{m.label}</h2>
+        {m.sections.map((s) => (
+          <ul role="list" class="menu-sheet__list">
+            {s.items.map((it) => (
+              <li>
+                {it.href ? (
+                  <a
+                    class="menu-sheet__item"
+                    href={it.href}
+                    target={it.external ? '_blank' : undefined}
+                    rel={it.external ? 'noopener' : undefined}
+                    aria-current={it.href === path ? 'page' : undefined}
+                  >
+                    {it.icon && <UeIcon name={it.icon} size={18} />}
+                    <span>{it.label}</span>
+                    {it.external && <span class="menu-sheet__ext">↗</span>}
+                  </a>
+                ) : (
+                  <button type="button" class="menu-sheet__item" data-action={it.action}>
+                    {it.icon && <UeIcon name={it.icon} size={18} />}
+                    <span>{it.label}</span>
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))}
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .menubar {
+    display: none;
+  }
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .menubar {
+      display: block;
+      height: 28px;
+      padding: 0 4px;
+      background: var(--ue-bg);
+      border-bottom: 1px solid #111;
+    }
+  }
+  .menubar__list {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .menubar__item {
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 3px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+  }
+  .menubar__item:hover,
+  .menubar__item[aria-expanded='true'] {
+    background: var(--ue-dropdown);
+    color: #fff;
+  }
+
+  /* ---------- menu sheet (small screens) ---------- */
+  .menu-sheet {
+    position: fixed;
+    inset: 48px 0 0 0;
+    z-index: 70;
+    overflow-y: auto;
+    padding: 8px 12px calc(80px + env(safe-area-inset-bottom));
+    background: var(--ue-title);
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+  .menu-sheet__group {
+    padding: 10px 10px 6px;
+    border-radius: 8px;
+    background: var(--ue-bg);
+  }
+  .menu-sheet__title {
+    margin-bottom: 4px;
+    padding: 0 6px;
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .menu-sheet__list + .menu-sheet__list {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #333;
+  }
+  .menu-sheet__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: var(--ue-fg);
+    font-size: 15px;
+  }
+  .menu-sheet__item:active,
+  .menu-sheet__item:hover {
+    background: var(--ue-dropdown);
+    color: #fff;
+  }
+  .menu-sheet__item[aria-current='page'] {
+    color: #fff;
+    background: color-mix(in oklab, var(--ue-primary) 35%, transparent);
+  }
+  .menu-sheet__ext {
+    margin-left: auto;
+    color: var(--ue-fg-dim);
+  }
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .menu-sheet {
+      display: none !important;
+    }
+  }
+</style>
