@@ -97,7 +97,6 @@ const GAMES = [
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'sens__value';
-            btn.dataset.cursor = 'copy';
             btn.textContent = value;
             btn.setAttribute('aria-label', `Copy ${g.name} sensitivity ${value}`);
             btn.addEventListener('click', async () => {
@@ -134,7 +133,7 @@ const GAMES = [
     color: var(--accent);
   }
   .sens__title {
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-size: 20px;
   }
   .sens__intro {
     color: var(--fg-2);
@@ -158,20 +157,27 @@ const GAMES = [
   }
   .field select,
   .field input {
-    height: 48px;
+    height: 30px;
     width: 100%;
-    padding: 0 14px;
-    background: var(--bg-2);
-    border: 1px solid var(--line-2);
+    padding: 0 10px;
+    background: var(--ue-input);
+    border: 1px solid var(--ue-input-line);
     border-radius: var(--radius);
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 13px;
     transition: border-color 0.2s;
+  }
+  .field select {
+    background: var(--ue-dropdown);
+    border-color: var(--ue-dropdown);
+  }
+  .field select:hover,
+  .field input:hover {
+    border-color: var(--ue-hover);
   }
   .field select:focus,
   .field input:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--ue-primary);
   }
   .sens__distance {
     display: grid;
@@ -186,8 +192,8 @@ const GAMES = [
   .sens__big {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(3.5rem, 8vw, 5.5rem);
-    line-height: 0.9;
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+    line-height: 0.95;
     color: var(--accent);
     font-variant-numeric: tabular-nums;
   }

@@ -1,0 +1,257 @@
+---
+/**
+ * The level editor's main toolbar. Play / skip / stop drive the Viewport's
+ * gallery, the Blueprint button opens the "Details" graph, Platforms lists
+ * where to get the open project, and Settings holds the viewport options.
+ */
+import UeIcon from './UeIcon.astro';
+import { SITE } from '../../data/site';
+import type { ProjectLink } from '../../lib/editor';
+
+interface Props {
+  platforms: ProjectLink[];
+  /** Whether this page has a Blueprint graph tab. */
+  graph: boolean;
+}
+const { platforms, graph } = Astro.props;
+
+const fallback: ProjectLink[] = [
+  { label: 'GitHub', href: 'https://github.com/swiiftex', external: true },
+  { label: 'mod.io', href: 'https://mod.io/u/swiift1/', external: true },
+  { label: 'LUNARBALL on Steam', href: 'https://store.steampowered.com/app/2012590/', external: true },
+];
+const links = platforms.length ? platforms : fallback;
+
+const VIEW_MODES = [
+  ['lit', 'Lit'],
+  ['unlit', 'Unlit'],
+  ['wireframe', 'Wireframe'],
+  ['detail', 'Detail Lighting'],
+  ['lighting', 'Lighting Only'],
+] as const;
+---
+
+<div class="toolbar" role="toolbar" aria-label="Main toolbar">
+  <span class="tb-btn tb-static tb-desk" aria-hidden="true"><UeIcon name="save" /></span>
+  <span class="tb-combo tb-static tb-desk" aria-hidden="true"><UeIcon name="select" size={14} /> Selection Mode <UeIcon name="chevron-down" size={12} /></span>
+  <span class="tb-sep tb-desk" aria-hidden="true"></span>
+  <span class="tb-btn tb-static tb-desk" aria-hidden="true"><UeIcon name="quickadd" /><UeIcon name="chevron-down" size={10} /></span>
+  {
+    graph && (
+      <button type="button" class="tb-btn tb-wide" data-action="tab:graph" title="Open the Blueprint graph" aria-label="Open the Blueprint graph">
+        <UeIcon name="blueprint" />
+        <UeIcon name="chevron-down" size={10} class="tb-desk" />
+      </button>
+    )
+  }
+  <span class="tb-btn tb-static tb-desk" aria-hidden="true"><UeIcon name="cinematics" /><UeIcon name="chevron-down" size={10} /></span>
+  <span class="tb-sep tb-wide" aria-hidden="true"></span>
+
+  <div class="tb-play" data-vp-controls>
+    <button type="button" class="tb-btn tb-btn--play" data-action="vp-play" title="Play the gallery (Alt+P)" aria-label="Play the gallery">
+      <UeIcon name="play" />
+    </button>
+    <button type="button" class="tb-btn" data-action="vp-next" title="Next item (→)" aria-label="Next item">
+      <UeIcon name="next" size={14} />
+    </button>
+    <button type="button" class="tb-btn tb-btn--stop" data-action="vp-stop" title="Stop the gallery" aria-label="Stop the gallery">
+      <UeIcon name="stop" size={14} />
+    </button>
+    <span class="tb-btn tb-static tb-desk" aria-hidden="true"><UeIcon name="more" size={14} /></span>
+  </div>
+  <span class="tb-sep" aria-hidden="true"></span>
+
+  <button type="button" class="tb-combo" data-menu-trigger="menu-platforms" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-platforms">
+    <UeIcon name="platforms" size={15} /> <span>Platforms</span> <UeIcon name="chevron-down" size={12} />
+  </button>
+
+  <div class="tb-right">
+    <button type="button" class="tb-combo" data-menu-trigger="menu-settings" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-settings">
+      <UeIcon name="settings" size={15} /> <span class="tb-desk">Settings</span> <UeIcon name="chevron-down" size={12} class="tb-desk" />
+    </button>
+    <a class="tb-combo tb-contact" href={`mailto:${SITE.email}`} data-action="contact">
+      <UeIcon name="mail" size={15} /> <span class="tb-contact__long">Get in touch</span><span class="tb-contact__short">Contact</span>
+    </a>
+  </div>
+</div>
+
+<div class="ue-menu" role="menu" id="menu-platforms" aria-label="Platforms" data-menu hidden>
+  <p class="ue-menu__heading">{platforms.length ? 'Get it' : 'Elsewhere'}</p>
+  {
+    links.map((l) => (
+      <a
+        class="ue-menu__item"
+        role="menuitem"
+        tabindex="-1"
+        href={l.href}
+        target={l.external ? '_blank' : undefined}
+        rel={l.external ? 'noopener' : undefined}
+        data-release-repo={l.release?.repo}
+        data-release-asset={l.release?.asset}
+      >
+        <UeIcon name={l.release ? 'import' : 'platforms'} size={16} />
+        <span class="ue-menu__label">
+          {l.label}
+          {l.tag && <span class="ue-menu__desc" data-release-tag>{l.tag}</span>}
+        </span>
+        <span class="ue-menu__key ue-menu__key--ext">{l.external ? '↗' : ''}</span>
+      </a>
+    ))
+  }
+</div>
+
+<div class="ue-menu" role="menu" id="menu-settings" aria-label="Settings" data-menu hidden>
+  <p class="ue-menu__heading">Viewport</p>
+  <button type="button" class="ue-menu__item" role="menuitemcheckbox" aria-checked="true" tabindex="-1" data-action="vp-toggle" data-realtime-toggle>
+    <UeIcon name="check" size={16} class="ue-menu__check" />
+    <span class="ue-menu__label">Realtime<span class="ue-menu__desc">Auto-play the gallery</span></span>
+    <span class="ue-menu__key">Alt+P</span>
+  </button>
+  <button type="button" class="ue-menu__item" role="menuitemcheckbox" aria-checked="false" tabindex="-1" data-action="game-view" data-game-view-toggle>
+    <UeIcon name="check" size={16} class="ue-menu__check" />
+    <span class="ue-menu__label">Game View<span class="ue-menu__desc">Hide the viewport overlays</span></span>
+    <span class="ue-menu__key">G</span>
+  </button>
+  <div class="ue-menu__sep" role="separator"></div>
+  <p class="ue-menu__heading">View mode</p>
+  {
+    VIEW_MODES.map(([id, label]) => (
+      <button
+        type="button"
+        class="ue-menu__item"
+        role="menuitemradio"
+        aria-checked={id === 'lit' ? 'true' : 'false'}
+        tabindex="-1"
+        data-action={`viewmode:${id}`}
+        data-viewmode-option={id}
+      >
+        <UeIcon name="check" size={16} class="ue-menu__check" />
+        <span class="ue-menu__label">{label}</span>
+        <span class="ue-menu__key" />
+      </button>
+    ))
+  }
+</div>
+
+<style>
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 44px;
+    margin: 6px 6px 0;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--ue-bg);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .toolbar :global(.tb-desk) {
+    display: none !important;
+  }
+  .tb-btn,
+  .tb-combo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex: none;
+    height: 32px;
+    min-width: 34px;
+    padding: 0 7px;
+    border-radius: 4px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+  }
+  .tb-combo {
+    padding: 0 9px;
+    background: var(--ue-dropdown);
+  }
+  button.tb-btn:hover,
+  button.tb-combo:hover,
+  a.tb-combo:hover,
+  .tb-combo[aria-expanded='true'] {
+    background: var(--ue-hover);
+    color: #fff;
+  }
+  .tb-static {
+    cursor: default;
+    opacity: 0.8;
+  }
+  .tb-combo.tb-static {
+    background: var(--ue-dropdown);
+  }
+  .tb-sep {
+    flex: none;
+    width: 1px;
+    height: 20px;
+    margin: 0 6px;
+    background: #3a3a3a;
+  }
+  .tb-play {
+    display: flex;
+    gap: 1px;
+  }
+  /* While the gallery plays, Play greys out and Stop lights up, as in PIE. */
+  :global(.vp-playing) .tb-btn--play {
+    opacity: 0.45;
+  }
+  .tb-btn--stop {
+    color: var(--ue-fg-dim);
+  }
+  :global(.vp-playing) .tb-btn--stop {
+    color: var(--ue-error);
+  }
+  .tb-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding-left: 8px;
+  }
+  .tb-contact {
+    background: var(--ue-primary);
+    color: #fff;
+  }
+  a.tb-contact:hover {
+    background: var(--ue-primary-hover);
+  }
+  .tb-contact__long {
+    display: none;
+  }
+  /* Narrow phones: the graph has its own tab right below, so drop its button. */
+  @media (max-width: 479px) {
+    .tb-wide {
+      display: none;
+    }
+  }
+  @media (min-width: 480px) {
+    .tb-contact__long {
+      display: inline;
+    }
+    .tb-contact__short {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .toolbar {
+      height: 40px;
+      margin: 4px 4px 4px;
+      border-radius: 4px;
+      overflow: visible;
+    }
+    .toolbar :global(.tb-desk) {
+      display: inline-flex !important;
+    }
+    .tb-btn,
+    .tb-combo {
+      height: 28px;
+      min-width: 30px;
+    }
+  }
+</style>

@@ -1,0 +1,711 @@
+---
+/**
+ * The level viewport, showing the page's media as an auto-scrolling gallery:
+ * screenshots, Steam trailers, clips, YouTube videos or a reel of projects.
+ * The usual viewport chrome sits on top: the viewport toolbar, axis gizmo,
+ * view modes (Lit, Unlit, Wireframe…) and Game View (G).
+ * Behaviour lives in scripts/editor/viewport.ts.
+ */
+import { Image } from 'astro:assets';
+import UeIcon from './UeIcon.astro';
+import TitleCard from '../TitleCard.astro';
+import type { ImageMetadata } from 'astro';
+import type { ViewportItem } from '../../lib/viewport';
+
+interface Props {
+  items: ViewportItem[];
+  /** Level name, for the region's label. */
+  level: string;
+  active?: boolean;
+  /** Start the gallery playing (it never autoplays for reduced-motion users). */
+  autoplay?: boolean;
+}
+const { items, level, active = true, autoplay = true } = Astro.props;
+const n = items.length;
+const largest = (it: ViewportItem) => (it.image ? it.image.src : undefined);
+/** Responsive widths up to the image's own size (capped at 1920). */
+const widthsFor = (img: ImageMetadata) => [...[640, 960, 1440].filter((w) => w < img.width), Math.min(img.width, 1920)];
+---
+
+<section class="doc-panel vp-panel" id="panel-viewport" role="tabpanel" aria-labelledby="tab-viewport" data-panel="viewport" hidden={!active}>
+  <div class:list={['vp', items[0]?.href && 'has-lower']} data-vp data-autoplay={autoplay && n > 1 ? '' : undefined} data-viewmode="lit" aria-roledescription="carousel" aria-label={`${level} viewport`}>
+    <div class="vp__track" data-vp-track tabindex="0" aria-label="Use the arrow keys to move between items">
+      {
+        items.map((it, i) => {
+          const fit = it.fit ?? (it.href ? 'cover' : 'contain');
+          return (
+            <div
+              class="vp__slide"
+              data-vp-slide={i}
+              data-kind={it.kind}
+              data-name={it.name}
+              data-caption={it.caption}
+              data-full={largest(it)}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${n}: ${it.name}`}
+              style={it.tint ? `--tint:${it.tint}` : undefined}
+            >
+              {it.thumb && fit === 'contain' && <div class="vp__backdrop" style={`background-image:url("${it.thumb}")`} aria-hidden="true" />}
+
+              {it.kind === 'image' && it.image && (
+                <Image
+                  src={it.image}
+                  alt={it.caption ?? ''}
+                  widths={widthsFor(it.image!)}
+                  sizes="(min-width: 1000px) 72vw, 100vw"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={i === 0 ? 'high' : undefined}
+                  class:list={['vp__img', `vp__img--${fit}`]}
+                />
+              )}
+
+              {it.kind === 'video' && (
+                <div class:list={['vp__frame', it.href && 'vp__frame--fill']}>
+                  {it.image && (
+                    <Image
+                      src={it.image}
+                      alt=""
+                      widths={widthsFor(it.image!)}
+                      sizes="(min-width: 1000px) 72vw, 100vw"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      class="vp__poster"
+                    />
+                  )}
+                  <span class="hover-video" data-hover-video={JSON.stringify(it.video)} data-start="0" aria-hidden="true" />
+                  <button type="button" class="vp__unmute" data-vp-unmute aria-pressed="false">
+                    <UeIcon name="video" size={14} /> <span>Unmute</span>
+                  </button>
+                </div>
+              )}
+
+              {it.kind === 'clip' && (
+                <div class="vp__frame">
+                  <video class="vp__clip" src={it.clip} muted loop playsinline preload="none" aria-label={it.caption} data-vp-clip />
+                </div>
+              )}
+
+              {it.kind === 'youtube' && (
+                <div class="vp__frame vp__yt" data-yt={it.youtube} data-yt-title={it.caption}>
+                  <img
+                    class="vp__yt-thumb"
+                    src={`https://i.ytimg.com/vi/${it.youtube}/maxresdefault.jpg`}
+                    data-fallback={`https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg`}
+                    alt=""
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                  <button type="button" class="vp__yt-play" data-yt-play aria-label={`Play video: ${it.caption}`}>
+                    <svg viewBox="0 0 68 48" width="68" height="48" aria-hidden="true">
+                      <path
+                        d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.2.3 34 .3 34 .3S12.8.3 7.5 1.7a8.5 8.5 0 0 0-6 6C0 13 0 24 0 24s0 11 1.5 16.3a8.5 8.5 0 0 0 6 6C12.8 47.7 34 47.7 34 47.7s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C68 35 68 24 68 24s0-11-1.5-16.3z"
+                        fill="currentColor"
+                      />
+                      <path d="m27 34 18-10-18-10z" fill="#fff" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
+              {it.kind === 'card' && it.card && (
+                <div class="vp__frame vp__frame--card">
+                  <TitleCard title={it.card.title} kicker={it.card.kicker} meta={it.card.meta} tint={it.tint} />
+                </div>
+              )}
+
+              {it.href && (
+                <div class="vp__lower">
+                  {it.tag && <span class="vp__tag">{it.tag}</span>}
+                  <a class="vp__title" href={it.href}>
+                    {it.name}
+                  </a>
+                  {it.caption && <p class="vp__sub">{it.caption}</p>}
+                  <a class="ue-btn ue-btn--primary vp__open" href={it.href}>
+                    <UeIcon name="blueprint" size={14} /> {it.action ?? 'Open'}
+                  </a>
+                </div>
+              )}
+            </div>
+          );
+        })
+      }
+    </div>
+
+    <!-- viewport toolbar -->
+    <div class="vp__bar vp-overlay">
+      <div class="vp__group">
+        <button type="button" class="vp__btn" data-menu-trigger="menu-vp" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-vp" aria-label="Viewport options">
+          <UeIcon name="menu" size={14} />
+        </button>
+      </div>
+      <div class="vp__group vp-desk">
+        <span class="vp__btn vp__btn--text" aria-hidden="true"><UeIcon name="perspective" size={14} /> Perspective</span>
+      </div>
+      <div class="vp__group">
+        <button type="button" class="vp__btn vp__btn--text" data-menu-trigger="menu-viewmode" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-viewmode">
+          <UeIcon name="lit" size={14} /> <span data-viewmode-label>Lit</span>
+        </button>
+      </div>
+      <div class="vp__group vp-desk">
+        <span class="vp__btn vp__btn--text" aria-hidden="true"><UeIcon name="show" size={14} /> Show</span>
+      </div>
+
+      <div class="vp__spacer"></div>
+
+      <div class="vp__group vp-desk" aria-hidden="true">
+        <span class="vp__btn"><UeIcon name="select" size={13} /></span>
+        <span class="vp__btn is-on"><UeIcon name="move" size={13} /></span>
+        <span class="vp__btn"><UeIcon name="rotate" size={13} /></span>
+        <span class="vp__btn"><UeIcon name="scale" size={13} /></span>
+      </div>
+      <div class="vp__group vp-desk vp-wide" aria-hidden="true">
+        <span class="vp__btn"><UeIcon name="globe" size={13} /></span>
+      </div>
+      <div class="vp__group vp-desk vp-wide" aria-hidden="true">
+        <span class="vp__btn vp__btn--text is-on"><UeIcon name="grid" size={13} /> 10</span>
+        <span class="vp__btn vp__btn--text is-on"><UeIcon name="angle" size={13} /> 10°</span>
+        <span class="vp__btn vp__btn--text"><UeIcon name="scale" size={13} /> 0.25</span>
+      </div>
+      <div class="vp__group vp-desk vp-wide" aria-hidden="true">
+        <span class="vp__btn vp__btn--text"><UeIcon name="camera" size={13} /> 4</span>
+      </div>
+      <div class="vp__group">
+        <button type="button" class="vp__btn" data-action="vp-fullscreen" aria-label="Maximize the viewport" title="Maximize the viewport">
+          <UeIcon name="maximize" size={13} />
+        </button>
+      </div>
+    </div>
+
+    {
+      n > 1 && (
+        <>
+          <button type="button" class="vp__nav vp__nav--prev vp-overlay" data-action="vp-prev" aria-label="Previous item">
+            <UeIcon name="chevron-left" size={20} />
+          </button>
+          <button type="button" class="vp__nav vp__nav--next vp-overlay" data-action="vp-next" aria-label="Next item">
+            <UeIcon name="chevron-right" size={20} />
+          </button>
+        </>
+      )
+    }
+
+    <div class="vp__caption" data-vp-caption aria-live="polite">
+      <span class="vp__caption-name" data-vp-caption-name>{items[0]?.name}</span>
+      <span class="vp__caption-text" data-vp-caption-text>{items[0]?.caption}</span>
+    </div>
+
+    <svg class="vp__axis vp-overlay" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+      <line x1="12" y1="32" x2="34" y2="32" stroke="#ef3535" stroke-width="2" />
+      <line x1="12" y1="32" x2="24" y2="22" stroke="#7fe04a" stroke-width="2" />
+      <line x1="12" y1="32" x2="12" y2="8" stroke="#2a7fff" stroke-width="2" />
+      <text x="36" y="35" fill="#ef3535" font-size="8" font-family="Roboto, sans-serif">X</text>
+      <text x="25" y="20" fill="#7fe04a" font-size="8" font-family="Roboto, sans-serif">Y</text>
+      <text x="9" y="6" fill="#2a7fff" font-size="8" font-family="Roboto, sans-serif">Z</text>
+    </svg>
+
+    {
+      n > 1 && (
+        <div class="vp__progress vp-overlay" aria-hidden="true">
+          {items.map((_, i) => (
+            <span class="vp__seg" data-vp-seg={i}>
+              <span />
+            </span>
+          ))}
+        </div>
+      )
+    }
+    <p class="vp__realtime vp-overlay" data-vp-realtime hidden>Realtime Off — press <UeIcon name="play" size={10} /> to resume</p>
+
+    <!-- Viewport menus -->
+    <div class="ue-menu" role="menu" id="menu-vp" aria-label="Viewport options" data-menu hidden>
+      <p class="ue-menu__heading">Viewport</p>
+      <button type="button" class="ue-menu__item" role="menuitemcheckbox" aria-checked="true" tabindex="-1" data-action="vp-toggle" data-realtime-toggle>
+        <UeIcon name="check" size={16} class="ue-menu__check" /><span class="ue-menu__label">Realtime</span><span class="ue-menu__key">Alt+P</span>
+      </button>
+      <button type="button" class="ue-menu__item" role="menuitemcheckbox" aria-checked="false" tabindex="-1" data-action="game-view" data-game-view-toggle>
+        <UeIcon name="check" size={16} class="ue-menu__check" /><span class="ue-menu__label">Game View</span><span class="ue-menu__key">G</span>
+      </button>
+      <button type="button" class="ue-menu__item" role="menuitem" tabindex="-1" data-action="vp-fullscreen">
+        <UeIcon name="maximize" size={16} /><span class="ue-menu__label">Immersive Mode</span><span class="ue-menu__key">F11</span>
+      </button>
+      <div class="ue-menu__sep" role="separator"></div>
+      <p class="ue-menu__heading">Screenshot</p>
+      <button type="button" class="ue-menu__item" role="menuitem" tabindex="-1" data-action="vp-highres">
+        <UeIcon name="camera" size={16} /><span class="ue-menu__label">High Resolution Screenshot…<span class="ue-menu__desc">Open the full-size image</span></span><span class="ue-menu__key" />
+      </button>
+    </div>
+    <div class="ue-menu" role="menu" id="menu-viewmode" aria-label="View mode" data-menu hidden>
+      <p class="ue-menu__heading">View mode</p>
+      {
+        (
+          [
+            ['lit', 'Lit'],
+            ['unlit', 'Unlit'],
+            ['wireframe', 'Wireframe'],
+            ['detail', 'Detail Lighting'],
+            ['lighting', 'Lighting Only'],
+          ] as const
+        ).map(([id, label], i) => (
+          <button
+            type="button"
+            class="ue-menu__item"
+            role="menuitemradio"
+            aria-checked={id === 'lit' ? 'true' : 'false'}
+            tabindex="-1"
+            data-action={`viewmode:${id}`}
+            data-viewmode-option={id}
+          >
+            <UeIcon name="check" size={16} class="ue-menu__check" />
+            <span class="ue-menu__label">{label}</span>
+            <span class="ue-menu__key">Alt+{i + 4}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <!-- Edge-detect filter for the Wireframe view mode -->
+    <svg class="vp__filters" aria-hidden="true" width="0" height="0">
+      <filter id="vp-wireframe" color-interpolation-filters="sRGB">
+        <feColorMatrix type="saturate" values="0" />
+        <feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="true" />
+        <feComponentTransfer>
+          <feFuncR type="linear" slope="5" />
+          <feFuncG type="linear" slope="5" />
+          <feFuncB type="linear" slope="5" />
+        </feComponentTransfer>
+        <feColorMatrix type="matrix" values="0.15 0 0 0 0  0 0.55 0 0 0.02  0 0 1 0 0.06  0 0 0 1 0" />
+      </filter>
+    </svg>
+  </div>
+</section>
+
+<style>
+  .vp-panel {
+    padding: 0;
+  }
+  .vp {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 0 4px 4px 4px;
+    background: #0b0b0b;
+    container-type: inline-size;
+  }
+  .vp:fullscreen {
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+
+  /* ---------- the gallery track ---------- */
+  .vp__track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .vp__track::-webkit-scrollbar {
+    display: none;
+  }
+  .vp__track:focus-visible {
+    outline: none;
+  }
+  .vp__slide {
+    position: relative;
+    flex: 0 0 100%;
+    height: 100%;
+    overflow: hidden;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    container-type: size;
+    display: grid;
+    place-items: center;
+  }
+  .vp__backdrop {
+    position: absolute;
+    inset: -40px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(28px) brightness(0.42) saturate(1.2);
+    transform: scale(1.1);
+  }
+  .vp :global(.vp__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .vp :global(.vp__img--contain) {
+    object-fit: contain;
+  }
+  .vp :global(.vp__img--cover) {
+    object-fit: cover;
+  }
+  /* View modes: Unreal's viewport shading, approximated with filters. */
+  .vp[data-viewmode='unlit'] .vp__slide > :not(.vp__lower):not(.vp__backdrop) {
+    filter: saturate(1.25) brightness(1.18) contrast(0.78);
+  }
+  .vp[data-viewmode='wireframe'] .vp__slide > :not(.vp__lower):not(.vp__backdrop) {
+    filter: url(#vp-wireframe);
+  }
+  .vp[data-viewmode='wireframe'] .vp__backdrop {
+    opacity: 0;
+  }
+  .vp[data-viewmode='detail'] .vp__slide > :not(.vp__lower):not(.vp__backdrop) {
+    filter: grayscale(1) contrast(1.15) brightness(1.08);
+  }
+  .vp[data-viewmode='lighting'] .vp__slide > :not(.vp__lower):not(.vp__backdrop) {
+    filter: grayscale(1) brightness(1.35) contrast(0.7) sepia(0.12);
+  }
+  .vp__filters {
+    position: absolute;
+  }
+
+  /* 16:9 frame, contained in the slide, for videos and title cards */
+  .vp__frame {
+    position: relative;
+    width: min(100cqw, 100cqh * 16 / 9);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000;
+  }
+  .vp__frame--fill {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .vp__frame :global(.vp__poster),
+  .vp__clip,
+  .vp__yt-thumb {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .vp__frame--card :global(.title-card) {
+    position: absolute;
+    inset: 0;
+  }
+  .vp__unmute {
+    position: absolute;
+    right: 12px;
+    bottom: 40px;
+    z-index: 3;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 4px;
+    background: rgb(20 20 20 / 0.85);
+    color: #fff;
+    font-size: var(--fs-ui);
+  }
+  .vp__slide.is-playing .vp__unmute {
+    display: inline-flex;
+  }
+  .vp__unmute:hover {
+    background: var(--ue-primary);
+  }
+  .vp__unmute[aria-pressed='true'] {
+    background: var(--ue-primary);
+  }
+  .vp__yt-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #e3262f;
+  }
+  .vp__yt-play svg {
+    transition: transform 0.2s;
+    filter: drop-shadow(0 8px 24px rgb(0 0 0 / 0.5));
+  }
+  .vp__yt-play:hover svg {
+    transform: scale(1.1);
+  }
+  .vp__yt :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* Lower third on reel items */
+  .vp__lower {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+    padding: 48px 16px 34px;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.85), rgb(0 0 0 / 0.5) 55%, transparent);
+  }
+  .vp__tag {
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--tint, var(--ue-primary));
+    color: #0b0b0b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .vp__title {
+    color: #fff;
+    font-size: clamp(22px, 5cqw, 44px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 16px rgb(0 0 0 / 0.6);
+  }
+  .vp__title:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .vp__sub {
+    max-width: 60ch;
+    color: #e6e6e6;
+    font-size: 13px;
+    line-height: 1.45;
+    text-shadow: 0 1px 8px rgb(0 0 0 / 0.8);
+  }
+  .vp__open {
+    margin-top: 4px;
+  }
+
+  /* ---------- overlays ---------- */
+  .vp__bar {
+    position: absolute;
+    inset: 8px 8px auto 8px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+  .vp__group {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 1px;
+    border-radius: 4px;
+    background: rgb(26 26 26 / 0.86);
+    pointer-events: auto;
+  }
+  .vp__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 3px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+  }
+  span.vp__btn {
+    cursor: default;
+  }
+  button.vp__btn:hover,
+  .vp__btn[aria-expanded='true'] {
+    background: var(--ue-hover);
+    color: #fff;
+  }
+  .vp__btn.is-on {
+    color: var(--ue-blue);
+  }
+  .vp__spacer {
+    flex: 1;
+  }
+  .vp :global(.vp-desk) {
+    display: none;
+  }
+  .vp__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 4;
+    display: none;
+    place-items: center;
+    width: 34px;
+    height: 54px;
+    margin-top: -27px;
+    border-radius: 4px;
+    background: rgb(20 20 20 / 0.7);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .vp__nav--prev {
+    left: 8px;
+  }
+  .vp__nav--next {
+    right: 8px;
+  }
+  .vp:hover .vp__nav,
+  .vp__nav:focus-visible {
+    opacity: 1;
+  }
+  .vp__nav:hover {
+    background: var(--ue-primary);
+  }
+  .vp__caption {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 12px;
+    z-index: 3;
+    display: flex;
+    gap: 2px 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    pointer-events: none;
+    color: #fff;
+    text-shadow:
+      0 1px 2px #000,
+      0 0 12px rgb(0 0 0 / 0.8);
+  }
+  .vp__caption-name {
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .vp__caption-text {
+    display: none;
+    color: #ddd;
+    font-size: 12px;
+  }
+  /* Reel slides carry their own lower third. */
+  .vp.has-lower .vp__caption {
+    display: none;
+  }
+  .vp__axis {
+    position: absolute;
+    left: 6px;
+    bottom: 14px;
+    z-index: 3;
+    display: none;
+    pointer-events: none;
+  }
+  .vp__progress {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 5px;
+    z-index: 3;
+    display: flex;
+    gap: 3px;
+    pointer-events: none;
+  }
+  .vp__seg {
+    flex: 1;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.25);
+  }
+  .vp__seg > span {
+    display: block;
+    height: 100%;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .vp__seg.is-done > span {
+    transform: scaleX(1);
+  }
+  .vp__seg.is-current > span {
+    transform: scaleX(1);
+    background: var(--ue-blue);
+  }
+  :global(.vp-playing) .vp__seg.is-current > span {
+    transform: scaleX(0);
+    background: #fff;
+    animation: vp-progress var(--vp-dur, 6s) linear forwards;
+  }
+  @keyframes vp-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+  .vp__realtime {
+    position: absolute;
+    left: 50%;
+    top: 46px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    background: rgb(20 20 20 / 0.8);
+    color: var(--ue-warning);
+    font-size: 11px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .vp__realtime :global(.ue-icon) {
+    --play: var(--ue-warning);
+  }
+  /* Game View hides the editor overlays. */
+  .vp.is-game-view .vp-overlay,
+  .vp.is-game-view .vp__caption {
+    display: none !important;
+  }
+
+  /* ---------- wide viewports ---------- */
+  @container (min-width: 620px) {
+    .vp__caption-text {
+      display: inline;
+    }
+    .vp__axis {
+      display: block;
+    }
+    .vp__lower {
+      padding: 80px 64px 40px;
+    }
+    .vp__nav {
+      display: grid;
+    }
+    .vp :global(.vp-desk) {
+      display: flex;
+    }
+  }
+  @container (max-width: 879px) {
+    .vp :global(.vp-wide) {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .vp-panel {
+      overflow: hidden;
+    }
+    .vp {
+      position: absolute;
+      inset: 0;
+      aspect-ratio: auto;
+    }
+    .vp__caption {
+      left: 60px;
+      bottom: 14px;
+    }
+    .vp__progress {
+      left: 60px;
+      right: 14px;
+    }
+  }
+</style>

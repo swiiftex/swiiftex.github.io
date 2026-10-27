@@ -1,12 +1,24 @@
 ---
+/**
+ * The melee slashers guide as a level you can play: the parry trainer runs in
+ * the main tab, each mechanic is a node in the Blueprint graph, and the
+ * definitions sit in the Details panel.
+ */
 import Base from '../layouts/Base.astro';
-import PageHeader from '../components/PageHeader.astro';
+import BlueprintGraph from '../components/editor/BlueprintGraph.astro';
+import DocPanel from '../components/editor/DocPanel.astro';
+import DetailsPanel from '../components/editor/DetailsPanel.astro';
+import DetailsCategory from '../components/editor/DetailsCategory.astro';
+import PropRow from '../components/editor/PropRow.astro';
+import UeIcon from '../components/editor/UeIcon.astro';
 import ParryTrainer from '../components/ParryTrainer.astro';
+import { buildGraph } from '../lib/graph';
+import type { DockTab } from '../lib/editor';
 
 const groups = [
   {
     id: 'offence',
-    title: 'Offensive mechanics',
+    title: 'Offensive Mechanics',
     terms: [
       {
         term: 'Real-time swings',
@@ -14,182 +26,131 @@ const groups = [
         note: 'Introduced by Chivalry: Medieval Warfare.',
         href: 'https://store.steampowered.com/app/219640/Chivalry_Medieval_Warfare/',
       },
-      {
-        term: 'Feint',
-        def: 'Cancelling an attack mid-swing — either to bait out your enemy’s parry, or simply to avoid missing.',
-      },
-      {
-        term: 'Combo',
-        def: 'Chaining multiple attacks in sequence, whether the previous one missed or landed.',
-      },
+      { term: 'Feint', def: 'Cancelling an attack mid-swing — either to bait out your enemy’s parry, or simply to avoid missing.' },
+      { term: 'Combo', def: 'Chaining multiple attacks in sequence, whether the previous one missed or landed.' },
     ],
   },
   {
     id: 'defence',
-    title: 'Defensive mechanics',
+    title: 'Defensive Mechanics',
     terms: [
-      {
-        term: 'Parry',
-        def: 'Blocking an attack. Depending on the game it’s either timed or held.',
-      },
-      {
-        term: 'Kick / jab',
-        def: 'A fast, low-damage attack — usually used to stop an opponent’s combo or punish facehugging.',
-      },
+      { term: 'Parry', def: 'Blocking an attack. Depending on the game it’s either timed or held.' },
+      { term: 'Kick / jab', def: 'A fast, low-damage attack — usually used to stop an opponent’s combo or punish facehugging.' },
     ],
   },
-];
+] as { id: string; title: string; terms: { term: string; def: string; note?: string; href?: string }[] }[];
 
 const acronyms = [
   { short: 'FTP', long: 'Feint-to-parry' },
   { short: 'CFTP', long: 'Combo feint-to-parry' },
 ];
+
+const graph = buildGraph(
+  'BP_MeleeSlasher',
+  groups.flatMap((g) => g.terms.map((t) => ({ title: t.term, detail: t.def }))),
+  { comment: 'Core mechanics', target: 'Melee Slasher' },
+);
+const tabs: DockTab[] = [
+  { id: 'trainer', label: 'Parry Trainer', icon: 'game', title: 'Play in editor' },
+  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: the core mechanics' },
+];
 ---
 
-<Base title="Melee Slashers: a Quick Start Guide" description="A quick start guide to melee slashers — real-time swings, feints, combos, parries and kicks — with a parry-timing mini game.">
-  <PageHeader
-    index="05"
-    eyebrow="Guide"
-    title="Melee slashers: a quick start guide"
-    lede="This guide is mainly for new players coming into the genre. Every melee slasher is different, but a few core mechanics carry over between most of them."
-  >
-    <p class="definition panel" data-reveal style="--i:3">
-      <span class="mono accent">Melee slasher</span>
-      <span>A melee-focused game that uses <a href="#real-time-swings">real-time swings</a>.</span>
+<Base
+  title="Melee Slashers: a Quick Start Guide"
+  description="A quick start guide to melee slashers — real-time swings, feints, combos, parries and kicks — with a parry-timing mini game."
+  level="Melee Slashers"
+  levelIcon="game"
+  folder="Guides"
+  asset="melee-slashers"
+  tabs={tabs}
+  log={[{ cat: 'PlayLevel', text: 'PIE: Play in editor start: Parry Trainer' }]}
+>
+  <DocPanel id="trainer" active>
+    <ParryTrainer />
+    <p class="outro">
+      Want the competitive version? See <a href="/swiifts-comp-mod/">swiift's Comp Mod</a> for MORDHAU.
     </p>
-  </PageHeader>
+  </DocPanel>
+  <BlueprintGraph graph={graph} />
 
-  {
-    groups.map((g, gi) => (
-      <section class="container section--tight" aria-labelledby={g.id}>
-        <h2 id={g.id} class="eyebrow" data-reveal>
-          <span class="eyebrow__index">{String(gi + 1).padStart(2, '0')}</span>
-          <span class="eyebrow__rule" />
-          {g.title}
-        </h2>
-        <dl class="terms">
-          {g.terms.map((t, i) => (
-            <div class="term panel" id={t.term.toLowerCase().replace(/[^a-z]+/g, '-')} data-reveal data-tilt="3" style={`--i:${i}`}>
-              <dt class="display term__name">{t.term}</dt>
-              <dd class="term__def">
+  <DetailsPanel slot="details" name="Melee Slashers: a Quick Start Guide" icon="game" type="Level · Guide" path="/Game/Guides/Lvl_MeleeSlashers">
+    <DetailsCategory title="Guide">
+      <PropRow wide>
+        <div class="dp-text prose">
+          <p>
+            This guide is mainly for new players coming into the genre. Every melee slasher is different, but a few core mechanics carry over between
+            most of them.
+          </p>
+        </div>
+      </PropRow>
+      <PropRow label="Melee Slasher">
+        <span class="dp-field">A melee-focused game that uses <a class="accent" href="#real-time-swings">real-time swings</a>.</span>
+      </PropRow>
+    </DetailsCategory>
+    {
+      groups.map((g) => (
+        <DetailsCategory title={g.title} id={g.id}>
+          {g.terms.map((t) => (
+            <PropRow label={t.term}>
+              <div class="dp-field term" id={t.term.toLowerCase().replace(/[^a-z]+/g, '-')}>
                 {t.def}
                 {t.note && (
-                  <span class="term__note mono">
+                  <span class="term__note">
                     {t.href ? (
                       <a href={t.href} target="_blank" rel="noopener">
-                        {t.note}
+                        {t.note} ↗
                       </a>
                     ) : (
                       t.note
                     )}
                   </span>
                 )}
-              </dd>
-            </div>
+              </div>
+            </PropRow>
           ))}
-        </dl>
-      </section>
-    ))
-  }
-
-  <section class="container section--tight" aria-labelledby="short">
-    <h2 id="short" class="eyebrow" data-reveal><span class="eyebrow__index">03</span><span class="eyebrow__rule"></span>Shorthand</h2>
-    <p class="lede short__lede" data-reveal>You'll often see combinations of these mechanics shortened to acronyms:</p>
-    <dl class="acros">
+        </DetailsCategory>
+      ))
+    }
+    <DetailsCategory title="Shorthand">
       {
-        acronyms.map((a, i) => (
-          <div class="acro" data-reveal style={`--i:${i}`}>
-            <dt class="display acro__short">{a.short}</dt>
-            <dd class="mono">{a.long}</dd>
-          </div>
+        acronyms.map((a) => (
+          <PropRow label={a.short}>
+            <span class="dp-field">{a.long}</span>
+          </PropRow>
         ))
       }
-    </dl>
-  </section>
-
-  <section class="container section" aria-label="Parry trainer">
-    <ParryTrainer />
-    <p class="mono muted outro">
-      Want the competitive version? See <a class="accent" href="/swiifts-comp-mod/">swiift's Comp Mod</a> for MORDHAU.
-    </p>
-  </section>
+    </DetailsCategory>
+    <DetailsCategory title="Links">
+      <PropRow wide>
+        <div class="dp-links">
+          <a class="dp-link dp-link--primary" href="/swiifts-comp-mod/"><UeIcon name="blueprint" size={14} /><span>swiift's Comp Mod</span></a>
+          <a class="dp-link" href="/venator/"><UeIcon name="blueprint" size={14} /><span>VENATOR — my melee slasher prototype</span></a>
+        </div>
+      </PropRow>
+    </DetailsCategory>
+  </DetailsPanel>
 </Base>
 
 <style>
-  .definition {
-    display: grid;
-    gap: 6px;
-    padding: 18px 22px;
-    max-width: 640px;
-    font-size: 1.2rem;
-    border-left: 3px solid var(--accent);
+  .outro {
+    color: var(--ue-fg-dim);
   }
-  .definition a {
-    color: var(--accent);
+  .outro a {
+    color: var(--ue-blue);
     text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  .terms {
-    display: grid;
-    gap: 16px;
-    margin-top: 20px;
-  }
-  @media (min-width: 900px) {
-    .terms {
-      grid-template-columns: repeat(3, 1fr);
-    }
   }
   .term {
-    --rx: 0deg;
-    --ry: 0deg;
-    display: grid;
-    gap: 12px;
-    align-content: start;
-    padding: 24px;
-    scroll-margin-top: calc(var(--header-h) + 24px);
-    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
-  }
-  .term:target {
-    border-color: var(--accent);
-  }
-  .term__name {
-    font-size: 2.1rem;
-    color: var(--fg);
-  }
-  .term__def {
-    color: var(--fg-2);
-    display: grid;
-    gap: 12px;
-  }
-  .term__note a {
-    color: var(--accent);
-  }
-  .short__lede {
-    margin-top: 16px;
-  }
-  .acros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 24px;
-  }
-  .acro {
     display: grid;
     gap: 4px;
-    padding: 18px 24px;
-    border: 1px dashed var(--line-2);
-    border-radius: var(--radius);
+    scroll-margin-top: 80px;
   }
-  .acro__short {
-    font-size: 3.5rem;
-    color: var(--accent);
+  .term:target {
+    border-color: var(--ue-primary);
   }
-  .acro dd {
-    color: var(--fg-2);
-  }
-  .outro {
-    margin-top: 20px;
-    text-transform: none;
-    letter-spacing: 0.02em;
+  .term__note,
+  .term__note a {
+    color: var(--ue-blue);
+    font-size: 11px;
   }
 </style>

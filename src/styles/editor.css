@@ -1,0 +1,734 @@
+/* ==========================================================================
+   Editor shell: docked panels, tab wells, splitters, sheets, notifications.
+   "Desk" layout (the full editor window) kicks in at
+   (min-width: 1000px) and (min-height: 560px); below that the panels stack.
+   ========================================================================== */
+
+/* ---------- stacked (phones, tablets, short windows) ---------- */
+.editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--ue-title);
+  padding-bottom: calc(52px + env(safe-area-inset-bottom));
+}
+.editor__top {
+  display: contents;
+}
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 6px 12px;
+}
+.splitter {
+  display: none;
+}
+
+/* ---------- docks and tab wells ---------- */
+.dock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.dock__tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  flex: none;
+  height: 30px;
+  padding: 0 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.dock__tabs::-webkit-scrollbar {
+  display: none;
+}
+.dock__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 26px;
+  padding: 0 14px 0 10px;
+  border-radius: 4px 4px 0 0;
+  color: var(--ue-fg-dim);
+  font-size: var(--fs-ui);
+  white-space: nowrap;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
+}
+.dock__tab:hover {
+  color: var(--ue-fg-hover);
+  background: #1e1e1e;
+}
+.dock__tab[aria-selected='true'] {
+  background: var(--ue-bg);
+  color: var(--ue-fg-hover);
+}
+/* The focused panel's active tab gets Unreal's thin blue rule along its top. */
+.dock:focus-within .dock__tab[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--ue-primary);
+}
+.dock__tab .ue-icon {
+  flex: none;
+}
+.dock__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--ue-bg);
+  border-radius: 0 4px 4px 4px;
+}
+.dock__sheet-close {
+  display: none;
+}
+
+/* Tab panels inside a dock body */
+.doc-panel {
+  position: relative;
+  min-width: 0;
+}
+.doc-panel:focus-visible {
+  outline: none;
+}
+
+/* ---------- bottom dock as a sheet (stacked layout) ---------- */
+.dock--bottom {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 90;
+  height: min(84dvh, 720px);
+  padding: 6px 6px calc(52px + env(safe-area-inset-bottom));
+  background: var(--ue-title);
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -20px 60px rgb(0 0 0 / 0.6);
+  transform: translateY(105%);
+  visibility: hidden;
+  transition:
+    transform 0.32s var(--ease-out),
+    visibility 0s 0.32s;
+}
+.sheet-open .dock--bottom {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.32s var(--ease-out);
+}
+.dock--bottom .dock__tabs {
+  height: 40px;
+}
+.dock--bottom .dock__tab {
+  height: 34px;
+  font-size: 13px;
+}
+.dock--bottom .dock__sheet-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 34px;
+  margin-left: auto;
+  border-radius: 6px;
+  color: var(--ue-fg);
+}
+.dock--bottom .dock__sheet-close:hover {
+  background: var(--ue-dropdown);
+}
+.dock--bottom .dock__body {
+  border-radius: 6px;
+  overflow: hidden;
+}
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgb(0 0 0 / 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.sheet-open .sheet-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet-open body,
+body:has(.sheet-open) {
+  overflow: hidden;
+}
+
+/* ---------- desk layout: the full editor window ---------- */
+@media (min-width: 1000px) and (min-height: 560px) {
+  .editor {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .workspace {
+    display: grid;
+    gap: 0;
+    padding: 0 4px;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) 6px clamp(280px, var(--right-w, 25vw), 46vw);
+    grid-template-rows: minmax(140px, 1fr) 6px clamp(120px, var(--dock-h, 31vh), 62vh);
+    grid-template-areas:
+      'main vsplit right'
+      'hsplit vsplit right'
+      'bottom vsplit right';
+  }
+  .dock--main {
+    grid-area: main;
+  }
+  .dock--right {
+    grid-area: right;
+  }
+  .dock--bottom {
+    grid-area: bottom;
+  }
+  .splitter {
+    display: block;
+    position: relative;
+    z-index: 5;
+    touch-action: none;
+  }
+  .splitter--v {
+    grid-area: vsplit;
+    cursor: col-resize;
+  }
+  .splitter--h {
+    grid-area: hsplit;
+    cursor: row-resize;
+  }
+  .splitter::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    transition: background-color 0.15s;
+  }
+  .splitter:hover::after,
+  .splitter.is-dragging::after,
+  .splitter:focus-visible::after {
+    background: color-mix(in oklab, var(--ue-primary) 55%, transparent);
+  }
+  .splitter:focus-visible {
+    outline: none;
+  }
+
+  /* The bottom dock is docked in the layout rather than a sheet. */
+  .dock--bottom,
+  .sheet-open .dock--bottom {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    height: auto;
+    padding: 0 0 4px;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    visibility: visible;
+    transition: none;
+  }
+  .dock--bottom .dock__tabs {
+    height: 30px;
+  }
+  .dock--bottom .dock__tab {
+    height: 26px;
+    font-size: var(--fs-ui);
+  }
+  .dock--bottom .dock__sheet-close {
+    display: none;
+  }
+  .dock--bottom .dock__body {
+    border-radius: 0 4px 4px 4px;
+  }
+  .dock--right {
+    padding-bottom: 4px;
+  }
+  .sheet-backdrop {
+    display: none;
+  }
+  :root.dock-hidden .workspace {
+    grid-template-rows: minmax(140px, 1fr) 0 0;
+  }
+  :root.dock-hidden .dock--bottom,
+  :root.dock-hidden .splitter--h {
+    display: none;
+  }
+
+  /* Panels fill their dock and scroll inside it. */
+  .doc-panel {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+  }
+}
+
+/* ---------- notifications (bottom right, like the editor's toasts) ---------- */
+.ue-notify-area {
+  position: fixed;
+  right: 10px;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  left: 10px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+@media (min-width: 1000px) and (min-height: 560px) {
+  .ue-notify-area {
+    left: auto;
+    bottom: 36px;
+  }
+}
+.ue-notify {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: start;
+  width: min(380px, 100%);
+  padding: 12px 12px 12px 14px;
+  border: 1px solid #0a0a0a;
+  border-radius: 6px;
+  background: var(--ue-bg);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  color: var(--ue-fg);
+  transform: translateX(24px);
+  opacity: 0;
+  transition:
+    transform 0.35s var(--ease-out),
+    opacity 0.25s;
+}
+.ue-notify.is-on {
+  transform: none;
+  opacity: 1;
+}
+.ue-notify__icon {
+  grid-row: span 3;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  color: var(--ue-blue);
+}
+.ue-notify[data-kind='success'] .ue-notify__icon {
+  color: var(--ue-success);
+}
+.ue-notify[data-kind='pending'] .ue-notify__icon::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ue-hover);
+  border-top-color: var(--ue-blue);
+  border-radius: 50%;
+  animation: ue-spin 0.8s linear infinite;
+}
+.ue-notify[data-kind='pending'] .ue-notify__icon svg {
+  display: none;
+}
+@keyframes ue-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ue-notify__title {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.ue-notify__text {
+  grid-column: 2;
+  font-size: var(--fs-ui);
+  color: var(--ue-fg);
+}
+.ue-notify__link {
+  grid-column: 2;
+  justify-self: start;
+  color: var(--ue-blue);
+  font-size: var(--fs-ui);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ue-notify__link:hover {
+  color: #fff;
+}
+.ue-notify__close {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  color: var(--ue-fg-dim);
+}
+.ue-notify__close:hover {
+  background: var(--ue-dropdown);
+  color: #fff;
+}
+
+/* ---------- menus (menu bar, toolbar drop-downs, context menus) ---------- */
+.ue-menu {
+  position: fixed;
+  z-index: 400;
+  min-width: 220px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 4px 0;
+  border: 1px solid #0a0a0a;
+  border-radius: 4px;
+  background: var(--ue-bg);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.6);
+  color: var(--ue-fg);
+}
+.ue-menu__heading {
+  padding: 7px 12px 3px;
+  color: var(--ue-fg-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ue-menu__sep {
+  height: 1px;
+  margin: 4px 0;
+  background: #333;
+}
+.ue-menu__item {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 26px;
+  padding: 3px 12px 3px 10px;
+  color: var(--ue-fg);
+  font-size: var(--fs-ui);
+  text-align: left;
+}
+.ue-menu__item:hover,
+.ue-menu__item:focus-visible {
+  outline: none;
+  background: var(--ue-primary);
+  color: #fff;
+}
+.ue-menu__item .ue-icon {
+  color: var(--ue-fg);
+}
+.ue-menu__item:hover .ue-icon,
+.ue-menu__item:focus-visible .ue-icon {
+  color: #fff;
+}
+.ue-menu__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ue-menu__desc {
+  display: block;
+  color: var(--ue-fg-dim);
+  font-size: 11px;
+  white-space: normal;
+}
+.ue-menu__item:hover .ue-menu__desc,
+.ue-menu__item:focus-visible .ue-menu__desc {
+  color: rgb(255 255 255 / 0.8);
+}
+.ue-menu__key {
+  color: var(--ue-fg-dim);
+  font-size: 11px;
+}
+.ue-menu__item:hover .ue-menu__key,
+.ue-menu__item:focus-visible .ue-menu__key {
+  color: #fff;
+}
+.ue-menu__item[aria-checked='true'] .ue-menu__check {
+  color: var(--ue-blue);
+}
+.ue-menu__item:hover[aria-checked='true'] .ue-menu__check {
+  color: #fff;
+}
+
+/* ---------- tooltips (Slate style) ---------- */
+.ue-tooltip {
+  position: fixed;
+  z-index: 500;
+  max-width: 340px;
+  padding: 8px 10px;
+  border: 1px solid #0a0a0a;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.55);
+  color: var(--ue-fg);
+  font-size: var(--fs-ui);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.ue-tooltip.is-on {
+  opacity: 1;
+}
+
+/* ---------- Details panel value widgets (slotted by pages) ---------- */
+.dp-field {
+  display: block;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--ue-input-line);
+  border-radius: var(--radius);
+  background: var(--ue-input);
+  color: #e8e8e8;
+  font-size: var(--fs-ui);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+a.dp-field:hover {
+  border-color: var(--ue-hover);
+  color: #fff;
+}
+.dp-field--mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.dp-text {
+  padding: 10px 12px;
+  border: 1px solid var(--ue-input-line);
+  border-radius: var(--radius);
+  background: var(--ue-input);
+}
+.dp-text.prose {
+  font-size: 13px;
+}
+.dp-num {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  overflow: hidden;
+  border: 1px solid var(--ue-input-line);
+  border-radius: var(--radius);
+  background: var(--ue-input);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #fff;
+}
+.dp-num::before {
+  content: '';
+  align-self: stretch;
+  width: 3px;
+  background: var(--ue-hover);
+}
+.dp-num > span {
+  padding: 3px 8px;
+}
+.dp-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  border: 1px solid var(--ue-input-line);
+  border-radius: 3px;
+  background: var(--ue-input);
+  color: var(--ue-blue);
+}
+.dp-array {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 5px;
+  color: var(--ue-fg-dim);
+  font-size: 11px;
+}
+.dp-list {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dp-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.dp-list__i {
+  padding-top: 4px;
+  color: var(--ue-fg-dim);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+.dp-links {
+  display: grid;
+  gap: 4px;
+}
+.dp-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  background: var(--ue-dropdown);
+  color: var(--ue-fg);
+  font-size: var(--fs-ui);
+  transition: background-color 0.1s;
+}
+.dp-link:hover,
+.dp-link:focus-visible {
+  background: var(--ue-hover);
+  color: #fff;
+}
+.dp-link--primary {
+  background: var(--ue-primary);
+  color: #fff;
+}
+.dp-link--primary:hover,
+.dp-link--primary:focus-visible {
+  background: var(--ue-primary-hover);
+}
+.dp-link > span {
+  flex: 1;
+  min-width: 0;
+}
+.dp-link__tag {
+  flex: none !important;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 11px;
+}
+.dp-link .ue-icon,
+.dp-link .icon {
+  flex: none;
+}
+
+/* ---------- Content Drawer asset tooltip ---------- */
+.cb-tooltip {
+  display: grid;
+  gap: 2px;
+  width: 300px;
+  border-left: 3px solid var(--type, var(--ue-primary));
+}
+.cb-tip__name {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cb-tip__type {
+  display: block;
+  color: var(--ue-fg-dim);
+  font-size: 11px;
+}
+.cb-tip__summary {
+  display: block;
+  margin-top: 6px;
+  color: var(--ue-fg);
+  line-height: 1.45;
+}
+.cb-tip__rows {
+  display: grid;
+  gap: 1px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #333;
+  font-size: 11px;
+}
+.cb-tip__row {
+  display: block;
+  color: #e4e4e4;
+  overflow-wrap: anywhere;
+}
+.cb-tip__k {
+  color: var(--ue-fg-dim);
+}
+.cb-tile.is-flash {
+  animation: cb-flash 1.4s ease-out;
+}
+@keyframes cb-flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 2px var(--ue-warning);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+/* ---------- `stat fps` in the viewport ---------- */
+.vp-stat {
+  position: absolute;
+  top: 46px;
+  right: 12px;
+  z-index: 5;
+  display: grid;
+  justify-items: end;
+  margin: 0;
+  color: var(--ue-success);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+}
+.vp-stat[data-level='ok'] {
+  color: var(--ue-warning);
+}
+.vp-stat[data-level='bad'] {
+  color: var(--ue-error);
+}
+.ue-menu__item.is-active {
+  background: var(--ue-primary);
+  color: #fff;
+}
+.sb-suggest__item {
+  cursor: pointer;
+}
+.sb-suggest__item .ue-menu__key {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.dp-num:hover {
+  border-color: var(--ue-hover);
+}
+.cb.is-flash {
+  animation: cb-panel-flash 1.2s ease-out;
+}
+@keyframes cb-panel-flash {
+  0%,
+  30% {
+    box-shadow: inset 0 0 0 2px var(--ue-primary);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+}
+/* Keyboard shortcut hints only mean something with a keyboard. */
+@media (pointer: coarse) {
+  .dp-link__key,
+  .ue-menu__key:not(:empty):not(.ue-menu__key--ext) {
+    display: none;
+  }
+}

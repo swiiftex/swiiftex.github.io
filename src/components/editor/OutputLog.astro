@@ -1,0 +1,177 @@
+---
+/**
+ * The Output Log: news, release notes and console output as Unreal log lines.
+ * Lines with a link open the post, page or patch notes they mention.
+ */
+import UeIcon from './UeIcon.astro';
+import { logStamp, type LogLine } from '../../lib/editor';
+
+interface Props {
+  level: string;
+  lines: LogLine[];
+}
+const { level, lines } = Astro.props;
+const built = new Date().toISOString();
+
+const all: LogLine[] = [
+  { cat: 'Init', text: 'swiift Editor — Owen Bladen-Kay’s portfolio', time: built },
+  { cat: 'Init', text: `Build: ${new Date(built).toUTCString()}`, time: built },
+  { cat: 'Load', text: `LoadMap: ${level}`, time: built },
+  ...lines,
+  { cat: 'Console', text: 'Type "help" in the console below for a list of commands.', time: built },
+];
+---
+
+<section class="doc-panel olog" id="panel-log" role="tabpanel" aria-labelledby="tab-log" data-panel="log" hidden>
+  <div class="olog__toolbar">
+    <span class="ue-btn olog-static" aria-hidden="true"><UeIcon name="filter" size={13} /> Filters <UeIcon name="chevron-down" size={10} /></span>
+    <label class="ue-search olog__search">
+      <UeIcon name="search" size={13} />
+      <span class="visually-hidden">Search log</span>
+      <input class="ue-input" type="search" placeholder="Search Log" autocomplete="off" data-log-search />
+    </label>
+    <button type="button" class="ue-btn" data-action="log-clear" title="Clear the log">Clear</button>
+  </div>
+  <div class="olog__lines" role="log" aria-label="Output Log" data-log tabindex="0">
+    {
+      all.map((l, i) => (
+        <p class="olog__line" data-verbosity={l.verbosity ?? 'Display'}>
+          <span class="olog__ts">
+            {logStamp(l.time)}[{String(i % 1000).padStart(3, ' ')}]
+          </span>
+          <span class="olog__cat">Log{l.cat}: </span>
+          {l.verbosity !== 'Log' && <span class="olog__verb">{l.verbosity ?? 'Display'}: </span>}
+          <span class="olog__text">{l.text}</span>
+          {l.href && (
+            <a class="olog__link" href={l.href} target={/^https?:/.test(l.href) ? '_blank' : undefined} rel={/^https?:/.test(l.href) ? 'noopener' : undefined}>
+              {l.action ?? 'Open'}
+            </a>
+          )}
+        </p>
+      ))
+    }
+  </div>
+  <div class="olog__cmd">
+    <span class="olog__cmd-label" aria-hidden="true">Cmd <UeIcon name="chevron-down" size={10} /></span>
+    <label class="visually-hidden" for="log-console-input">Console command</label>
+    <input
+      id="log-console-input"
+      class="ue-input olog__input"
+      type="text"
+      placeholder="Enter Console Command (try help)"
+      autocomplete="off"
+      spellcheck="false"
+      enterkeyhint="go"
+      data-console-input
+    />
+  </div>
+</section>
+
+<style>
+  .olog {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .olog[hidden] {
+    display: none;
+  }
+  .olog__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 6px 8px;
+  }
+  .olog-static {
+    cursor: default;
+  }
+  span.ue-btn.olog-static:hover {
+    background: var(--ue-dropdown);
+    color: var(--ue-fg);
+  }
+  .olog__search {
+    flex: 1;
+    max-width: 420px;
+  }
+  .olog__lines {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 6px 10px 10px;
+    background: var(--ue-recessed);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  .olog__lines:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--ue-primary);
+  }
+  .olog__line {
+    color: var(--ue-fg);
+    overflow-wrap: anywhere;
+  }
+  .olog__text {
+    white-space: pre-wrap;
+  }
+  .olog__ts {
+    color: #6f6f6f;
+  }
+  .olog__cat {
+    color: #e2e2e2;
+  }
+  .olog__verb {
+    color: inherit;
+  }
+  .olog__line[data-verbosity='Warning'] {
+    color: var(--ue-warning);
+  }
+  .olog__line[data-verbosity='Error'] {
+    color: var(--ue-error);
+  }
+  .olog__line[data-verbosity='Warning'] .olog__cat,
+  .olog__line[data-verbosity='Error'] .olog__cat {
+    color: inherit;
+  }
+  .olog__line[data-verbosity='Cmd'] {
+    color: #fff;
+  }
+  .olog__link {
+    margin-left: 8px;
+    color: var(--ue-blue);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .olog__link:hover {
+    color: #fff;
+  }
+  .olog__cmd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 6px 8px;
+  }
+  .olog__cmd-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--ue-fg);
+  }
+  .olog__input {
+    font-family: var(--font-mono);
+    min-height: 32px;
+    font-size: 13px;
+  }
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .olog__toolbar {
+      padding: 4px 6px;
+    }
+    .olog__input {
+      min-height: 24px;
+      font-size: 11px;
+    }
+  }
+</style>

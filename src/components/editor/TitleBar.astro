@@ -1,0 +1,158 @@
+---
+/**
+ * The editor's title bar: the animated swiift logo where Unreal's logo sits,
+ * the open level as a tab, the project name and window controls.
+ */
+import Logo from '../Logo.astro';
+import UeIcon from './UeIcon.astro';
+import type { UeIconName } from '../../lib/editor';
+
+interface Props {
+  level: string;
+  icon: UeIconName;
+}
+const { level, icon } = Astro.props;
+---
+
+<div class="titlebar">
+  <a class="titlebar__logo" href="/" aria-label="swiift — home" data-logo-replay title="swiift — home">
+    <Logo size={19} intro tight />
+  </a>
+  <div class="titlebar__level" title={level}>
+    <UeIcon name={icon} size={14} class="titlebar__level-icon" />
+    <span class="titlebar__level-name">{level}</span>
+  </div>
+  <div class="titlebar__right">
+    <span class="titlebar__project">swiift</span>
+    <span class="titlebar__win" aria-hidden="true"><UeIcon name="minimize" size={14} /></span>
+    <button type="button" class="titlebar__win titlebar__win--btn" data-action="fullscreen" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+      <UeIcon name="restore" size={12} />
+    </button>
+    <span class="titlebar__win titlebar__win--close" aria-hidden="true"><UeIcon name="close" size={14} /></span>
+    <button type="button" class="titlebar__menu-btn" data-action="menu-sheet" aria-label="Open menu" aria-expanded="false" aria-controls="menu-sheet">
+      <UeIcon name="menu" size={20} />
+    </button>
+  </div>
+</div>
+
+<style>
+  .titlebar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 6px 0 12px;
+    background: var(--ue-title);
+    border-bottom: 1px solid #0a0a0a;
+  }
+  .titlebar__logo {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 30px;
+    height: 36px;
+    color: #fff;
+    border-radius: 4px;
+  }
+  .titlebar__logo:hover {
+    color: var(--ue-blue);
+  }
+  .titlebar__logo :global(.logo-mark) {
+    width: 21px;
+    height: auto;
+  }
+  .titlebar__level {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    height: 30px;
+    padding: 0 14px 0 10px;
+    border-radius: 6px;
+    background: var(--ue-bg);
+    color: #fff;
+    font-size: 13px;
+  }
+  .titlebar__level :global(.titlebar__level-icon) {
+    flex: none;
+    color: var(--ue-orange);
+  }
+  .titlebar__level-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .titlebar__right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    align-self: stretch;
+  }
+  .titlebar__project,
+  .titlebar__win {
+    display: none;
+  }
+  .titlebar__menu-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 40px;
+    margin: auto 0;
+    border-radius: 6px;
+    color: var(--ue-fg);
+  }
+  .titlebar__menu-btn:hover,
+  .titlebar__menu-btn[aria-expanded='true'] {
+    background: var(--ue-dropdown);
+    color: #fff;
+  }
+
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .titlebar {
+      position: relative;
+      height: 34px;
+      gap: 6px;
+      padding: 0 0 0 8px;
+      border-bottom: 0;
+    }
+    .titlebar__logo {
+      width: 26px;
+      height: 30px;
+    }
+    .titlebar__logo :global(.logo-mark) {
+      width: 18px;
+    }
+    /* The level tab hangs off the bottom of the title bar into the menu bar. */
+    .titlebar__level {
+      align-self: flex-end;
+      height: 28px;
+      max-width: 360px;
+      padding: 0 18px 0 10px;
+      border-radius: 4px 4px 0 0;
+      font-size: var(--fs-ui);
+    }
+    .titlebar__project {
+      display: block;
+      align-self: center;
+      margin-right: 14px;
+      color: var(--ue-fg-dim);
+      font-size: var(--fs-ui);
+    }
+    .titlebar__win {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      color: var(--ue-fg);
+    }
+    .titlebar__win--btn:hover {
+      background: var(--ue-dropdown);
+      color: #fff;
+    }
+    .titlebar__menu-btn {
+      display: none;
+    }
+  }
+</style>

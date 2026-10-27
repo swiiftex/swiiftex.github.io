@@ -1,0 +1,43 @@
+---
+import FolderLevel from '../components/editor/FolderLevel.astro';
+import DetailsCategory from '../components/editor/DetailsCategory.astro';
+import PropRow from '../components/editor/PropRow.astro';
+import UeIcon from '../components/editor/UeIcon.astro';
+import { MODIO } from '../data/site';
+
+const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}K` : String(n));
+---
+
+<FolderLevel
+  category="mods"
+  title="Mods"
+  description="MORDHAU and Hellsplit Arena mods by Owen Bladen-Kay — game modes, competitive changes, scoreboards and map packs, with 130K+ downloads on mod.io."
+  lede="Game modes, competitive changes, scoreboards and map packs, mostly for MORDHAU."
+>
+  <DetailsCategory title="mod.io">
+    <PropRow label="Total Downloads">
+      <span class="dp-num"><span>{MODIO.totalDownloads.toLocaleString('en-GB')}</span></span>
+    </PropRow>
+    <PropRow label="Mods Published">
+      <span class="dp-num"><span>{MODIO.published}</span></span>
+    </PropRow>
+    <PropRow wide>
+      <div class="dp-links">
+        <a class="dp-link dp-link--primary" href={MODIO.profile} target="_blank" rel="noopener">
+          <UeIcon name="external" size={14} /><span>All my mods on mod.io</span>
+        </a>
+      </div>
+    </PropRow>
+  </DetailsCategory>
+  <DetailsCategory title="Also on mod.io" meta={`${MODIO.more.length} Hyperlinks`}>
+    {
+      MODIO.more.map((m) => (
+        <PropRow label={`↓ ${fmt(m.downloads)}`}>
+          <a class="dp-field" href={m.href} target="_blank" rel="noopener">
+            {m.title} ↗
+          </a>
+        </PropRow>
+      ))
+    }
+  </DetailsCategory>
+</FolderLevel>

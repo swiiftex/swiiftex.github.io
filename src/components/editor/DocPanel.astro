@@ -1,0 +1,38 @@
+---
+/** A scrolling tab panel in the main tab well, for tools and text (patch notes, inventory…). */
+interface Props {
+  id: string;
+  active?: boolean;
+  /** Let the content use the panel's full width. */
+  wide?: boolean;
+}
+const { id, active = false, wide = false } = Astro.props;
+---
+
+<section class="doc-panel doc-panel--page" id={`panel-${id}`} role="tabpanel" aria-labelledby={`tab-${id}`} data-panel={id} hidden={!active} tabindex="0">
+  <div class:list={['doc-page', { 'doc-page--wide': wide }]}>
+    <slot />
+  </div>
+</section>
+
+<style>
+  .doc-panel--page {
+    background: var(--ue-recessed);
+    border-radius: 0 4px 4px 4px;
+  }
+  .doc-page {
+    display: grid;
+    gap: 14px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+  .doc-page--wide {
+    max-width: none;
+  }
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .doc-page {
+      padding: 16px 20px 28px;
+    }
+  }
+</style>

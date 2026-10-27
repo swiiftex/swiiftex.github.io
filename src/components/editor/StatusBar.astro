@@ -1,0 +1,207 @@
+---
+/**
+ * The bottom status bar: Content Drawer and Output Log buttons, a console that
+ * takes commands (try `help`), local time, save state and revision control.
+ */
+import UeIcon from './UeIcon.astro';
+import { SITE } from '../../data/site';
+---
+
+<footer class="statusbar" aria-label="Status bar">
+  <div class="sb-left">
+    <button type="button" class="sb-btn sb-btn--drawer" data-action="drawer" aria-label="Content Drawer (Ctrl+Space)" title="Content Drawer (Ctrl+Space)">
+      <UeIcon name="drawer" size={15} /><span>Content Drawer</span>
+    </button>
+    <button type="button" class="sb-btn" data-action="log" title="Output Log">
+      <UeIcon name="log" size={15} /><span>Output Log</span>
+    </button>
+    <div class="sb-console" data-console>
+      <span class="sb-cmd" aria-hidden="true">Cmd <UeIcon name="chevron-down" size={10} /></span>
+      <label class="visually-hidden" for="console-input">Console command</label>
+      <input
+        id="console-input"
+        class="sb-console__input"
+        type="text"
+        placeholder="Enter Console Command"
+        autocomplete="off"
+        spellcheck="false"
+        enterkeyhint="go"
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="console-suggest"
+        aria-autocomplete="list"
+        data-console-input
+      />
+      <ul class="sb-suggest ue-menu" id="console-suggest" role="listbox" data-console-suggest hidden></ul>
+    </div>
+  </div>
+  <div class="sb-right">
+    <span class="sb-item" title={`Local time in ${SITE.location}`}><UeIcon name="clock" size={13} /><span data-clock>--:--</span> Manchester</span>
+    <span class="sb-item sb-static" aria-hidden="true">Trace <UeIcon name="chevron-down" size={10} /></span>
+    <span class="sb-item sb-static" aria-hidden="true">Derived Data <UeIcon name="chevron-down" size={10} /></span>
+    <span class="sb-item sb-saved"><UeIcon name="check" size={13} />All Saved</span>
+    <a class="sb-item sb-link" href="https://github.com/swiiftex" target="_blank" rel="noopener" title="github.com/swiiftex">
+      <UeIcon name="branch" size={13} />Revision Control <UeIcon name="chevron-down" size={10} />
+    </a>
+  </div>
+</footer>
+
+<style>
+  /* ---------- small screens: a fixed bar with big buttons ---------- */
+  .statusbar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 95;
+    display: flex;
+    align-items: center;
+    height: calc(52px + env(safe-area-inset-bottom));
+    padding: 0 8px env(safe-area-inset-bottom);
+    background: var(--ue-title);
+    border-top: 1px solid #0a0a0a;
+  }
+  .sb-left {
+    display: flex;
+    flex: 1;
+    gap: 6px;
+  }
+  .sb-right,
+  .sb-console {
+    display: none;
+  }
+  .sb-btn {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 6px;
+    background: var(--ue-bg);
+    color: var(--ue-fg);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .sb-btn:hover {
+    background: var(--ue-dropdown);
+    color: #fff;
+  }
+  /* The Content Drawer is the way around on phones, so it's the primary button. */
+  .sb-btn[aria-pressed='true'],
+  .sb-btn--drawer {
+    background: var(--ue-primary);
+    color: #fff;
+  }
+  .sb-btn--drawer:hover {
+    background: var(--ue-primary-hover);
+  }
+
+  /* ---------- desk: Unreal's thin status bar ---------- */
+  @media (min-width: 1000px) and (min-height: 560px) {
+    .statusbar {
+      position: relative;
+      inset: auto;
+      height: 28px;
+      padding: 0 4px;
+      border-top: 0;
+      gap: 8px;
+    }
+    .sb-left {
+      flex: 1;
+      gap: 2px;
+      min-width: 0;
+    }
+    .sb-btn,
+    .sb-btn--drawer {
+      flex: none;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 3px;
+      gap: 5px;
+      background: transparent;
+      color: var(--ue-fg);
+      font-size: var(--fs-ui);
+    }
+    .sb-btn:hover,
+    .sb-btn--drawer:hover,
+    .sb-btn[aria-pressed='true'] {
+      background: var(--ue-dropdown);
+      color: #fff;
+    }
+    .sb-console {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 1 380px;
+      min-width: 160px;
+      margin-left: 6px;
+    }
+    .sb-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: var(--ue-fg);
+    }
+    .sb-console__input {
+      flex: 1;
+      min-width: 0;
+      height: 20px;
+      padding: 0 8px;
+      border: 1px solid var(--ue-input-line);
+      border-radius: 3px;
+      background: var(--ue-input);
+      color: var(--ue-fg);
+      font-size: 11px;
+    }
+    .sb-console__input:focus {
+      outline: none;
+      border-color: var(--ue-primary);
+      color: #fff;
+    }
+    .sb-console__input::placeholder {
+      color: #6a6a6a;
+    }
+    .sb-suggest {
+      position: absolute;
+      left: 36px;
+      right: 0;
+      bottom: calc(100% + 4px);
+      min-width: 300px;
+      margin: 0;
+      list-style: none;
+    }
+    .sb-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: none;
+    }
+    .sb-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 3px;
+      color: var(--ue-fg);
+      font-size: var(--fs-ui);
+      white-space: nowrap;
+    }
+    .sb-static {
+      opacity: 0.75;
+    }
+    .sb-saved :global(.ue-icon) {
+      color: var(--ue-success);
+    }
+    .sb-link:hover {
+      background: var(--ue-dropdown);
+      color: #fff;
+    }
+  }
+  @media (min-width: 1000px) and (max-width: 1279px) {
+    .sb-static {
+      display: none;
+    }
+  }
+</style>
