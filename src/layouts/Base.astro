@@ -1,64 +1,24 @@
 ---
-/**
- * Page shell, laid out like the Unreal Engine 5 level editor: title bar with
- * the logo and level tab, menu bar, main toolbar, a main tab well (Viewport,
- * the Blueprint "Details" graph and any project tools), the Details panel on
- * the right, the Content Drawer and Output Log docked underneath, and the
- * status bar. On small screens the panels stack and the drawer becomes a sheet.
- */
-import '@fontsource-variable/roboto';
-import '@fontsource-variable/roboto-mono';
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
+import '@fontsource/barlow-condensed/800.css';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
-import '../styles/editor.css';
 
-import TitleBar from '../components/editor/TitleBar.astro';
-import MenuBar from '../components/editor/MenuBar.astro';
-import Toolbar from '../components/editor/Toolbar.astro';
-import ContentDrawer from '../components/editor/ContentDrawer.astro';
-import OutputLog from '../components/editor/OutputLog.astro';
-import StatusBar from '../components/editor/StatusBar.astro';
-import UeIcon from '../components/editor/UeIcon.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 import { SITE } from '../data/site';
-import type { DockTab, LogLine, ProjectLink, UeIconName } from '../lib/editor';
-
-export type Notice = { title: string; text?: string; href: string; action: string };
 
 interface Props {
   title?: string;
   description?: string;
   /** Absolute or root-relative path to a social preview image. */
   image?: string;
-  /** Level name shown in the title bar tab, e.g. "LUNARBALL". */
-  level: string;
-  levelIcon?: UeIconName;
-  /** Content Drawer folder to open, e.g. "Projects/Games", and the asset to select in it. */
-  folder?: string;
-  asset?: string;
-  /** Tabs in the main tab well; each panel is passed in the default slot. */
-  tabs: DockTab[];
-  active?: string;
-  /** Toolbar "Platforms" menu: where to play, download or read more. */
-  platforms?: ProjectLink[];
-  /** Extra Output Log lines for this page. */
-  log?: LogLine[];
-  /** A notification shown shortly after the page loads. */
-  notice?: Notice;
+  bodyClass?: string;
 }
 
-const {
-  title,
-  description = SITE.description,
-  image = '/og.png',
-  level,
-  levelIcon = 'level',
-  folder = 'Projects',
-  asset,
-  tabs,
-  active = tabs[0]?.id,
-  platforms = [],
-  log = [],
-  notice,
-} = Astro.props;
+const { title, description = SITE.description, image = '/og.png', bodyClass } = Astro.props;
 const fullTitle = title ? `${title} — swiift` : SITE.title;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
@@ -68,24 +28,12 @@ const ogImage = new URL(image, Astro.site);
 <html lang="en-GB">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <script is:inline>
-      (function () {
-        var root = document.documentElement;
-        root.classList.add('js');
-        try {
-          if (sessionStorage.getItem('swiift:logo-played')) root.classList.add('logo-played');
-          var layout = JSON.parse(localStorage.getItem('swiift:layout') || '{}');
-          if (layout.right) root.style.setProperty('--right-w', layout.right + 'px');
-          if (layout.dock) root.style.setProperty('--dock-h', layout.dock + 'px');
-          if (layout.dockHidden) root.classList.add('dock-hidden');
-        } catch (e) {}
-      })();
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#151515" />
+    <meta name="theme-color" content="#07080b" />
     <meta name="color-scheme" content="dark" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -101,78 +49,131 @@ const ogImage = new URL(image, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
     <slot name="head" />
   </head>
-  <body>
+  <body class={bodyClass}>
     <a class="skip-link" href="#main">Skip to content</a>
-    <div class="editor" data-editor>
-      <header class="editor__top">
-        <TitleBar level={level} icon={levelIcon} />
-        <MenuBar />
-        <Toolbar platforms={platforms} graph={tabs.some((t) => t.id === 'graph')} />
-      </header>
-
-      <div class="workspace" data-workspace>
-        <main id="main" class="dock dock--main" data-dock="main" tabindex="-1">
-          <div class="dock__tabs" role="tablist" aria-label="Level editor">
-            {
-              tabs.map((t) => (
-                <button
-                  type="button"
-                  role="tab"
-                  class="dock__tab"
-                  id={`tab-${t.id}`}
-                  aria-controls={`panel-${t.id}`}
-                  aria-selected={t.id === active ? 'true' : 'false'}
-                  tabindex={t.id === active ? 0 : -1}
-                  data-tab={t.id}
-                  title={t.title}
-                >
-                  <UeIcon name={t.icon} size={14} />
-                  <span>{t.label}</span>
-                </button>
-              ))
-            }
-          </div>
-          <div class="dock__body" data-active-tab={active}>
-            <slot />
-          </div>
-        </main>
-
-        <div class="splitter splitter--v" data-split="right" role="separator" aria-orientation="vertical" aria-label="Resize the Details panel" tabindex="0"></div>
-
-        <aside class="dock dock--right" aria-label="Details">
-          <slot name="details" />
-        </aside>
-
-        <div class="splitter splitter--h" data-split="dock" role="separator" aria-orientation="horizontal" aria-label="Resize the Content Drawer" tabindex="0"></div>
-
-        <section class="dock dock--bottom" data-bottom-dock aria-label="Content Drawer and Output Log">
-          <div class="dock__tabs" role="tablist" aria-label="Bottom panels">
-            <button type="button" role="tab" class="dock__tab" id="tab-drawer" aria-controls="panel-drawer" aria-selected="true" data-tab="drawer">
-              <UeIcon name="drawer" size={14} /><span>Content Drawer</span>
-            </button>
-            <button type="button" role="tab" class="dock__tab" id="tab-log" aria-controls="panel-log" aria-selected="false" tabindex="-1" data-tab="log">
-              <UeIcon name="log" size={14} /><span>Output Log</span>
-            </button>
-            <button type="button" class="dock__sheet-close" data-action="close-sheet" aria-label="Close">
-              <UeIcon name="close" size={16} />
-            </button>
-          </div>
-          <div class="dock__body" data-active-tab="drawer">
-            <ContentDrawer folder={folder} asset={asset} />
-            <OutputLog level={level} lines={log} />
-          </div>
-        </section>
-      </div>
-
-      <StatusBar />
-    </div>
-
-    <div class="ue-notify-area" data-notify-area aria-live="polite"></div>
-    {notice && <script type="application/json" data-notice set:html={JSON.stringify(notice).replace(/</g, '\\u003c')} />}
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
 
     <script>
-      import { initEditor } from '../scripts/editor';
-      initEditor();
+      import { initFx } from '../scripts/fx';
+      import { initCursor } from '../scripts/cursor';
+      initFx();
+      initCursor();
     </script>
   </body>
 </html>
+
+<style is:global>
+  /* ---------- custom cursor ---------- */
+  .cursor {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .cursor.is-visible {
+    opacity: 1;
+  }
+  .cursor__dot,
+  .cursor__ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+  }
+  .cursor__dot {
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition:
+      opacity 0.2s,
+      width 0.25s,
+      height 0.25s,
+      margin 0.25s;
+  }
+  .cursor__ring {
+    width: 0;
+    height: 0;
+  }
+  .cursor__shape {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    left: -18px;
+    top: -18px;
+    border: 1.5px solid rgb(238 242 247 / 0.55);
+    border-radius: 50%;
+    transition:
+      width 0.35s var(--ease-out),
+      height 0.35s var(--ease-out),
+      left 0.35s var(--ease-out),
+      top 0.35s var(--ease-out),
+      background-color 0.3s,
+      border-color 0.3s;
+  }
+  .cursor__label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    white-space: nowrap;
+    transition:
+      opacity 0.25s,
+      transform 0.35s var(--ease-out);
+  }
+  .cursor.is-hover .cursor__shape {
+    width: 56px;
+    height: 56px;
+    left: -28px;
+    top: -28px;
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 14%, transparent);
+  }
+  .cursor.is-hover .cursor__dot {
+    opacity: 0;
+  }
+  .cursor.has-label .cursor__shape {
+    width: 76px;
+    height: 76px;
+    left: -38px;
+    top: -38px;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .cursor.has-label .cursor__label {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .cursor.is-down .cursor__shape {
+    width: 26px;
+    height: 26px;
+    left: -13px;
+    top: -13px;
+  }
+  /* Text fields keep the native I-beam. */
+  .cursor.is-text {
+    opacity: 0;
+  }
+  .tracer {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9998;
+    pointer-events: none;
+  }
+</style>

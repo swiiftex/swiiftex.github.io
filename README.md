@@ -14,7 +14,7 @@ Portfolio site for games, mods, software and live events. Built with [Astro](htt
 
 ## Adding or editing a project
 
-Every game, mod, piece of software and event is a Markdown file in `src/content/projects/`. The file name becomes the URL (`lunarball.md` → `/lunarball/`), and the page, the Content Drawer, lists and stats all update automatically.
+Every game, mod, piece of software and event is a Markdown file in `src/content/projects/`. The file name becomes the URL (`lunarball.md` → `/lunarball/`, and `/editor/lunarball/` in the editor view), and the pages, cards, Content Drawer, lists and stats all update automatically.
 
 ```md
 ---
@@ -29,7 +29,7 @@ gallery:
   - src: ../../assets/projects/my-project/shot-1.jpg
     alt: What the screenshot shows.
 highlights:
-  - Each one becomes a node in the project's Blueprint graph
+  - A bullet for the sidebar (and a node in the editor view's Blueprint graph)
 links:
   - label: Steam
     href: https://store.steampowered.com/app/123/
@@ -60,9 +60,16 @@ All fields are defined in `src/content.config.ts`. Put images in `src/assets/pro
 
 Site-wide bits (nav, socials, mod.io total, older GitHub repos) live in `src/data/site.ts`.
 
-## The editor layout
+## Two views
 
-The site is laid out like the Unreal Engine 5 level editor, in the default dark editor theme:
+The site has two views of the same content, with a **UE5 view** toggle at the top right of every page that switches to the same page in the other view:
+
+- **Classic** (the default) at the normal URLs: `/`, `/games/`, `/lunarball/`… This is the one search engines index and the one download links point at.
+- **UE5 editor view** under `/editor/`: `/editor/`, `/editor/games/`, `/editor/lunarball/`… Every link inside it stays in `/editor/`. Its pages point search engines at their classic versions and are left out of the sitemap.
+
+### The editor view
+
+It's laid out like the Unreal Engine 5 level editor, in the default dark editor theme:
 
 | Editor part | What it shows |
 | --- | --- |
@@ -81,16 +88,21 @@ Viewport items come from a project's `steamAppId` trailer, `cover`, `hero`, `cli
 
 ```
 src/
-  content/projects/   one Markdown file per project
-  assets/             images (optimised at build time)
-  components/editor/  the editor: title bar, menus, toolbar, viewport, graph, details, content drawer…
-  components/         the logo and the tools shown in tabs (inventory, calculators, patch notes…)
-  layouts/Base.astro  the editor window every page opens in
-  lib/                content drawer tree, viewport items, Blueprint graphs, Steam/GitHub lookups
-  pages/              routes (index, games, mods, software, events, about, [slug]…)
-  scripts/editor/     tabs, menus, panels, gallery, graph, drawer and console behaviour
-  styles/             UE5 colour tokens (global.css) and the editor shell (editor.css)
-public/               served as-is (favicon, og image, hatecodev.html…)
+  content/projects/     one Markdown file per project (used by both views)
+  assets/               images (optimised at build time)
+  components/           classic site: header, footer, cards, vision mixer… plus the logo,
+                        the view toggle and the tools both views share (inventory, calculators, patch notes…)
+  components/editor/    editor view: title bar, menus, toolbar, viewport, graph, details, content drawer…
+  layouts/Base.astro    the classic page shell
+  layouts/Editor.astro  the editor window every /editor/ page opens in
+  lib/                  project data, Steam/GitHub lookups, and the editor's drawer tree, viewport items and graphs
+  pages/                classic routes (index, games, software, events, about, [slug]…)
+  pages/editor/         editor view routes (the same pages, plus /editor/mods/)
+  scripts/              classic site: custom cursor and shared effects
+  scripts/editor/       editor view: tabs, menus, panels, gallery, graph, drawer and console
+  styles/global.css     classic design tokens and global styles
+  styles/ue.css, editor.css  UE5 colour tokens and the editor shell
+public/                 served as-is (favicon, og image, hatecodev.html…)
 ```
 
 ## Deploying
@@ -100,5 +112,6 @@ public/               served as-is (favicon, og image, hatecodev.html…)
 ## Notes
 
 - `public/hatecodev.html` (plus `public/audio` and `public/images/travis.png`) is kept as-is, so its URL still works.
-- Old URLs (`games.html`, `events.html`, the WordPress `/my-games/` page, `/games/#mods`, `/simple-sensitivity-converter/`) redirect to their new pages.
-- The viewport gallery doesn't auto-play for visitors who prefer reduced motion, and panel sizes are remembered per browser (Window → Reset Layout puts them back).
+- Old URLs (`games.html`, `events.html`, the WordPress `/my-games/` and `/mods/` pages, `/simple-sensitivity-converter/`) redirect to their new pages.
+- The custom cursor only runs on mouse/trackpad devices, and motion effects respect `prefers-reduced-motion`.
+- In the editor view the gallery doesn't auto-play for visitors who prefer reduced motion, and panel sizes are remembered per browser (Window → Reset Layout puts them back).

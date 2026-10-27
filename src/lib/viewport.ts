@@ -7,7 +7,7 @@ import type { ImageMetadata } from 'astro';
 import { steamTrailer } from './steam';
 import { projectHref, type Project } from './projects';
 import { thumbOf } from './content-tree';
-import type { UeIconName } from './editor';
+import { ed, type UeIconName } from './editor';
 import type { VideoSource } from '../scripts/hover-video';
 
 export type ViewportItem = {
@@ -163,7 +163,7 @@ export async function reelItem(
     image,
     thumb: image && (await thumbOf(image)),
     caption: opts.caption ?? d.summary,
-    href: projectHref(p),
+    href: ed(projectHref(p)),
     action: `Open ${d.title}`,
     tag: opts.tag ?? d.kicker,
     card: image ? undefined : { title: d.title, kicker: d.kicker, meta: d.status ?? d.when },

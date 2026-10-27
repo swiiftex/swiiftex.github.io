@@ -1,0 +1,308 @@
+---
+/**
+ * A project, opened in the editor: its media in the Viewport, what I did on it
+ * as a Blueprint graph ("Details" tab), its facts and write-up in the Details
+ * panel, and tool tabs where it has them (patch notes, inventory, calculator).
+ */
+import { getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Editor from '../../layouts/Editor.astro';
+import Viewport from '../../components/editor/Viewport.astro';
+import BlueprintGraph from '../../components/editor/BlueprintGraph.astro';
+import DocPanel from '../../components/editor/DocPanel.astro';
+import DetailsPanel from '../../components/editor/DetailsPanel.astro';
+import DetailsCategory from '../../components/editor/DetailsCategory.astro';
+import PropRow from '../../components/editor/PropRow.astro';
+import MediaList from '../../components/editor/MediaList.astro';
+import UeIcon from '../../components/editor/UeIcon.astro';
+import SensCalc from '../../components/SensCalc.astro';
+import SupportedGames from '../../components/SupportedGames.astro';
+import Inventory from '../../components/Inventory.astro';
+import Updates from '../../components/Updates.astro';
+import { supportedGames } from '../../lib/source2all';
+import { getProjects, projectHref, whenLabel, type Project } from '../../lib/projects';
+import { latestAsset } from '../../lib/releases';
+import { projectUpdates } from '../../lib/updates';
+import { isRecent, updateDate } from '../../lib/updates-view';
+import { projectViewport } from '../../lib/viewport';
+import { projectGraph } from '../../lib/graph';
+import { CATEGORY_FOLDER, CATEGORY_HREF, assetPath, bpName, ed, pascal, type DockTab, type LogLine, type ProjectLink } from '../../lib/editor';
+import { CATEGORY_LABELS } from '../../data/site';
+
+export async function getStaticPaths() {
+  const all = await getProjects();
+  return all.map((project) => {
+    const siblings = all.filter((p) => p.data.category === project.data.category);
+    const i = siblings.findIndex((p) => p.id === project.id);
+    return {
+      params: { slug: project.id },
+      props: { project, prev: siblings[i - 1] ?? null, next: siblings[i + 1] ?? null },
+    };
+  });
+}
+
+interface Props {
+  project: Project;
+  prev: Project | null;
+  next: Project | null;
+}
+const { project, prev, next } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+// Links between projects in the write-up stay in the editor view.
+const bodyHtml = project.rendered?.html.replace(/href="\/(?!\/|_astro\/|editor\/)/g, 'href="/editor/');
+
+const folder = CATEGORY_FOLDER[data.category];
+const ogImage = data.cover ? (await getImage({ src: data.cover, width: 1200, format: 'jpg' })).src : undefined;
+
+const spec = [
+  data.studio && { k: 'Studio', v: data.studio },
+  data.role && { k: 'Role', v: data.role },
+  data.game && { k: 'Game', v: data.game },
+  data.location && { k: 'Location', v: data.location },
+  { k: 'When', v: whenLabel(project) },
+  data.status && { k: 'Status', v: data.status },
+].filter(Boolean) as { k: string; v: string }[];
+
+// Links flagged with `release` point straight at a file in the repo's latest
+// GitHub release (looked up now, and re-checked in the browser below).
+const links = await Promise.all(
+  data.links.map(async (l) => {
+    const asset = l.release ? await latestAsset(l.release.repo, l.release.asset) : null;
+    return { ...l, href: asset?.url ?? l.href, tag: asset?.tag ?? '' };
+  }),
+);
+const platforms: ProjectLink[] = links.map((l) => ({ label: l.label, href: l.href, external: !l.release, release: l.release, tag: l.tag }));
+const linkAttrs = (l: (typeof links)[number]) =>
+  l.release
+    ? { href: l.href, 'data-release-repo': l.release.repo, 'data-release-asset': l.release.asset }
+    : { href: l.href, target: '_blank', rel: 'noopener' };
+
+const items = await projectViewport(project);
+const graph = projectGraph(project);
+const s2aGames = project.id === 'source2all-sensitivity-converter' ? await supportedGames() : null;
+const updates = await projectUpdates(project);
+const latestUpdate = updates[0];
+
+const tabs: DockTab[] = [
+  { id: 'viewport', label: 'Viewport', icon: 'camera' },
+  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: what I did on this project' },
+  ...(project.id === 'source2all-sensitivity-converter'
+    ? [
+        { id: 'calculator', label: 'Sensitivity Calculator', icon: 'utility' } as DockTab,
+        { id: 'supported-games', label: 'DT_SupportedGames', icon: 'table' } as DockTab,
+      ]
+    : []),
+  ...(project.id === 'lunarball' ? [{ id: 'inventory', label: 'DA_Inventory', icon: 'data' } as DockTab] : []),
+  ...(updates.length ? [{ id: 'updates', label: 'Patch Notes', icon: 'log' } as DockTab] : []),
+];
+
+const logCat = pascal(data.title);
+const log: LogLine[] = [
+  { cat: 'Blueprint', text: `Loaded ${bpName(project)} (${data.highlights.length || 1} nodes)` },
+  ...updates.slice(0, 8).map((u): LogLine => ({ cat: logCat, text: `${updateDate(u.date)}  ${u.title}`, href: '#updates', action: 'Patch notes', time: u.date })),
+  ...(data.status && /development|coming soon|prototype/i.test(data.status) ? [{ cat: logCat, verbosity: 'Warning' as const, text: data.status }] : []),
+];
+const notice =
+  latestUpdate && isRecent(latestUpdate.date)
+    ? { title: `New ${latestUpdate.source === 'steam' ? 'update' : 'release'}: ${latestUpdate.title}`, text: updateDate(latestUpdate.date), href: '#updates', action: 'Read the patch notes' }
+    : undefined;
+---
+
+<Editor
+  title={data.title}
+  description={data.summary}
+  image={ogImage}
+  level={data.title}
+  levelIcon="blueprint"
+  folder={folder}
+  asset={project.id}
+  tabs={tabs}
+  platforms={platforms}
+  log={log}
+  notice={notice}
+>
+  <Viewport items={items} level={data.title} />
+  <BlueprintGraph graph={graph} />
+  {
+    project.id === 'source2all-sensitivity-converter' && (
+      <>
+        <DocPanel id="calculator">
+          <SensCalc />
+        </DocPanel>
+        <DocPanel id="supported-games">{s2aGames && <SupportedGames games={s2aGames} />}</DocPanel>
+      </>
+    )
+  }
+  {
+    project.id === 'lunarball' && (
+      <DocPanel id="inventory">
+        <Inventory />
+      </DocPanel>
+    )
+  }
+  {
+    updates.length > 0 && (
+      <DocPanel id="updates">
+        <Updates project={project} posts={updates} />
+      </DocPanel>
+    )
+  }
+
+  <DetailsPanel slot="details" name={data.title} icon="blueprint" type="Blueprint Class" path={assetPath(folder, bpName(project))}>
+    <MediaList items={items} />
+
+    <DetailsCategory title={CATEGORY_LABELS[data.category].replace(/s$/, '')}>
+      {
+        spec.map((s) => (
+          <PropRow label={s.k}>
+            <span class="dp-field">{s.v}</span>
+          </PropRow>
+        ))
+      }
+      {
+        data.platforms.length > 0 && (
+          <PropRow label="Platforms">
+            <ul role="list" class="dp-list">
+              {data.platforms.map((p, i) => (
+                <li>
+                  <span class="dp-list__i">[{i}]</span>
+                  <span class="dp-field">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </PropRow>
+        )
+      }
+      {
+        data.downloads && (
+          <PropRow label="Downloads">
+            <span class="dp-num">
+              <span>{data.downloads.toLocaleString('en-GB')}</span>
+            </span>
+          </PropRow>
+        )
+      }
+      {
+        latestUpdate && (
+          <PropRow label="Latest Update">
+            <a class="dp-field" href="#updates" data-action="tab:updates">
+              {latestUpdate.title} · {updateDate(latestUpdate.date)}
+            </a>
+          </PropRow>
+        )
+      }
+    </DetailsCategory>
+
+    {
+      links.length > 0 && (
+        <DetailsCategory title="Links">
+          <PropRow wide keywords={links.map((l) => l.label).join(' ')}>
+            <div class="dp-links">
+              {links.map((l, i) => (
+                <a class:list={['dp-link', i === 0 && 'dp-link--primary']} {...linkAttrs(l)}>
+                  <UeIcon name={l.release ? 'import' : 'external'} size={14} />
+                  <span>{l.label}</span>
+                  {l.release && (
+                    <span class="dp-link__tag" data-release-tag>
+                      {l.tag}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </PropRow>
+        </DetailsCategory>
+      )
+    }
+
+    <DetailsCategory title="Description">
+      <PropRow wide>
+        <div class="dp-text prose">
+          <p><strong>{data.summary}</strong></p>
+          {bodyHtml ? <Fragment set:html={bodyHtml} /> : <Content />}
+        </div>
+      </PropRow>
+    </DetailsCategory>
+
+    {
+      data.highlights.length > 0 && (
+        <DetailsCategory title={data.highlightsTitle} meta={`${data.highlights.length} Array elements`}>
+          {data.highlights.map((h, i) => (
+            <PropRow label={`Index [ ${i} ]`}>
+              <span class="dp-field">{h}</span>
+            </PropRow>
+          ))}
+        </DetailsCategory>
+      )
+    }
+
+    {
+      data.stack.length > 0 && (
+        <DetailsCategory title="Tech Stack">
+          <PropRow wide keywords={data.stack.join(' ')}>
+            <ul role="list" class="chip-row">
+              {data.stack.map((t) => (
+                <li class="chip">{t}</li>
+              ))}
+            </ul>
+          </PropRow>
+        </DetailsCategory>
+      )
+    }
+
+    <DetailsCategory title="Folder" meta={folder}>
+      <PropRow wide>
+        <div class="dp-links">
+          {
+            prev && (
+              <a class="dp-link" href={ed(projectHref(prev))}>
+                <UeIcon name="back" size={14} />
+                <span>Newer: {prev.data.title}</span>
+              </a>
+            )
+          }
+          {
+            next && (
+              <a class="dp-link" href={ed(projectHref(next))}>
+                <UeIcon name="forward" size={14} />
+                <span>Older: {next.data.title}</span>
+              </a>
+            )
+          }
+          <a class="dp-link" href={CATEGORY_HREF[data.category]}>
+            <UeIcon name="folder" size={14} />
+            <span>All {CATEGORY_LABELS[data.category].toLowerCase()}</span>
+          </a>
+          <button type="button" class="dp-link" data-action="browse-asset">
+            <UeIcon name="search" size={14} />
+            <span>Browse to Asset in Content Drawer</span>
+            <span class="dp-link__tag dp-link__key">Ctrl+B</span>
+          </button>
+        </div>
+      </PropRow>
+    </DetailsCategory>
+  </DetailsPanel>
+</Editor>
+
+<script>
+  // Re-check release download links against GitHub, so a new release is picked
+  // up straight away rather than at the next site build.
+  import { latestRelease } from '../../lib/github';
+  import { liveReleases } from '../../scripts/github-live';
+
+  const anchors = [...document.querySelectorAll<HTMLAnchorElement>('a[data-release-repo]')];
+  new Set(anchors.map((a) => a.dataset.releaseRepo!)).forEach(async (repo) => {
+    const rel = latestRelease((await liveReleases(repo)) ?? []);
+    if (!rel) return;
+    anchors
+      .filter((a) => a.dataset.releaseRepo === repo)
+      .forEach((a) => {
+        const re = new RegExp(a.dataset.releaseAsset!, 'i');
+        const asset = rel.assets.find((x) => re.test(x.name));
+        if (!asset) return;
+        a.href = asset.url;
+        a.querySelectorAll('[data-release-tag]').forEach((t) => (t.textContent = rel.tag));
+      });
+  });
+</script>

@@ -1,0 +1,500 @@
+---
+/**
+ * About: opened as the editor's Project Settings — my details under
+ * "Description", the career log as "Experience", skills as "Plugins" and a
+ * "Contact" section. The Viewport holds my portrait.
+ */
+import { Image, getImage } from 'astro:assets';
+import Editor from '../../layouts/Editor.astro';
+import Viewport from '../../components/editor/Viewport.astro';
+import BlueprintGraph from '../../components/editor/BlueprintGraph.astro';
+import DocPanel from '../../components/editor/DocPanel.astro';
+import DetailsPanel from '../../components/editor/DetailsPanel.astro';
+import DetailsCategory from '../../components/editor/DetailsCategory.astro';
+import PropRow from '../../components/editor/PropRow.astro';
+import MediaList from '../../components/editor/MediaList.astro';
+import UeIcon from '../../components/editor/UeIcon.astro';
+import Icon from '../../components/Icon.astro';
+import { buildGraph } from '../../lib/graph';
+import { thumbOf } from '../../lib/content-tree';
+import { ed, type DockTab, type UeIconName } from '../../lib/editor';
+import type { ViewportItem } from '../../lib/viewport';
+import { CAREER, DISCIPLINES, SITE, SOCIALS } from '../../data/site';
+import portrait from '../../assets/about/graduation.jpg';
+
+const portraitAlt = 'Owen Bladen-Kay smiling in his graduation cap and gown, holding his degree scroll.';
+const items: ViewportItem[] = [
+  { id: 'portrait', name: 'Portrait', type: 'Texture2D', icon: 'texture', kind: 'image', image: portrait, thumb: await thumbOf(portrait), caption: portraitAlt },
+];
+const og = (await getImage({ src: portrait, width: 1200, format: 'jpg' })).src;
+
+const graph = buildGraph(
+  'BP_Owen',
+  CAREER.map((y) => ({ title: y.year, detail: y.items.map((i) => `• ${i.text}`).join('\n') })),
+  { comment: 'Experience', target: 'Owen' },
+);
+
+const tabs: DockTab[] = [
+  { id: 'settings', label: 'Project Settings', icon: 'settings' },
+  { id: 'viewport', label: 'Viewport', icon: 'camera' },
+  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: my experience, year by year' },
+];
+
+const nav = [
+  { id: 'description', label: 'Description', group: 'Project' },
+  { id: 'experience', label: 'Experience', group: 'Project' },
+  { id: 'plugins', label: 'Plugins', group: 'Plugins' },
+  { id: 'contact', label: 'Contact', group: 'Project' },
+];
+const pluginIcon: UeIconName[] = ['blueprint', 'terminal', 'camera'];
+const pluginColor = ['var(--asset-blueprint)', 'var(--ue-purple)', 'var(--asset-level)'];
+---
+
+<Editor
+  title="About"
+  description="Owen Bladen-Kay — aka swiift — writes code for Unreal Engine games and bespoke software. Based in Manchester, UK."
+  image={og}
+  level="About"
+  levelIcon="settings"
+  folder="About"
+  asset="about"
+  tabs={tabs}
+  log={[{ cat: 'Config', text: 'Loaded DefaultGame.ini: [/Script/EngineSettings.GeneralProjectSettings]' }]}
+>
+  <DocPanel id="settings" active wide>
+    <div class="ps">
+      <nav class="ps__nav" aria-label="Settings sections">
+        <p class="ps__group">Project</p>
+        {
+          nav
+            .filter((n) => n.group === 'Project')
+            .map((n) => (
+              <a class="ps__link" href={`#${n.id}`} data-ps-link={n.id}>
+                {n.label}
+              </a>
+            ))
+        }
+        <p class="ps__group">Plugins</p>
+        <a class="ps__link" href="#plugins" data-ps-link="plugins">Installed</a>
+      </nav>
+
+      <div class="ps__content">
+        <header class="ps__header">
+          <h1 class="ps__title">Description</h1>
+          <p class="ps__sub">Project - Description</p>
+          <div class="ps__notice">
+            <span>These settings are saved in DefaultGame.ini, which is currently writable.</span>
+            <span class="ps__notice-btns" aria-hidden="true">
+              <span class="ue-btn">Set as Default</span><span class="ue-btn">Export…</span><span class="ue-btn">Import…</span>
+            </span>
+          </div>
+        </header>
+
+        <section class="ps__section" id="description" aria-label="Description">
+          <DetailsCategory title="About">
+            <PropRow label="Project Name"><span class="dp-field">swiift</span></PropRow>
+            <PropRow label="Description">
+              <div class="dp-text prose ps__bio">
+                <p class="ps__hello">Hello world!</p>
+                <p>My name's Owen, also known as <strong>swiift</strong>.</p>
+                <p>
+                  I write code for Unreal Engine games and bespoke software. Most recently I worked on <a href="/editor/directive-8020/">Directive 8020</a> with
+                  Supermassive Games. Before that I released my own game, <a href="/editor/lunarball/">LUNARBALL</a>, on Steam, and I've made a number of
+                  <a href="/editor/mods/">MORDHAU mods</a>.
+                </p>
+                <p>
+                  I was also Production Lead at <a href="https://vr-lan.com" target="_blank" rel="noopener">VRLAN</a>, a community-focused event for
+                  competitive virtual reality players, producing its broadcasts from 2022 to 2026.
+                </p>
+                <p>I graduated from Futureworks in 2025 with first-class honours in Games Design.</p>
+                <p>
+                  I'm always looking for new projects and people to work with, so if you have anything in mind, please
+                  <a href="#contact">get in touch</a>.
+                </p>
+              </div>
+            </PropRow>
+            <PropRow label="Project Version"><span class="dp-field dp-field--mono">2026.10</span></PropRow>
+            <PropRow label="Project Thumbnail">
+              <div class="ps__thumb">
+                <Image src={portrait} alt={portraitAlt} widths={[240, 480]} sizes="240px" class="ps__thumb-img" />
+              </div>
+            </PropRow>
+          </DetailsCategory>
+          <DetailsCategory title="Publisher">
+            <PropRow label="Company Name"><span class="dp-field">{SITE.author}</span></PropRow>
+            <PropRow label="Role"><span class="dp-field">Programmer · Unreal Engine</span></PropRow>
+            <PropRow label="Based In"><span class="dp-field">{SITE.location}</span></PropRow>
+            <PropRow label="Degree"><span class="dp-field">BA (Hons) Games Design, first class · Futureworks, 2025</span></PropRow>
+            <PropRow label="Homepage"><a class="dp-field" href="/editor/">www.swiift.co.uk</a></PropRow>
+            <PropRow label="Support Contact">
+              <button type="button" class="dp-field ps__copy" data-action="copy-email" title="Copy my email address">
+                {SITE.email} <UeIcon name="copy" size={12} />
+              </button>
+            </PropRow>
+          </DetailsCategory>
+        </section>
+
+        <section class="ps__section" id="experience" aria-label="Experience">
+          <DetailsCategory title="Experience" meta={`${CAREER.length} Array elements`}>
+            {
+              CAREER.map((y) => (
+                <PropRow label={y.year}>
+                  <ul role="list" class="dp-list">
+                    {y.items.map((it, i) => (
+                      <li>
+                        <span class="dp-list__i">[{i}]</span>
+                        {it.href ? (
+                          <a class="dp-field" href={ed(it.href)}>
+                            {it.text}
+                          </a>
+                        ) : (
+                          <span class="dp-field">{it.text}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </PropRow>
+              ))
+            }
+          </DetailsCategory>
+        </section>
+
+        <section class="ps__section" id="plugins" aria-label="Plugins">
+          <DetailsCategory title="Plugins" meta={`${DISCIPLINES.length} enabled`}>
+            <PropRow wide keywords={DISCIPLINES.flatMap((d) => d.tags).join(' ')}>
+              <ul role="list" class="plugins">
+                {
+                  DISCIPLINES.map((d, i) => (
+                    <li class="plugin" style={`--c:${pluginColor[i]}`}>
+                      <span class="plugin__icon">
+                        <UeIcon name={pluginIcon[i]} size={34} />
+                      </span>
+                      <div class="plugin__main">
+                        <div class="plugin__top">
+                          <h2 class="plugin__name">{d.title}</h2>
+                          <span class="plugin__enabled">
+                            <span class="dp-check" aria-hidden="true">
+                              <UeIcon name="check" size={12} />
+                            </span>
+                            Enabled
+                          </span>
+                        </div>
+                        <p class="plugin__desc">{d.body}</p>
+                        <ul role="list" class="chip-row" aria-label="Tools">
+                          {d.tags.map((t) => (
+                            <li class="chip">{t}</li>
+                          ))}
+                        </ul>
+                        <p class="plugin__by">Created by swiift · Version 5.{6 - i}</p>
+                      </div>
+                    </li>
+                  ))
+                }
+              </ul>
+            </PropRow>
+          </DetailsCategory>
+        </section>
+
+        <section class="ps__section" id="contact" aria-label="Contact">
+          <DetailsCategory title="Contact">
+            <PropRow label="Email">
+              <div class="dp-links">
+                <button type="button" class="dp-link dp-link--primary" data-action="copy-email">
+                  <UeIcon name="copy" size={14} /><span>{SITE.email}</span><span class="dp-link__tag">Copy</span>
+                </button>
+                <a class="dp-link" href={`mailto:${SITE.email}`}><UeIcon name="mail" size={14} /><span>Open in your mail app</span></a>
+              </div>
+            </PropRow>
+            <PropRow label="Discord"><span class="dp-field">swiift.</span></PropRow>
+            {
+              SOCIALS.map((s) => (
+                <PropRow label={s.label}>
+                  <a class="dp-link" href={s.href} target="_blank" rel="noopener">
+                    <Icon name={s.icon} size={14} />
+                    <span>{s.handle}</span>
+                    <UeIcon name="external" size={12} />
+                  </a>
+                </PropRow>
+              ))
+            }
+            <PropRow label="Guide">
+              <a class="dp-link" href="/editor/melee-slashers/"><UeIcon name="game" size={14} /><span>Melee slashers guide</span></a>
+            </PropRow>
+          </DetailsCategory>
+        </section>
+      </div>
+    </div>
+  </DocPanel>
+
+  <Viewport items={items} level="About" active={false} autoplay={false} />
+  <BlueprintGraph graph={graph} />
+
+  <DetailsPanel slot="details" name={SITE.author} icon="user" type="Character · swiift" path="/Game/About/Lvl_About">
+    <MediaList items={items} />
+    <DetailsCategory title="Player Card">
+      <PropRow label="Tag"><span class="dp-field">swiift</span></PropRow>
+      <PropRow label="Role"><span class="dp-field">Programmer</span></PropRow>
+      <PropRow label="Engine"><span class="dp-field">Unreal</span></PropRow>
+      <PropRow label="Based In"><span class="dp-field">Manchester</span></PropRow>
+      <PropRow label="Degree"><span class="dp-field">First-class</span></PropRow>
+      <PropRow label="Local Time"><span class="dp-field dp-field--mono" data-clock>--:--</span></PropRow>
+    </DetailsCategory>
+    <DetailsCategory title="Contact">
+      <PropRow wide keywords={`email ${SITE.email}`}>
+        <div class="dp-links">
+          <button type="button" class="dp-link dp-link--primary" data-action="copy-email">
+            <UeIcon name="mail" size={14} /><span>Email me</span><span class="dp-link__tag">Copy</span>
+          </button>
+          {
+            SOCIALS.map((s) => (
+              <a class="dp-link" href={s.href} target="_blank" rel="noopener">
+                <Icon name={s.icon} size={14} />
+                <span>{s.label}</span>
+                <span class="dp-link__tag">{s.handle}</span>
+              </a>
+            ))
+          }
+        </div>
+      </PropRow>
+    </DetailsCategory>
+  </DetailsPanel>
+</Editor>
+
+<script>
+  // Highlight the settings section in view, like the Project Settings sidebar.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-ps-link]')];
+  const scroller = document.querySelector<HTMLElement>('#panel-settings');
+  const sections = links.map((l) => document.getElementById(l.dataset.psLink!)).filter(Boolean) as HTMLElement[];
+  const title = document.querySelector('.ps__title');
+  const sub = document.querySelector('.ps__sub');
+  const mark = (id: string) => {
+    links.forEach((l) => l.classList.toggle('is-active', l.dataset.psLink === id));
+    const link = links.find((l) => l.dataset.psLink === id);
+    if (title && link) title.textContent = link.dataset.psLink === 'plugins' ? 'Plugins' : link.textContent!.trim();
+    if (sub && link) sub.textContent = id === 'plugins' ? 'Plugins - Installed' : `Project - ${link.textContent!.trim()}`;
+  };
+  links.forEach((l) =>
+    l.addEventListener('click', (e) => {
+      const target = document.getElementById(l.dataset.psLink!);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', `#${l.dataset.psLink}`);
+      mark(l.dataset.psLink!);
+    }),
+  );
+  const onScroll = () => {
+    const top = (scroller?.getBoundingClientRect().top ?? 0) + 120;
+    let current = sections[0]?.id;
+    for (const s of sections) if (s.getBoundingClientRect().top <= top) current = s.id;
+    if (current) mark(current);
+  };
+  scroller?.addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+
+<style>
+  .ps {
+    display: grid;
+    gap: 12px;
+  }
+  .ps__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ps__group {
+    display: none;
+  }
+  .ps__link {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: var(--ue-bg);
+    color: var(--ue-fg);
+    font-size: 13px;
+  }
+  .ps__link:hover {
+    background: #303030;
+    color: #fff;
+  }
+  .ps__link.is-active {
+    background: var(--ue-primary);
+    color: #fff;
+  }
+  .ps__content {
+    min-width: 0;
+    border-radius: 4px;
+    background: var(--ue-bg);
+  }
+  .ps__header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 14px 14px 12px;
+    border-radius: 4px 4px 0 0;
+    background: var(--ue-bg);
+    box-shadow: 0 1px 0 #151515;
+  }
+  .ps__title {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .ps__sub {
+    margin-top: 2px;
+    color: var(--ue-fg-dim);
+    font-size: var(--fs-ui);
+  }
+  .ps__notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-top: 12px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background: color-mix(in oklab, var(--ue-success) 12%, var(--ue-recessed));
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+  }
+  .ps__notice-btns {
+    display: flex;
+    gap: 4px;
+  }
+  .ps__notice-btns .ue-btn {
+    cursor: default;
+  }
+  .ps__notice-btns .ue-btn:hover {
+    background: var(--ue-dropdown);
+    color: var(--ue-fg);
+  }
+  .ps__section {
+    scroll-margin-top: 12px;
+  }
+  .ps__hello {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .ps__bio {
+    font-size: var(--fs-text);
+  }
+  .ps__thumb {
+    width: min(240px, 100%);
+    padding: 4px;
+    border: 1px solid var(--ue-input-line);
+    border-radius: var(--radius);
+    background: var(--ue-input);
+  }
+  .ps__thumb :global(.ps__thumb-img) {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: 50% 18%;
+    border-radius: 2px;
+  }
+  .ps__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+  }
+  .ps__copy:hover {
+    border-color: var(--ue-hover);
+    color: #fff;
+  }
+
+  /* ---------- plugin cards ---------- */
+  .plugins {
+    display: grid;
+    gap: 8px;
+  }
+  .plugin {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #151515;
+    border-radius: 4px;
+    background: var(--ue-recessed);
+  }
+  .plugin__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    background: radial-gradient(circle at 30% 25%, color-mix(in oklab, var(--c) 60%, white 10%), color-mix(in oklab, var(--c) 45%, black));
+    color: #fff;
+  }
+  .plugin__main {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .plugin__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+  }
+  .plugin__name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .plugin__enabled {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ue-fg);
+    font-size: var(--fs-ui);
+  }
+  .plugin__enabled .dp-check {
+    margin-top: 0;
+  }
+  .plugin__desc {
+    color: var(--ue-fg);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .plugin__by {
+    color: var(--ue-fg-dim);
+    font-size: 11px;
+  }
+
+  @media (min-width: 760px) {
+    .ps {
+      grid-template-columns: 180px minmax(0, 1fr);
+      align-items: start;
+    }
+    .ps__nav {
+      position: sticky;
+      top: 0;
+      display: grid;
+      gap: 1px;
+      padding: 6px;
+      border-radius: 4px;
+      background: var(--ue-bg);
+    }
+    .ps__group {
+      display: block;
+      padding: 8px 8px 4px;
+      color: var(--ue-fg-dim);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .ps__link {
+      padding: 4px 8px 4px 18px;
+      background: none;
+      font-size: var(--fs-ui);
+    }
+    .plugins {
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    }
+  }
+</style>

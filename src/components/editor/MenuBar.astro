@@ -7,7 +7,7 @@
 import UeIcon from './UeIcon.astro';
 import { getProjects, projectHref } from '../../lib/projects';
 import { SITE, SOCIALS } from '../../data/site';
-import type { UeIconName } from '../../lib/editor';
+import { ed, type UeIconName } from '../../lib/editor';
 
 type Item = {
   label: string;
@@ -152,6 +152,8 @@ const MENUS: Menu[] = [
   },
 ];
 
+// Every internal link stays in the editor view.
+MENUS.forEach((m) => m.sections.forEach((s) => s.items.forEach((it) => it.href && (it.href = ed(it.href)))));
 const path = Astro.url.pathname;
 ---
 

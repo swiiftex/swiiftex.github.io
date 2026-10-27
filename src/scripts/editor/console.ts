@@ -56,12 +56,12 @@ export function initConsole() {
     targets.push({ name, href: a.getAttribute('href')!, external: a.target === '_blank', kind: a.querySelector('.cb-tile__type')?.textContent ?? '' });
   });
   for (const [name, href] of [
-    ['Games', '/games/'],
-    ['Mods', '/mods/'],
-    ['Software', '/software/'],
-    ['Events', '/events/'],
-    ['About', '/about/'],
-    ['Home', '/'],
+    ['Games', '/editor/games/'],
+    ['Mods', '/editor/mods/'],
+    ['Software', '/editor/software/'],
+    ['Events', '/editor/events/'],
+    ['About', '/editor/about/'],
+    ['Home', '/editor/'],
   ])
     targets.push({ name, href, external: false, kind: 'Level' });
   const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -98,7 +98,7 @@ export function initConsole() {
         go(t);
       },
     },
-    { name: 'about', help: 'Open the About page', run: () => (location.href = '/about/') },
+    { name: 'about', help: 'Open the About page', run: () => (location.href = '/editor/about/') },
     { name: 'contact', help: 'Copy my email address', run: () => runAction('contact') },
     { name: 'github', help: 'Open my GitHub profile', run: () => window.open('https://github.com/swiiftex', '_blank', 'noopener') },
     { name: 'stat fps', help: 'Show the frame rate in the viewport', run: () => runAction('stat-fps') || write('Console', 'No viewport on this page.', 'Warning') },

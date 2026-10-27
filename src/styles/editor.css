@@ -732,3 +732,58 @@ a.dp-num:hover {
     display: none;
   }
 }
+
+/* ---------- the classic site's tools, restyled for the editor's tabs ----------
+   (Prefixed with .editor .doc-page to outrank the components' scoped styles.) */
+.editor .doc-page :is(.inv__title, .sens__title, .games__title, .parry__title, .upd__heading) {
+  font-size: 20px;
+}
+.editor .doc-page :is(.inv__filter, .games__filter, .upd__tag, .upd__more) {
+  border-radius: var(--radius);
+}
+.editor .doc-page :is(.inv__filter, .games__filter)[aria-pressed='true'] {
+  background: var(--ue-primary);
+  border-color: var(--ue-primary);
+  color: #fff;
+}
+.editor .doc-page .sens .field :is(select, input) {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ue-input-line);
+  background: var(--ue-input);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.editor .doc-page .sens .field select {
+  border-color: var(--ue-dropdown);
+  background: var(--ue-dropdown);
+}
+.editor .doc-page .sens .field :is(select, input):hover {
+  border-color: var(--ue-hover);
+}
+.editor .doc-page .sens .field :is(select, input):focus {
+  border-color: var(--ue-primary);
+}
+.editor .doc-page .sens .sens__big {
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  line-height: 0.95;
+}
+.editor .doc-page .upd .upd__title {
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  line-height: 1.15;
+}
+.editor .doc-page .upd .upd__body :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-ui);
+  line-height: 1.2;
+  text-transform: none;
+  margin-top: 1.4em;
+}
+.editor .doc-page .upd .upd__body :is(h1, h2, .bb-h1) {
+  font-size: 1.2rem;
+}
+.editor .doc-page .upd .upd__body :is(h3, .bb-h2) {
+  font-size: 1.05rem;
+}
+.editor .doc-page .upd .upd__body :is(h4:not(.bb-h1), h5:not(.bb-h2), h6, .bb-h3) {
+  font-size: 1rem;
+}

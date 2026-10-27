@@ -1,500 +1,394 @@
 ---
-/**
- * About: opened as the editor's Project Settings — my details under
- * "Description", the career log as "Experience", skills as "Plugins" and a
- * "Contact" section. The Viewport holds my portrait.
- */
-import { Image, getImage } from 'astro:assets';
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import Viewport from '../components/editor/Viewport.astro';
-import BlueprintGraph from '../components/editor/BlueprintGraph.astro';
-import DocPanel from '../components/editor/DocPanel.astro';
-import DetailsPanel from '../components/editor/DetailsPanel.astro';
-import DetailsCategory from '../components/editor/DetailsCategory.astro';
-import PropRow from '../components/editor/PropRow.astro';
-import MediaList from '../components/editor/MediaList.astro';
-import UeIcon from '../components/editor/UeIcon.astro';
 import Icon from '../components/Icon.astro';
-import { buildGraph } from '../lib/graph';
-import { thumbOf } from '../lib/content-tree';
-import type { DockTab, UeIconName } from '../lib/editor';
-import type { ViewportItem } from '../lib/viewport';
-import { CAREER, DISCIPLINES, SITE, SOCIALS } from '../data/site';
+import Logo from '../components/Logo.astro';
+import { SITE, SOCIALS } from '../data/site';
 import portrait from '../assets/about/graduation.jpg';
 
-const portraitAlt = 'Owen Bladen-Kay smiling in his graduation cap and gown, holding his degree scroll.';
-const items: ViewportItem[] = [
-  { id: 'portrait', name: 'Portrait', type: 'Texture2D', icon: 'texture', kind: 'image', image: portrait, thumb: await thumbOf(portrait), caption: portraitAlt },
+const log = [
+  {
+    year: '2026',
+    items: [
+      { text: 'Shipped Directive 8020 with Supermassive Games — my first AAA credit', href: '/directive-8020/' },
+      { text: 'Production Lead and company director for VRLAN 2026 in the Netherlands', href: '/vrlan-2026/' },
+      { text: 'Released Source2All Sensitivity Converter and QuickClip', href: '/software/' },
+    ],
+  },
+  {
+    year: '2025',
+    items: [
+      { text: 'Graduated from Futureworks with first-class honours in Games Design' },
+      { text: 'Goldrush: Revived, BetterPUGs and the WMMR scoreboard for MORDHAU', href: '/games/#mods' },
+    ],
+  },
+  {
+    year: '2024',
+    items: [
+      { text: 'Released LUNARBALL on Steam', href: '/lunarball/' },
+      { text: 'Led production at VRLAN 2024, including the first public broadcast of Orion Drift', href: '/vrlan-2024/' },
+      { text: "Released swiift's Comp Mod and the battle royale map packs", href: '/games/#mods' },
+    ],
+  },
+  {
+    year: '2023',
+    items: [
+      { text: 'Rebuilt the broadcast package from scratch for Duckman LAN 2', href: '/duckman-lan-2023/' },
+      { text: 'Ported Chivalry weapons into Hellsplit Arena', href: '/chivalry-mw-weapon-ports/' },
+    ],
+  },
+  {
+    year: '2022',
+    items: [
+      { text: 'Produced and presented the broadcast for Duckman LAN, Europe’s first community Echo Arena LAN', href: '/duckman-lan-2022/' },
+      { text: 'First MORDHAU mods: Hijacked and Highrise', href: '/cod-to-mordhau-map-ports/' },
+    ],
+  },
+  {
+    year: '2021',
+    items: [{ text: 'Built the Broadcast Tool for the first Redshift Contender Series', href: '/broadcast-tool/' }],
+  },
 ];
-const og = (await getImage({ src: portrait, width: 1200, format: 'jpg' })).src;
-
-const graph = buildGraph(
-  'BP_Owen',
-  CAREER.map((y) => ({ title: y.year, detail: y.items.map((i) => `• ${i.text}`).join('\n') })),
-  { comment: 'Experience', target: 'Owen' },
-);
-
-const tabs: DockTab[] = [
-  { id: 'settings', label: 'Project Settings', icon: 'settings' },
-  { id: 'viewport', label: 'Viewport', icon: 'camera' },
-  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: my experience, year by year' },
-];
-
-const nav = [
-  { id: 'description', label: 'Description', group: 'Project' },
-  { id: 'experience', label: 'Experience', group: 'Project' },
-  { id: 'plugins', label: 'Plugins', group: 'Plugins' },
-  { id: 'contact', label: 'Contact', group: 'Project' },
-];
-const pluginIcon: UeIconName[] = ['blueprint', 'terminal', 'camera'];
-const pluginColor = ['var(--asset-blueprint)', 'var(--ue-purple)', 'var(--asset-level)'];
 ---
 
-<Base
-  title="About"
-  description="Owen Bladen-Kay — aka swiift — writes code for Unreal Engine games and bespoke software. Based in Manchester, UK."
-  image={og}
-  level="About"
-  levelIcon="settings"
-  folder="About"
-  asset="about"
-  tabs={tabs}
-  log={[{ cat: 'Config', text: 'Loaded DefaultGame.ini: [/Script/EngineSettings.GeneralProjectSettings]' }]}
->
-  <DocPanel id="settings" active wide>
-    <div class="ps">
-      <nav class="ps__nav" aria-label="Settings sections">
-        <p class="ps__group">Project</p>
-        {
-          nav
-            .filter((n) => n.group === 'Project')
-            .map((n) => (
-              <a class="ps__link" href={`#${n.id}`} data-ps-link={n.id}>
-                {n.label}
-              </a>
-            ))
-        }
-        <p class="ps__group">Plugins</p>
-        <a class="ps__link" href="#plugins" data-ps-link="plugins">Installed</a>
-      </nav>
-
-      <div class="ps__content">
-        <header class="ps__header">
-          <h1 class="ps__title">Description</h1>
-          <p class="ps__sub">Project - Description</p>
-          <div class="ps__notice">
-            <span>These settings are saved in DefaultGame.ini, which is currently writable.</span>
-            <span class="ps__notice-btns" aria-hidden="true">
-              <span class="ue-btn">Set as Default</span><span class="ue-btn">Export…</span><span class="ue-btn">Import…</span>
-            </span>
-          </div>
-        </header>
-
-        <section class="ps__section" id="description" aria-label="Description">
-          <DetailsCategory title="About">
-            <PropRow label="Project Name"><span class="dp-field">swiift</span></PropRow>
-            <PropRow label="Description">
-              <div class="dp-text prose ps__bio">
-                <p class="ps__hello">Hello world!</p>
-                <p>My name's Owen, also known as <strong>swiift</strong>.</p>
-                <p>
-                  I write code for Unreal Engine games and bespoke software. Most recently I worked on <a href="/directive-8020/">Directive 8020</a> with
-                  Supermassive Games. Before that I released my own game, <a href="/lunarball/">LUNARBALL</a>, on Steam, and I've made a number of
-                  <a href="/mods/">MORDHAU mods</a>.
-                </p>
-                <p>
-                  I was also Production Lead at <a href="https://vr-lan.com" target="_blank" rel="noopener">VRLAN</a>, a community-focused event for
-                  competitive virtual reality players, producing its broadcasts from 2022 to 2026.
-                </p>
-                <p>I graduated from Futureworks in 2025 with first-class honours in Games Design.</p>
-                <p>
-                  I'm always looking for new projects and people to work with, so if you have anything in mind, please
-                  <a href="#contact">get in touch</a>.
-                </p>
-              </div>
-            </PropRow>
-            <PropRow label="Project Version"><span class="dp-field dp-field--mono">2026.10</span></PropRow>
-            <PropRow label="Project Thumbnail">
-              <div class="ps__thumb">
-                <Image src={portrait} alt={portraitAlt} widths={[240, 480]} sizes="240px" class="ps__thumb-img" />
-              </div>
-            </PropRow>
-          </DetailsCategory>
-          <DetailsCategory title="Publisher">
-            <PropRow label="Company Name"><span class="dp-field">{SITE.author}</span></PropRow>
-            <PropRow label="Role"><span class="dp-field">Programmer · Unreal Engine</span></PropRow>
-            <PropRow label="Based In"><span class="dp-field">{SITE.location}</span></PropRow>
-            <PropRow label="Degree"><span class="dp-field">BA (Hons) Games Design, first class · Futureworks, 2025</span></PropRow>
-            <PropRow label="Homepage"><a class="dp-field" href="/">www.swiift.co.uk</a></PropRow>
-            <PropRow label="Support Contact">
-              <button type="button" class="dp-field ps__copy" data-action="copy-email" title="Copy my email address">
-                {SITE.email} <UeIcon name="copy" size={12} />
-              </button>
-            </PropRow>
-          </DetailsCategory>
-        </section>
-
-        <section class="ps__section" id="experience" aria-label="Experience">
-          <DetailsCategory title="Experience" meta={`${CAREER.length} Array elements`}>
-            {
-              CAREER.map((y) => (
-                <PropRow label={y.year}>
-                  <ul role="list" class="dp-list">
-                    {y.items.map((it, i) => (
-                      <li>
-                        <span class="dp-list__i">[{i}]</span>
-                        {it.href ? (
-                          <a class="dp-field" href={it.href}>
-                            {it.text}
-                          </a>
-                        ) : (
-                          <span class="dp-field">{it.text}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </PropRow>
-              ))
-            }
-          </DetailsCategory>
-        </section>
-
-        <section class="ps__section" id="plugins" aria-label="Plugins">
-          <DetailsCategory title="Plugins" meta={`${DISCIPLINES.length} enabled`}>
-            <PropRow wide keywords={DISCIPLINES.flatMap((d) => d.tags).join(' ')}>
-              <ul role="list" class="plugins">
-                {
-                  DISCIPLINES.map((d, i) => (
-                    <li class="plugin" style={`--c:${pluginColor[i]}`}>
-                      <span class="plugin__icon">
-                        <UeIcon name={pluginIcon[i]} size={34} />
-                      </span>
-                      <div class="plugin__main">
-                        <div class="plugin__top">
-                          <h2 class="plugin__name">{d.title}</h2>
-                          <span class="plugin__enabled">
-                            <span class="dp-check" aria-hidden="true">
-                              <UeIcon name="check" size={12} />
-                            </span>
-                            Enabled
-                          </span>
-                        </div>
-                        <p class="plugin__desc">{d.body}</p>
-                        <ul role="list" class="chip-row" aria-label="Tools">
-                          {d.tags.map((t) => (
-                            <li class="chip">{t}</li>
-                          ))}
-                        </ul>
-                        <p class="plugin__by">Created by swiift · Version 5.{6 - i}</p>
-                      </div>
-                    </li>
-                  ))
-                }
-              </ul>
-            </PropRow>
-          </DetailsCategory>
-        </section>
-
-        <section class="ps__section" id="contact" aria-label="Contact">
-          <DetailsCategory title="Contact">
-            <PropRow label="Email">
-              <div class="dp-links">
-                <button type="button" class="dp-link dp-link--primary" data-action="copy-email">
-                  <UeIcon name="copy" size={14} /><span>{SITE.email}</span><span class="dp-link__tag">Copy</span>
-                </button>
-                <a class="dp-link" href={`mailto:${SITE.email}`}><UeIcon name="mail" size={14} /><span>Open in your mail app</span></a>
-              </div>
-            </PropRow>
-            <PropRow label="Discord"><span class="dp-field">swiift.</span></PropRow>
-            {
-              SOCIALS.map((s) => (
-                <PropRow label={s.label}>
-                  <a class="dp-link" href={s.href} target="_blank" rel="noopener">
-                    <Icon name={s.icon} size={14} />
-                    <span>{s.handle}</span>
-                    <UeIcon name="external" size={12} />
-                  </a>
-                </PropRow>
-              ))
-            }
-            <PropRow label="Guide">
-              <a class="dp-link" href="/melee-slashers/"><UeIcon name="game" size={14} /><span>Melee slashers guide</span></a>
-            </PropRow>
-          </DetailsCategory>
-        </section>
+<Base title="About" description="Owen Bladen-Kay — aka swiift — writes code for Unreal Engine games and bespoke software. Based in Manchester, UK.">
+  <section class="about container">
+    <div class="about__intro">
+      <p class="eyebrow" data-reveal><span class="eyebrow__index">04</span><span class="eyebrow__rule"></span>About</p>
+      <h1 class="display h1 about__title" data-reveal style="--i:1">Hello world!</h1>
+      <div class="prose about__bio" data-reveal style="--i:2">
+        <p class="lede">My name's Owen, also known as <strong>swiift</strong>.</p>
+        <p>
+          I write code for Unreal Engine games and bespoke software. Most recently I worked on <a href="/directive-8020/">Directive 8020</a>
+          with Supermassive Games. Before that I released my own game, <a href="/lunarball/">LUNARBALL</a>, on Steam, and I've made a number of
+          <a href="/games/#mods">MORDHAU mods</a>.
+        </p>
+        <p>
+          I was also Production Lead at <a href="https://vr-lan.com" target="_blank" rel="noopener">VRLAN</a>, a community-focused event for
+          competitive virtual reality players, producing its broadcasts from 2022 to 2026.
+        </p>
+        <p>I graduated from Futureworks in 2025 with first-class honours in Games Design.</p>
+        <p>
+          I'm always looking for new projects and people to work with, so if you have anything in mind, please
+          <a href="#contact">get in touch</a>.
+        </p>
       </div>
     </div>
-  </DocPanel>
 
-  <Viewport items={items} level="About" active={false} autoplay={false} />
-  <BlueprintGraph graph={graph} />
-
-  <DetailsPanel slot="details" name={SITE.author} icon="user" type="Character · swiift" path="/Game/About/Lvl_About">
-    <MediaList items={items} />
-    <DetailsCategory title="Player Card">
-      <PropRow label="Tag"><span class="dp-field">swiift</span></PropRow>
-      <PropRow label="Role"><span class="dp-field">Programmer</span></PropRow>
-      <PropRow label="Engine"><span class="dp-field">Unreal</span></PropRow>
-      <PropRow label="Based In"><span class="dp-field">Manchester</span></PropRow>
-      <PropRow label="Degree"><span class="dp-field">First-class</span></PropRow>
-      <PropRow label="Local Time"><span class="dp-field dp-field--mono" data-clock>--:--</span></PropRow>
-    </DetailsCategory>
-    <DetailsCategory title="Contact">
-      <PropRow wide keywords={`email ${SITE.email}`}>
-        <div class="dp-links">
-          <button type="button" class="dp-link dp-link--primary" data-action="copy-email">
-            <UeIcon name="mail" size={14} /><span>Email me</span><span class="dp-link__tag">Copy</span>
-          </button>
-          {
-            SOCIALS.map((s) => (
-              <a class="dp-link" href={s.href} target="_blank" rel="noopener">
-                <Icon name={s.icon} size={14} />
-                <span>{s.label}</span>
-                <span class="dp-link__tag">{s.handle}</span>
-              </a>
-            ))
-          }
+    <!-- Player card -->
+    <div class="card-wrap" data-reveal="fade" style="--i:2">
+      <div class="player" data-tilt="10">
+        <div class="player__photo">
+          <Image src={portrait} alt="Owen Bladen-Kay smiling in his graduation cap and gown, holding his degree scroll." widths={[400, 640, 900]} sizes="(min-width: 1000px) 420px, 90vw" loading="eager" />
         </div>
-      </PropRow>
-    </DetailsCategory>
-  </DetailsPanel>
+        <div class="player__sheen" aria-hidden="true"></div>
+        <div class="player__top">
+          <Logo size={26} />
+        </div>
+        <div class="player__plate">
+          <p class="player__tag mono">swiift</p>
+          <p class="player__name display">Owen Bladen-Kay</p>
+          <dl class="player__stats">
+            <div><dt class="mono">Role</dt><dd>Programmer</dd></div>
+            <div><dt class="mono">Engine</dt><dd>Unreal</dd></div>
+            <div><dt class="mono">Based in</dt><dd>Manchester</dd></div>
+            <div><dt class="mono">Degree</dt><dd>First-class</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Career log -->
+  <section class="section container" aria-labelledby="log-title">
+    <div class="section-head">
+      <p class="eyebrow" data-reveal><span class="eyebrow__index">01</span><span class="eyebrow__rule"></span>Timeline</p>
+      <h2 id="log-title" class="display h2" data-reveal style="--i:1">Experience</h2>
+    </div>
+    <ol role="list" class="log">
+      {
+        log.map((y, i) => (
+          <li class="log__year" data-reveal style={`--i:${i % 3}`}>
+            <span class="log__label display">{y.year}</span>
+            <ul role="list" class="log__items">
+              {y.items.map((it) => (
+                <li>
+                  {it.href ? (
+                    <a href={it.href}>
+                      {it.text} <Icon name="arrow" size={14} />
+                    </a>
+                  ) : (
+                    <span>{it.text}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- Elsewhere -->
+  <section class="container section--tight" aria-labelledby="links-title">
+    <div class="links-grid">
+      <div>
+        <p class="eyebrow" data-reveal><span class="eyebrow__index">02</span><span class="eyebrow__rule"></span>Links</p>
+        <h2 id="links-title" class="display h2" data-reveal style="--i:1">Contact</h2>
+        <p class="lede" data-reveal style="--i:2">
+          Email is best for work enquiries. I'm also <span class="accent">swiift.</span> on Discord.
+        </p>
+        <div class="btn-row" data-reveal style="--i:3">
+          <a class="btn btn--primary" href={`mailto:${SITE.email}`} data-magnetic><Icon name="mail" /> Email me</a>
+          <a class="btn btn--ghost" href="/melee-slashers/">Melee slashers guide</a>
+        </div>
+      </div>
+      <ul role="list" class="tiles">
+        {
+          SOCIALS.map((s, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <a class="tile panel" href={s.href} target="_blank" rel="noopener" data-tilt="6">
+                <Icon name={s.icon} size={26} />
+                <span class="tile__label">{s.label}</span>
+                <span class="tile__handle mono">{s.handle}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
 </Base>
 
-<script>
-  // Highlight the settings section in view, like the Project Settings sidebar.
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-ps-link]')];
-  const scroller = document.querySelector<HTMLElement>('#panel-settings');
-  const sections = links.map((l) => document.getElementById(l.dataset.psLink!)).filter(Boolean) as HTMLElement[];
-  const title = document.querySelector('.ps__title');
-  const sub = document.querySelector('.ps__sub');
-  const mark = (id: string) => {
-    links.forEach((l) => l.classList.toggle('is-active', l.dataset.psLink === id));
-    const link = links.find((l) => l.dataset.psLink === id);
-    if (title && link) title.textContent = link.dataset.psLink === 'plugins' ? 'Plugins' : link.textContent!.trim();
-    if (sub && link) sub.textContent = id === 'plugins' ? 'Plugins - Installed' : `Project - ${link.textContent!.trim()}`;
-  };
-  links.forEach((l) =>
-    l.addEventListener('click', (e) => {
-      const target = document.getElementById(l.dataset.psLink!);
-      if (!target) return;
-      e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      history.replaceState(null, '', `#${l.dataset.psLink}`);
-      mark(l.dataset.psLink!);
-    }),
-  );
-  const onScroll = () => {
-    const top = (scroller?.getBoundingClientRect().top ?? 0) + 120;
-    let current = sections[0]?.id;
-    for (const s of sections) if (s.getBoundingClientRect().top <= top) current = s.id;
-    if (current) mark(current);
-  };
-  scroller?.addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-</script>
-
 <style>
-  .ps {
+  .about {
     display: grid;
-    gap: 12px;
+    gap: 56px;
+    padding-top: calc(var(--header-h) + clamp(48px, 8vw, 110px));
+    align-items: start;
   }
-  .ps__nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  @media (min-width: 1000px) {
+    .about {
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: clamp(48px, 7vw, 120px);
+    }
   }
-  .ps__group {
-    display: none;
+  .about__intro {
+    display: grid;
+    gap: 28px;
   }
-  .ps__link {
-    padding: 6px 12px;
-    border-radius: 4px;
-    background: var(--ue-bg);
-    color: var(--ue-fg);
-    font-size: 13px;
+  .about__bio p:not(.lede) {
+    font-size: 1.1rem;
   }
-  .ps__link:hover {
-    background: #303030;
-    color: #fff;
+
+  /* ---------- player card ---------- */
+  .card-wrap {
+    perspective: 1000px;
+    justify-self: center;
+    width: min(100%, 420px);
   }
-  .ps__link.is-active {
-    background: var(--ue-primary);
-    color: #fff;
+  .player {
+    --rx: 0deg;
+    --ry: 0deg;
+    --mx: 50%;
+    --my: 30%;
+    position: relative;
+    aspect-ratio: 3 / 4.2;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--accent) 45%, var(--line));
+    background: var(--panel);
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+    transition: transform 0.6s var(--ease-out);
+    box-shadow:
+      0 50px 100px -40px color-mix(in oklab, var(--accent) 45%, transparent),
+      0 0 0 6px var(--bg-2),
+      0 0 0 7px var(--line-2);
   }
-  .ps__content {
-    min-width: 0;
-    border-radius: 4px;
-    background: var(--ue-bg);
-  }
-  .ps__header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    padding: 14px 14px 12px;
-    border-radius: 4px 4px 0 0;
-    background: var(--ue-bg);
-    box-shadow: 0 1px 0 #151515;
-  }
-  .ps__title {
-    color: #fff;
-    font-size: 22px;
-    font-weight: 700;
-  }
-  .ps__sub {
-    margin-top: 2px;
-    color: var(--ue-fg-dim);
-    font-size: var(--fs-ui);
-  }
-  .ps__notice {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 16px;
-    margin-top: 12px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    background: color-mix(in oklab, var(--ue-success) 12%, var(--ue-recessed));
-    color: var(--ue-fg);
-    font-size: var(--fs-ui);
-  }
-  .ps__notice-btns {
-    display: flex;
-    gap: 4px;
-  }
-  .ps__notice-btns .ue-btn {
-    cursor: default;
-  }
-  .ps__notice-btns .ue-btn:hover {
-    background: var(--ue-dropdown);
-    color: var(--ue-fg);
-  }
-  .ps__section {
-    scroll-margin-top: 12px;
-  }
-  .ps__hello {
-    color: #fff;
-    font-size: 20px;
-    font-weight: 800;
-  }
-  .ps__bio {
-    font-size: var(--fs-text);
-  }
-  .ps__thumb {
-    width: min(240px, 100%);
-    padding: 4px;
-    border: 1px solid var(--ue-input-line);
-    border-radius: var(--radius);
-    background: var(--ue-input);
-  }
-  .ps__thumb :global(.ps__thumb-img) {
+  .player__photo,
+  .player__photo :global(img) {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    aspect-ratio: 1;
+    height: 100%;
     object-fit: cover;
     object-position: 50% 18%;
-    border-radius: 2px;
   }
-  .ps__copy {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    text-align: left;
+  .player__photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgb(7 8 11 / 0.92) 82%);
   }
-  .ps__copy:hover {
-    border-color: var(--ue-hover);
-    color: #fff;
+  .player__sheen {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: color-dodge;
+    opacity: 0.0;
+    background:
+      radial-gradient(500px circle at var(--mx) var(--my), rgb(255 255 255 / 0.35), transparent 40%),
+      linear-gradient(115deg, transparent 20%, rgb(0 177 255 / 0.45) 35%, rgb(255 80 200 / 0.35) 50%, rgb(255 220 120 / 0.35) 65%, transparent 80%);
+    background-size: 100% 100%, 250% 250%;
+    background-position: center, calc(var(--mx) * 1.2) calc(var(--my) * 1.2);
+    transition: opacity 0.4s;
   }
-
-  /* ---------- plugin cards ---------- */
-  .plugins {
-    display: grid;
-    gap: 8px;
+  .player:hover .player__sheen {
+    opacity: 0.55;
   }
-  .plugin {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid #151515;
-    border-radius: 4px;
-    background: var(--ue-recessed);
-  }
-  .plugin__icon {
-    display: grid;
-    place-items: center;
-    width: 64px;
-    height: 64px;
-    border-radius: 6px;
-    background: radial-gradient(circle at 30% 25%, color-mix(in oklab, var(--c) 60%, white 10%), color-mix(in oklab, var(--c) 45%, black));
-    color: #fff;
-  }
-  .plugin__main {
-    display: grid;
-    gap: 6px;
-    min-width: 0;
-  }
-  .plugin__top {
+  .player__top {
+    position: absolute;
+    inset: 16px 16px auto 16px;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     justify-content: space-between;
-    gap: 6px 12px;
-  }
-  .plugin__name {
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-  }
-  .plugin__enabled {
-    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: var(--ue-fg);
-    font-size: var(--fs-ui);
+    color: var(--fg);
+    text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
   }
-  .plugin__enabled .dp-check {
-    margin-top: 0;
+  .player__plate {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 22px 22px 20px;
+    transform: translateZ(40px);
   }
-  .plugin__desc {
-    color: var(--ue-fg);
-    font-size: 13px;
-    line-height: 1.5;
+  .player__tag {
+    color: var(--accent);
   }
-  .plugin__by {
-    color: var(--ue-fg-dim);
-    font-size: 11px;
+  .player__name {
+    font-size: 2.6rem;
+    line-height: 0.9;
+    margin: 4px 0 16px;
+  }
+  .player__stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line-2);
+    padding-top: 12px;
+    gap: 8px;
+  }
+  .player__stats dt {
+    font-size: 0.58rem;
+    color: var(--muted);
+  }
+  .player__stats dd {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    line-height: 1.1;
   }
 
-  @media (min-width: 760px) {
-    .ps {
-      grid-template-columns: 180px minmax(0, 1fr);
+  /* ---------- log ---------- */
+  .log {
+    display: grid;
+    border-top: 1px solid var(--line-2);
+  }
+  .log__year {
+    display: grid;
+    gap: 12px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 800px) {
+    .log__year {
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+    }
+  }
+  .log__label {
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    color: var(--accent);
+  }
+  .log__items {
+    display: grid;
+    gap: 10px;
+    align-content: center;
+  }
+  .log__items li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--fg-2);
+    font-size: 1.05rem;
+  }
+  .log__items li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .log__items a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s;
+  }
+  .log__items a:hover {
+    color: var(--fg);
+  }
+  .log__items a :global(svg) {
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: 0.3s var(--ease-out);
+    color: var(--accent);
+  }
+  .log__items a:hover :global(svg) {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- links ---------- */
+  .links-grid {
+    display: grid;
+    gap: 40px;
+  }
+  .links-grid > div {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+  }
+  @media (min-width: 1000px) {
+    .links-grid {
+      grid-template-columns: 1fr 1fr;
       align-items: start;
     }
-    .ps__nav {
-      position: sticky;
-      top: 0;
-      display: grid;
-      gap: 1px;
-      padding: 6px;
-      border-radius: 4px;
-      background: var(--ue-bg);
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .tiles {
+      grid-template-columns: repeat(3, 1fr);
     }
-    .ps__group {
-      display: block;
-      padding: 8px 8px 4px;
-      color: var(--ue-fg-dim);
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .ps__link {
-      padding: 4px 8px 4px 18px;
-      background: none;
-      font-size: var(--fs-ui);
-    }
-    .plugins {
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-    }
+  }
+  .tile {
+    --rx: 0deg;
+    --ry: 0deg;
+    display: grid;
+    gap: 6px;
+    padding: 18px;
+    height: 100%;
+    transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition:
+      transform 0.5s var(--ease-out),
+      border-color 0.3s,
+      color 0.3s;
+  }
+  .tile:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tile__label {
+    font-weight: 700;
+    color: var(--fg);
+    margin-top: 10px;
+  }
+  .tile__handle {
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
   }
 </style>

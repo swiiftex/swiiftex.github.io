@@ -1,0 +1,37 @@
+---
+import FolderLevel from '../../components/editor/FolderLevel.astro';
+import DetailsCategory from '../../components/editor/DetailsCategory.astro';
+import PropRow from '../../components/editor/PropRow.astro';
+import UeIcon from '../../components/editor/UeIcon.astro';
+import { MORE_ON_GITHUB } from '../../data/site';
+---
+
+<FolderLevel
+  category="software"
+  title="Software"
+  description="Windows apps, an Unreal Engine plugin and broadcast tools by Owen Bladen-Kay — QuickClip, DesktopSplitter, Source2All Sensitivity Converter and more."
+  lede="Windows apps, a virtual display driver, an Unreal Engine plugin and broadcast tools."
+  order={['quickclip', 'desktopsplitter', 'source2all-sensitivity-converter', 'fgswidgets', 'revolt', 'broadcast-tool']}
+>
+  <DetailsCategory title="More on GitHub" meta={`${MORE_ON_GITHUB.length} older projects`}>
+    {
+      MORE_ON_GITHUB.map((r) => (
+        <PropRow label={r.year} keywords={`${r.tech} ${r.blurb}`}>
+          <a class="dp-field" href={r.href} target="_blank" rel="noopener">
+            <strong>{r.title}</strong> ↗<br />
+            <span class="muted">{r.tech}</span>
+            <br />
+            {r.blurb}
+          </a>
+        </PropRow>
+      ))
+    }
+    <PropRow wide>
+      <div class="dp-links">
+        <a class="dp-link" href="https://github.com/swiiftex" target="_blank" rel="noopener">
+          <UeIcon name="branch" size={14} /><span>github.com/swiiftex</span>
+        </a>
+      </div>
+    </PropRow>
+  </DetailsCategory>
+</FolderLevel>

@@ -1,0 +1,537 @@
+/* ==========================================================================
+   swiift — design tokens & global styles
+   The whole site is laid out like the Unreal Engine 5 editor, using the
+   default "Dark" editor theme (Slate's FStyleColors).
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- UE5 editor palette ---------- */
+  --ue-black: #000000;
+  --ue-title: #151515; /* title bar, tab wells, gaps between panels */
+  --ue-window: #0f0f0f; /* window border, foldouts */
+  --ue-input: #0f0f0f; /* text fields */
+  --ue-input-line: #383838;
+  --ue-recessed: #1a1a1a; /* lists, asset views, wells */
+  --ue-bg: #242424; /* panels */
+  --ue-header: #2f2f2f; /* category headers */
+  --ue-dropdown: #383838; /* buttons, combo boxes */
+  --ue-dropdown-line: #4c4c4c;
+  --ue-hover: #575757;
+  --ue-hover-2: #808080;
+  --ue-fg: #c0c0c0;
+  --ue-fg-hover: #ffffff;
+  --ue-fg-header: #c8c8c8;
+  --ue-fg-dim: #808080;
+  --ue-primary: #0070e0;
+  --ue-primary-hover: #0e86ff;
+  --ue-primary-press: #0050a0;
+  --ue-select-parent: #2f3e52;
+  --ue-blue: #26bbff;
+  --ue-purple: #a139bf;
+  --ue-pink: #ff729c;
+  --ue-red: #ff4040;
+  --ue-orange: #fe9b07;
+  --ue-yellow: #ffdc1a;
+  --ue-green: #8bc24a;
+  --ue-brown: #804d39;
+  --ue-folder: #b68f55;
+  --ue-warning: #ffb800;
+  --ue-error: #ef3535;
+  --ue-success: #1fe44b;
+
+  /* Asset type colours, as on Content Browser thumbnails. */
+  --asset-blueprint: #3f7eff;
+  --asset-level: #ff9c00;
+  --asset-texture: #c04040;
+  --asset-data: #c91d55;
+  --asset-widget: #2c59b4;
+  --asset-media: #b12bff;
+  --asset-link: #8bc24a;
+
+  /* Blueprint graph */
+  --bp-bg: #262626;
+  --bp-grid: #2f2f2f;
+  --bp-grid-major: #1a1a1a;
+  --bp-event: #8c1d1d;
+  --bp-function: #3561a3;
+  --bp-pure: #4b8a3d;
+  --bp-macro: #5a5a5a;
+  --bp-exec: #ffffff;
+  --bp-string: #ff00d4;
+  --bp-text: #e07ba5;
+  --bp-object: #00a8f0;
+  --bp-int: #1fe0a0;
+  --bp-float: #9ef01a;
+  --bp-bool: #940000;
+  --bp-select: #f6a200;
+
+  /* ---------- general tokens (shared with the interactive widgets) ---------- */
+  --bg: var(--ue-recessed);
+  --bg-2: #1c1c1c;
+  --panel: var(--ue-bg);
+  --panel-2: var(--ue-header);
+  --line: #343434;
+  --line-2: var(--ue-dropdown-line);
+  --fg: #ffffff;
+  --fg-2: var(--ue-fg);
+  --muted: var(--ue-fg-dim);
+  --accent: var(--ue-blue);
+  --accent-2: #7fd6ff;
+  --accent-ink: #0f0f0f;
+  --accent-soft: color-mix(in oklab, var(--ue-blue) 14%, transparent);
+  --live: var(--ue-error);
+  --gold: var(--ue-warning);
+  --ok: var(--ue-success);
+
+  --font-ui: 'Roboto Variable', 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-ui);
+  --font-body: var(--font-ui);
+  --font-mono: 'Roboto Mono Variable', 'Roboto Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --fs-ui: 12px;
+  --fs-text: 13.5px;
+  --radius: 4px;
+  --header-h: 0px; /* legacy: nothing is fixed over the content any more */
+  --gutter: 16px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ---------- reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-height: 100dvh;
+  background: var(--ue-window);
+  color: var(--ue-fg);
+  font-family: var(--font-ui);
+  font-size: var(--fs-ui);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+img {
+  height: auto;
+}
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+p,
+h1,
+h2,
+h3,
+h4 {
+  overflow-wrap: break-word;
+}
+p {
+  text-wrap: pretty;
+}
+ul[role='list'],
+ol[role='list'] {
+  list-style: none;
+  padding: 0;
+}
+::selection {
+  background: var(--ue-primary);
+  color: #fff;
+}
+:focus-visible {
+  outline: 1px solid var(--ue-primary-hover);
+  outline-offset: 1px;
+}
+[hidden] {
+  display: none !important;
+}
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0 4px;
+  border: 1px solid var(--ue-dropdown-line);
+  border-radius: 3px;
+  background: var(--ue-recessed);
+}
+
+/* ---------- scrollbars (thin, rounded, like Slate's) ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6a6a6a;
+}
+
+/* ---------- utilities ---------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  left: 8px;
+  top: -100px;
+  z-index: 1000;
+  background: var(--ue-primary);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  transition: top 0.2s var(--ease-out);
+}
+.skip-link:focus {
+  top: 8px;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.display {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+}
+.muted {
+  color: var(--ue-fg-dim);
+}
+.accent {
+  color: var(--ue-blue);
+}
+.lede {
+  color: var(--ue-fg);
+  font-size: var(--fs-text);
+  line-height: 1.55;
+}
+
+/* ---------- UE widgets: buttons ---------- */
+.btn,
+.ue-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--ue-dropdown);
+  color: var(--ue-fg);
+  font-family: var(--font-ui);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+}
+.btn:hover,
+.ue-btn:hover,
+.btn:focus-visible,
+.ue-btn:focus-visible {
+  background: var(--ue-hover);
+  color: #fff;
+}
+.btn:active,
+.ue-btn:active {
+  background: var(--ue-recessed);
+}
+.btn--primary,
+.ue-btn--primary {
+  background: var(--ue-primary);
+  color: #fff;
+}
+.btn--primary:hover,
+.ue-btn--primary:hover,
+.btn--primary:focus-visible,
+.ue-btn--primary:focus-visible {
+  background: var(--ue-primary-hover);
+}
+.btn--primary:active,
+.ue-btn--primary:active {
+  background: var(--ue-primary-press);
+}
+.btn--ghost,
+.ue-btn--ghost {
+  background: transparent;
+}
+.btn svg,
+.ue-btn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- UE widgets: text fields ---------- */
+.ue-input {
+  width: 100%;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--ue-input-line);
+  border-radius: var(--radius);
+  background: var(--ue-input);
+  color: var(--ue-fg);
+  font-size: var(--fs-ui);
+}
+.ue-input:hover {
+  border-color: var(--ue-hover);
+}
+.ue-input:focus {
+  outline: none;
+  border-color: var(--ue-primary);
+  color: #fff;
+}
+.ue-input::placeholder {
+  color: #6b6b6b;
+}
+.ue-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.ue-search > svg {
+  position: absolute;
+  left: 7px;
+  color: var(--ue-fg-dim);
+  pointer-events: none;
+}
+.ue-search .ue-input {
+  padding-left: 26px;
+}
+input[type='search']::-webkit-search-cancel-button {
+  filter: grayscale(1) brightness(1.4);
+}
+
+/* ---------- UE widgets: chips (tags in the Details panel) ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 20px;
+  padding: 1px 7px;
+  border: 1px solid var(--ue-input-line);
+  border-radius: 3px;
+  background: var(--ue-recessed);
+  color: var(--ue-fg);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.chip--accent {
+  border-color: color-mix(in oklab, var(--ue-blue) 45%, transparent);
+  color: var(--ue-blue);
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ---------- panels (the interactive widgets sit in these) ---------- */
+.panel {
+  background: var(--ue-bg);
+  border: 1px solid var(--ue-window);
+  border-radius: var(--radius);
+}
+
+/* ---------- live dot ---------- */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  flex: none;
+}
+
+/* ---------- prose (Markdown bodies) ---------- */
+.prose {
+  color: var(--ue-fg);
+  font-size: var(--fs-text);
+  line-height: 1.6;
+}
+.prose > * + * {
+  margin-top: 0.85em;
+}
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+  margin-top: 1.4em;
+}
+.prose h2 {
+  font-size: 1.15em;
+}
+.prose h3,
+.prose h4 {
+  font-size: 1.05em;
+}
+.prose strong {
+  color: #fff;
+  font-weight: 600;
+}
+.prose a {
+  color: var(--ue-blue);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.prose a:hover {
+  color: #fff;
+}
+.prose ul,
+.prose ol {
+  padding-left: 0;
+  list-style: none;
+}
+.prose li {
+  position: relative;
+  padding-left: 1.3em;
+}
+.prose li + li {
+  margin-top: 0.3em;
+}
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0.25em;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  background: var(--ue-fg-dim);
+  border-radius: 1px;
+}
+.prose ol {
+  counter-reset: li;
+}
+.prose ol > li::before {
+  counter-increment: li;
+  content: '[' counter(li) ']';
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  top: 0.2em;
+  color: var(--ue-fg-dim);
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.05em 0.35em;
+  border-radius: 3px;
+  background: var(--ue-input);
+  border: 1px solid var(--ue-input-line);
+  color: #fff;
+}
+.prose blockquote {
+  border-left: 2px solid var(--ue-hover);
+  padding-left: 0.9em;
+  color: #e6e6e6;
+  font-style: italic;
+}
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--ue-input-line);
+}
+
+/* ---------- cross-document view transitions ---------- */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.18s;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* ---------- hover preview video (see scripts/hover-video.ts) ---------- */
+.hover-video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #000;
+  transition: opacity 0.35s ease;
+}
+.hover-video.is-playing {
+  opacity: 1;
+}
+.hover-video video,
+.hover-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}

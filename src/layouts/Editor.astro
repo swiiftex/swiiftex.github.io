@@ -1,0 +1,179 @@
+---
+/**
+ * Page shell, laid out like the Unreal Engine 5 level editor: title bar with
+ * the logo and level tab, menu bar, main toolbar, a main tab well (Viewport,
+ * the Blueprint "Details" graph and any project tools), the Details panel on
+ * the right, the Content Drawer and Output Log docked underneath, and the
+ * status bar. On small screens the panels stack and the drawer becomes a sheet.
+ */
+import '@fontsource-variable/roboto';
+import '@fontsource-variable/roboto-mono';
+import '../styles/ue.css';
+import '../styles/editor.css';
+
+import TitleBar from '../components/editor/TitleBar.astro';
+import MenuBar from '../components/editor/MenuBar.astro';
+import Toolbar from '../components/editor/Toolbar.astro';
+import ContentDrawer from '../components/editor/ContentDrawer.astro';
+import OutputLog from '../components/editor/OutputLog.astro';
+import StatusBar from '../components/editor/StatusBar.astro';
+import UeIcon from '../components/editor/UeIcon.astro';
+import { SITE } from '../data/site';
+import { toClassic, type DockTab, type LogLine, type ProjectLink, type UeIconName } from '../lib/editor';
+
+export type Notice = { title: string; text?: string; href: string; action: string };
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or root-relative path to a social preview image. */
+  image?: string;
+  /** Level name shown in the title bar tab, e.g. "LUNARBALL". */
+  level: string;
+  levelIcon?: UeIconName;
+  /** Content Drawer folder to open, e.g. "Projects/Games", and the asset to select in it. */
+  folder?: string;
+  asset?: string;
+  /** Tabs in the main tab well; each panel is passed in the default slot. */
+  tabs: DockTab[];
+  active?: string;
+  /** Toolbar "Platforms" menu: where to play, download or read more. */
+  platforms?: ProjectLink[];
+  /** Extra Output Log lines for this page. */
+  log?: LogLine[];
+  /** A notification shown shortly after the page loads. */
+  notice?: Notice;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image = '/og.png',
+  level,
+  levelIcon = 'level',
+  folder = 'Projects',
+  asset,
+  tabs,
+  active = tabs[0]?.id,
+  platforms = [],
+  log = [],
+  notice,
+} = Astro.props;
+const fullTitle = title ? `${title} — swiift` : SITE.title;
+// The editor view mirrors the classic pages, so search engines are pointed at those.
+const canonical = new URL(toClassic(Astro.url.pathname).split('#')[0], Astro.site);
+const ogImage = new URL(image, Astro.site);
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        try {
+          if (sessionStorage.getItem('swiift:logo-played')) root.classList.add('logo-played');
+          var layout = JSON.parse(localStorage.getItem('swiift:layout') || '{}');
+          if (layout.right) root.style.setProperty('--right-w', layout.right + 'px');
+          if (layout.dock) root.style.setProperty('--dock-h', layout.dock + 'px');
+          if (layout.dockHidden) root.classList.add('dock-hidden');
+        } catch (e) {}
+      })();
+    </script>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#151515" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="swiift" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="editor" data-editor>
+      <header class="editor__top">
+        <TitleBar level={level} icon={levelIcon} />
+        <MenuBar />
+        <Toolbar platforms={platforms} graph={tabs.some((t) => t.id === 'graph')} />
+      </header>
+
+      <div class="workspace" data-workspace>
+        <main id="main" class="dock dock--main" data-dock="main" tabindex="-1">
+          <div class="dock__tabs" role="tablist" aria-label="Level editor">
+            {
+              tabs.map((t) => (
+                <button
+                  type="button"
+                  role="tab"
+                  class="dock__tab"
+                  id={`tab-${t.id}`}
+                  aria-controls={`panel-${t.id}`}
+                  aria-selected={t.id === active ? 'true' : 'false'}
+                  tabindex={t.id === active ? 0 : -1}
+                  data-tab={t.id}
+                  title={t.title}
+                >
+                  <UeIcon name={t.icon} size={14} />
+                  <span>{t.label}</span>
+                </button>
+              ))
+            }
+          </div>
+          <div class="dock__body" data-active-tab={active}>
+            <slot />
+          </div>
+        </main>
+
+        <div class="splitter splitter--v" data-split="right" role="separator" aria-orientation="vertical" aria-label="Resize the Details panel" tabindex="0"></div>
+
+        <aside class="dock dock--right" aria-label="Details">
+          <slot name="details" />
+        </aside>
+
+        <div class="splitter splitter--h" data-split="dock" role="separator" aria-orientation="horizontal" aria-label="Resize the Content Drawer" tabindex="0"></div>
+
+        <section class="dock dock--bottom" data-bottom-dock aria-label="Content Drawer and Output Log">
+          <div class="dock__tabs" role="tablist" aria-label="Bottom panels">
+            <button type="button" role="tab" class="dock__tab" id="tab-drawer" aria-controls="panel-drawer" aria-selected="true" data-tab="drawer">
+              <UeIcon name="drawer" size={14} /><span>Content Drawer</span>
+            </button>
+            <button type="button" role="tab" class="dock__tab" id="tab-log" aria-controls="panel-log" aria-selected="false" tabindex="-1" data-tab="log">
+              <UeIcon name="log" size={14} /><span>Output Log</span>
+            </button>
+            <button type="button" class="dock__sheet-close" data-action="close-sheet" aria-label="Close">
+              <UeIcon name="close" size={16} />
+            </button>
+          </div>
+          <div class="dock__body" data-active-tab="drawer">
+            <ContentDrawer folder={folder} asset={asset} />
+            <OutputLog level={level} lines={log} />
+          </div>
+        </section>
+      </div>
+
+      <StatusBar />
+    </div>
+
+    <div class="ue-notify-area" data-notify-area aria-live="polite"></div>
+    {notice && <script type="application/json" data-notice set:html={JSON.stringify(notice).replace(/</g, '\\u003c')} />}
+
+    <script>
+      import { initEditor } from '../scripts/editor';
+      initEditor();
+    </script>
+  </body>
+</html>

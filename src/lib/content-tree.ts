@@ -7,7 +7,7 @@
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { getProjects, projectHref, whenLabel, type Project } from './projects';
-import { ASSET_TYPES, CATEGORY_FOLDER, assetPath, bpName, type AssetKind, type UeIconName } from './editor';
+import { ASSET_TYPES, CATEGORY_FOLDER, assetPath, bpName, ed, type AssetKind, type UeIconName } from './editor';
 import { CATEGORY_LABELS, MODIO, MORE_ON_GITHUB, SITE, SOCIALS } from '../data/site';
 import portrait from '../assets/about/graduation.jpg';
 
@@ -67,7 +67,7 @@ async function projectAsset(p: Project): Promise<DrawerAsset> {
     id: p.id,
     name: d.title,
     pathName: bpName(p),
-    href: projectHref(p),
+    href: ed(projectHref(p)),
     external: false,
     thumb: d.cover ? await thumbOf(d.cover) : undefined,
     folder,
@@ -146,7 +146,7 @@ async function buildTree(): Promise<DrawerFolder> {
         id: 'about',
         name: SITE.author,
         pathName: 'Lvl_About',
-        href: '/about/',
+        href: ed('/about/'),
         external: false,
         thumb: portraitThumb,
         folder: 'About',
@@ -173,7 +173,7 @@ async function buildTree(): Promise<DrawerFolder> {
         id: 'melee-slashers',
         name: 'Melee Slashers',
         pathName: 'Lvl_MeleeSlashers',
-        href: '/melee-slashers/',
+        href: ed('/melee-slashers/'),
         external: false,
         folder: 'Guides',
         summary: 'A quick start guide to melee slashers, with a parry trainer to play.',
@@ -190,7 +190,7 @@ async function buildTree(): Promise<DrawerFolder> {
       id: 'home',
       name: 'Main',
       pathName: 'Lvl_Main',
-      href: '/',
+      href: ed('/'),
       external: false,
       folder: '',
       summary: 'The home page: featured projects and what I do.',

@@ -1,32 +1,20 @@
 ---
-/**
- * A project, opened in the editor: its media in the Viewport, what I did on it
- * as a Blueprint graph ("Details" tab), its facts and write-up in the Details
- * panel, and tool tabs where it has them (patch notes, inventory, calculator).
- */
-import { getImage } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Viewport from '../components/editor/Viewport.astro';
-import BlueprintGraph from '../components/editor/BlueprintGraph.astro';
-import DocPanel from '../components/editor/DocPanel.astro';
-import DetailsPanel from '../components/editor/DetailsPanel.astro';
-import DetailsCategory from '../components/editor/DetailsCategory.astro';
-import PropRow from '../components/editor/PropRow.astro';
-import MediaList from '../components/editor/MediaList.astro';
-import UeIcon from '../components/editor/UeIcon.astro';
+import Icon from '../components/Icon.astro';
+import TitleCard from '../components/TitleCard.astro';
+import Gallery from '../components/Gallery.astro';
+import YouTube from '../components/YouTube.astro';
 import SensCalc from '../components/SensCalc.astro';
 import SupportedGames from '../components/SupportedGames.astro';
 import Inventory from '../components/Inventory.astro';
 import Updates from '../components/Updates.astro';
 import { supportedGames } from '../lib/source2all';
-import { getProjects, projectHref, whenLabel, type Project } from '../lib/projects';
+import { getProjects, projectHref, vtName, whenLabel, type Project } from '../lib/projects';
 import { latestAsset } from '../lib/releases';
 import { projectUpdates } from '../lib/updates';
 import { isRecent, updateDate } from '../lib/updates-view';
-import { projectViewport } from '../lib/viewport';
-import { projectGraph } from '../lib/graph';
-import { CATEGORY_FOLDER, CATEGORY_HREF, assetPath, bpName, pascal, type DockTab, type LogLine, type ProjectLink } from '../lib/editor';
 import { CATEGORY_LABELS } from '../data/site';
 
 export async function getStaticPaths() {
@@ -36,7 +24,11 @@ export async function getStaticPaths() {
     const i = siblings.findIndex((p) => p.id === project.id);
     return {
       params: { slug: project.id },
-      props: { project, prev: siblings[i - 1] ?? null, next: siblings[i + 1] ?? null },
+      props: {
+        project,
+        prev: siblings[i - 1] ?? null,
+        next: siblings[i + 1] ?? null,
+      },
     };
   });
 }
@@ -50,16 +42,28 @@ const { project, prev, next } = Astro.props;
 const { data } = project;
 const { Content } = await render(project);
 
-const folder = CATEGORY_FOLDER[data.category];
+const categoryHref = {
+  games: '/games/',
+  mods: '/games/#mods',
+  software: '/software/',
+  events: '/events/',
+}[data.category];
+
+// Wide banner: a dedicated hero image if there is one, else the cover.
+// App screenshots and low-res covers are shown whole on a backdrop instead of cropped or stretched.
+const banner = data.hero ?? data.cover;
+const bannerFit = banner && banner.width >= 1000 && data.category !== 'software' ? 'cover' : 'contain';
 const ogImage = data.cover ? (await getImage({ src: data.cover, width: 1200, format: 'jpg' })).src : undefined;
 
 const spec = [
-  data.studio && { k: 'Studio', v: data.studio },
   data.role && { k: 'Role', v: data.role },
+  data.studio && { k: 'Studio', v: data.studio },
   data.game && { k: 'Game', v: data.game },
-  data.location && { k: 'Location', v: data.location },
+  data.location && { k: 'Where', v: data.location },
   { k: 'When', v: whenLabel(project) },
   data.status && { k: 'Status', v: data.status },
+  data.platforms.length > 0 && { k: 'Platforms', v: data.platforms.join(' · ') },
+  data.downloads && { k: 'Downloads', v: `${data.downloads.toLocaleString('en-GB')} on mod.io` },
 ].filter(Boolean) as { k: string; v: string }[];
 
 // Links flagged with `release` point straight at a file in the repo's latest
@@ -70,217 +74,219 @@ const links = await Promise.all(
     return { ...l, href: asset?.url ?? l.href, tag: asset?.tag ?? '' };
   }),
 );
-const platforms: ProjectLink[] = links.map((l) => ({ label: l.label, href: l.href, external: !l.release, release: l.release, tag: l.tag }));
-const linkAttrs = (l: (typeof links)[number]) =>
+type ResolvedLink = (typeof links)[number];
+const linkAttrs = (l: ResolvedLink) =>
   l.release
     ? { href: l.href, 'data-release-repo': l.release.repo, 'data-release-asset': l.release.asset }
     : { href: l.href, target: '_blank', rel: 'noopener' };
+const [primary, ...secondary] = links;
 
-const items = await projectViewport(project);
-const graph = projectGraph(project);
 const s2aGames = project.id === 'source2all-sensitivity-converter' ? await supportedGames() : null;
 const updates = await projectUpdates(project);
 const latestUpdate = updates[0];
-
-const tabs: DockTab[] = [
-  { id: 'viewport', label: 'Viewport', icon: 'camera' },
-  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: what I did on this project' },
-  ...(project.id === 'source2all-sensitivity-converter'
-    ? [
-        { id: 'calculator', label: 'Sensitivity Calculator', icon: 'utility' } as DockTab,
-        { id: 'supported-games', label: 'DT_SupportedGames', icon: 'table' } as DockTab,
-      ]
-    : []),
-  ...(project.id === 'lunarball' ? [{ id: 'inventory', label: 'DA_Inventory', icon: 'data' } as DockTab] : []),
-  ...(updates.length ? [{ id: 'updates', label: 'Patch Notes', icon: 'log' } as DockTab] : []),
-];
-
-const logCat = pascal(data.title);
-const log: LogLine[] = [
-  { cat: 'Blueprint', text: `Loaded ${bpName(project)} (${data.highlights.length || 1} nodes)` },
-  ...updates.slice(0, 8).map((u): LogLine => ({ cat: logCat, text: `${updateDate(u.date)}  ${u.title}`, href: '#updates', action: 'Patch notes', time: u.date })),
-  ...(data.status && /development|coming soon|prototype/i.test(data.status) ? [{ cat: logCat, verbosity: 'Warning' as const, text: data.status }] : []),
-];
-const notice =
-  latestUpdate && isRecent(latestUpdate.date)
-    ? { title: `New ${latestUpdate.source === 'steam' ? 'update' : 'release'}: ${latestUpdate.title}`, text: updateDate(latestUpdate.date), href: '#updates', action: 'Read the patch notes' }
-    : undefined;
 ---
 
-<Base
-  title={data.title}
-  description={data.summary}
-  image={ogImage}
-  level={data.title}
-  levelIcon="blueprint"
-  folder={folder}
-  asset={project.id}
-  tabs={tabs}
-  platforms={platforms}
-  log={log}
-  notice={notice}
->
-  <Viewport items={items} level={data.title} />
-  <BlueprintGraph graph={graph} />
-  {
-    project.id === 'source2all-sensitivity-converter' && (
-      <>
-        <DocPanel id="calculator">
-          <SensCalc />
-        </DocPanel>
-        <DocPanel id="supported-games">{s2aGames && <SupportedGames games={s2aGames} />}</DocPanel>
-      </>
-    )
-  }
-  {
-    project.id === 'lunarball' && (
-      <DocPanel id="inventory">
-        <Inventory />
-      </DocPanel>
-    )
-  }
-  {
-    updates.length > 0 && (
-      <DocPanel id="updates">
-        <Updates project={project} posts={updates} />
-      </DocPanel>
-    )
-  }
-
-  <DetailsPanel slot="details" name={data.title} icon="blueprint" type="Blueprint Class" path={assetPath(folder, bpName(project))}>
-    <MediaList items={items} />
-
-    <DetailsCategory title={CATEGORY_LABELS[data.category].replace(/s$/, '')}>
-      {
-        spec.map((s) => (
-          <PropRow label={s.k}>
-            <span class="dp-field">{s.v}</span>
-          </PropRow>
-        ))
-      }
-      {
-        data.platforms.length > 0 && (
-          <PropRow label="Platforms">
-            <ul role="list" class="dp-list">
-              {data.platforms.map((p, i) => (
-                <li>
-                  <span class="dp-list__i">[{i}]</span>
-                  <span class="dp-field">{p}</span>
-                </li>
-              ))}
-            </ul>
-          </PropRow>
-        )
-      }
-      {
-        data.downloads && (
-          <PropRow label="Downloads">
-            <span class="dp-num">
-              <span>{data.downloads.toLocaleString('en-GB')}</span>
-            </span>
-          </PropRow>
-        )
-      }
+<Base title={data.title} description={data.summary} image={ogImage}>
+  <article class="project" style={data.tint ? `--tint:${data.tint}` : undefined}>
+    <header class="project__head container">
+      <nav class="crumbs mono" aria-label="Breadcrumb" data-reveal>
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href={categoryHref}>{CATEGORY_LABELS[data.category]}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{data.title}</span>
+      </nav>
+      {data.kicker && <p class="eyebrow project__kicker" data-reveal style="--i:1"><span class="eyebrow__rule"></span>{data.kicker}</p>}
+      <h1 class="display h1 project__title" data-reveal style="--i:2">{data.title}</h1>
+      <p class="lede" data-reveal style="--i:3">{data.summary}</p>
       {
         latestUpdate && (
-          <PropRow label="Latest Update">
-            <a class="dp-field" href="#updates" data-action="tab:updates">
-              {latestUpdate.title} · {updateDate(latestUpdate.date)}
-            </a>
-          </PropRow>
+          <a class="upd-chip" href="#updates" data-upd-chip data-reveal style="--i:3">
+            <span class="upd-chip__label mono" data-upd-chip-label>{isRecent(latestUpdate.date) ? 'New' : 'Latest'}</span>
+            <span class="upd-chip__title" data-upd-chip-title>{latestUpdate.title}</span>
+            <time class="upd-chip__date mono">{updateDate(latestUpdate.date)}</time>
+            <span aria-hidden="true">→</span>
+          </a>
         )
       }
-    </DetailsCategory>
+      {
+        primary && (
+          <div class="btn-row" data-reveal style="--i:4">
+            <a class="btn btn--primary" {...linkAttrs(primary)} data-magnetic>
+              {primary.label}
+              {primary.release && <span data-release-tag>{primary.tag && ` · ${primary.tag}`}</span>}
+              <Icon name={primary.release ? 'download' : 'external'} />
+            </a>
+            {secondary.slice(0, 2).map((l) => (
+              <a class="btn btn--ghost" {...linkAttrs(l)}>
+                {l.label}
+                {l.release && <span data-release-tag>{l.tag && ` · ${l.tag}`}</span>}
+                <Icon name={l.release ? 'download' : 'external'} />
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </header>
 
-    {
-      links.length > 0 && (
-        <DetailsCategory title="Links">
-          <PropRow wide keywords={links.map((l) => l.label).join(' ')}>
-            <div class="dp-links">
-              {links.map((l, i) => (
-                <a class:list={['dp-link', i === 0 && 'dp-link--primary']} {...linkAttrs(l)}>
-                  <UeIcon name={l.release ? 'import' : 'external'} size={14} />
-                  <span>{l.label}</span>
-                  {l.release && (
-                    <span class="dp-link__tag" data-release-tag>
-                      {l.tag}
-                    </span>
-                  )}
-                </a>
-              ))}
-            </div>
-          </PropRow>
-        </DetailsCategory>
-      )
-    }
+    <div class="container">
+      <div class:list={['banner frame', `banner--${banner ? bannerFit : 'card'}`]} style={`view-transition-name:${vtName(project)}`}>
+        {
+          banner ? (
+            <>
+              {bannerFit === 'contain' && <div class="banner__grid" aria-hidden="true" />}
+              <Image
+                src={banner}
+                alt={data.hero ? '' : (data.coverAlt ?? '')}
+                widths={bannerFit === 'cover' ? [800, 1280, 1920] : undefined}
+                sizes={bannerFit === 'cover' ? '(min-width: 1320px) 1320px, 100vw' : undefined}
+                loading="eager"
+                fetchpriority="high"
+                class="banner__img"
+              />
+            </>
+          ) : (
+            <TitleCard title={data.title} kicker={data.kicker} meta={data.status ?? data.when} tint={data.tint} />
+          )
+        }
+      </div>
+    </div>
 
-    <DetailsCategory title="Description">
-      <PropRow wide>
-        <div class="dp-text prose">
-          <p><strong>{data.summary}</strong></p>
+    <div class="project__body container">
+      <div class="project__main">
+        <div class="prose" data-reveal>
           <Content />
         </div>
-      </PropRow>
-    </DetailsCategory>
 
-    {
-      data.highlights.length > 0 && (
-        <DetailsCategory title={data.highlightsTitle} meta={`${data.highlights.length} Array elements`}>
-          {data.highlights.map((h, i) => (
-            <PropRow label={`Index [ ${i} ]`}>
-              <span class="dp-field">{h}</span>
-            </PropRow>
-          ))}
-        </DetailsCategory>
-      )
-    }
+        {
+          data.clip && (
+            <figure class="clip" data-reveal>
+              <video class="clip__video" src={data.clip} muted loop playsinline autoplay preload="metadata" aria-label={`${data.title} gameplay clip`} />
+              <figcaption class="clip__bar mono">Gameplay clip</figcaption>
+            </figure>
+          )
+        }
 
-    {
-      data.stack.length > 0 && (
-        <DetailsCategory title="Tech Stack">
-          <PropRow wide keywords={data.stack.join(' ')}>
-            <ul role="list" class="chip-row">
+        {project.id === 'source2all-sensitivity-converter' && <SensCalc />}
+        {s2aGames && <SupportedGames games={s2aGames} />}
+        {project.id === 'lunarball' && <Inventory />}
+
+        {
+          data.youtube.length > 0 && (
+            <section class="project__videos" aria-label="Videos">
+              <h2 class="mono muted">Watch</h2>
+              <div class="videos">
+                {data.youtube.map((v) => (
+                  <YouTube id={v.id} title={v.title} />
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="project__aside">
+        <dl class="spec panel" data-reveal>
+          {
+            spec.map((s) => (
+              <div class="spec__row">
+                <dt class="mono">{s.k}</dt>
+                <dd>{s.v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        {
+          data.highlights.length > 0 && (
+            <section class="highlights panel" data-reveal style="--i:1">
+              <h2 class="mono">{data.highlightsTitle}</h2>
+              <ul role="list">
+                {data.highlights.map((h) => (
+                  <li>{h}</li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+
+        {
+          data.stack.length > 0 && (
+            <ul role="list" class="chip-row" data-reveal style="--i:2" aria-label="Tools and tech">
               {data.stack.map((t) => (
                 <li class="chip">{t}</li>
               ))}
             </ul>
-          </PropRow>
-        </DetailsCategory>
+          )
+        }
+
+        {
+          links.length > 0 && (
+            <ul role="list" class="links" data-reveal style="--i:3">
+              {links.map((l) => (
+                <li>
+                  <a {...linkAttrs(l)}>
+                    <span>
+                      {l.label}
+                      {l.release && <span data-release-tag>{l.tag && ` · ${l.tag}`}</span>}
+                    </span>
+                    <Icon name={l.release ? 'download' : 'external'} size={14} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </aside>
+    </div>
+
+    {
+      updates.length > 0 && (
+        <div class="container project__updates">
+          <Updates project={project} posts={updates} />
+        </div>
       )
     }
 
-    <DetailsCategory title="Folder" meta={folder}>
-      <PropRow wide>
-        <div class="dp-links">
-          {
-            prev && (
-              <a class="dp-link" href={projectHref(prev)}>
-                <UeIcon name="back" size={14} />
-                <span>Newer: {prev.data.title}</span>
-              </a>
-            )
-          }
-          {
-            next && (
-              <a class="dp-link" href={projectHref(next)}>
-                <UeIcon name="forward" size={14} />
-                <span>Older: {next.data.title}</span>
-              </a>
-            )
-          }
-          <a class="dp-link" href={CATEGORY_HREF[data.category]}>
-            <UeIcon name="folder" size={14} />
-            <span>All {CATEGORY_LABELS[data.category].toLowerCase()}</span>
+    {
+      data.gallery.length > 0 && (
+        <section class="container project__gallery" aria-labelledby="gallery-title">
+          <p class="eyebrow" id="gallery-title">
+            <span class="eyebrow__index">{String(data.gallery.length).padStart(2, '0')}</span>
+            <span class="eyebrow__rule" />
+            Gallery
+          </p>
+          <Gallery items={data.gallery} />
+        </section>
+      )
+    }
+
+    <nav class="container pager" aria-label={`More ${CATEGORY_LABELS[data.category].toLowerCase()}`}>
+      {
+        prev ? (
+          <a href={projectHref(prev)} class="pager__link" data-cursor="view">
+            <span class="mono muted">← Newer</span>
+            <span class="pager__title display">{prev.data.title}</span>
           </a>
-          <button type="button" class="dp-link" data-action="browse-asset">
-            <UeIcon name="search" size={14} />
-            <span>Browse to Asset in Content Drawer</span>
-            <span class="dp-link__tag dp-link__key">Ctrl+B</span>
-          </button>
-        </div>
-      </PropRow>
-    </DetailsCategory>
-  </DetailsPanel>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next ? (
+          <a href={projectHref(next)} class="pager__link pager__link--next" data-cursor="view">
+            <span class="mono muted">Older →</span>
+            <span class="pager__title display">{next.data.title}</span>
+          </a>
+        ) : (
+          <a href={categoryHref} class="pager__link pager__link--next">
+            <span class="mono muted">Back to</span>
+            <span class="pager__title display">All {CATEGORY_LABELS[data.category].toLowerCase()}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
 </Base>
 
 <script>
@@ -300,7 +306,290 @@ const notice =
         const asset = rel.assets.find((x) => re.test(x.name));
         if (!asset) return;
         a.href = asset.url;
-        a.querySelectorAll('[data-release-tag]').forEach((t) => (t.textContent = rel.tag));
+        a.querySelectorAll('[data-release-tag]').forEach((t) => (t.textContent = ` · ${rel.tag}`));
       });
   });
 </script>
+
+<style>
+  .project {
+    --tint: var(--accent);
+  }
+  .project__head {
+    display: grid;
+    gap: 22px;
+    justify-items: start;
+    padding-top: calc(var(--header-h) + clamp(40px, 7vw, 96px));
+    padding-bottom: clamp(32px, 5vw, 56px);
+  }
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+  }
+  .crumbs a:hover {
+    color: var(--tint);
+  }
+  .crumbs [aria-current] {
+    color: var(--fg-2);
+  }
+  .project__kicker {
+    color: var(--tint);
+  }
+  .project__title {
+    font-size: clamp(3.25rem, 10vw, 8rem);
+  }
+
+  .project__updates {
+    margin-top: clamp(48px, 7vw, 96px);
+  }
+
+  /* "New: <latest update>" link down to the patch notes */
+  .upd-chip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    max-width: 100%;
+    padding: 7px 14px 7px 7px;
+    border: 1px solid color-mix(in oklab, var(--tint) 45%, var(--line));
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--tint) 8%, transparent);
+    color: var(--fg);
+    font-size: 0.92rem;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+  .upd-chip:hover {
+    border-color: var(--tint);
+    background: color-mix(in oklab, var(--tint) 14%, transparent);
+  }
+  .upd-chip__label {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--tint);
+    color: #06080b;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .upd-chip__title {
+    font-weight: 600;
+  }
+  .upd-chip__date {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  /* ---------- banner ---------- */
+  .banner {
+    --frame-inset: -8px;
+    --frame-color: var(--tint);
+    position: relative;
+    aspect-ratio: 21 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  @media (max-width: 700px) {
+    .banner {
+      aspect-ratio: 16 / 10;
+    }
+  }
+  .banner :global(.banner__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .banner--contain :global(.banner__img) {
+    /* Centred, and sized against the banner's own (aspect-ratio) height. */
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: auto;
+    height: auto;
+    max-width: 86%;
+    max-height: 84%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 30px 60px -20px rgb(0 0 0 / 0.7);
+  }
+  .banner__grid {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(80% 90% at 50% 100%, color-mix(in oklab, var(--tint) 22%, transparent), transparent 70%),
+      linear-gradient(to right, color-mix(in oklab, var(--line-2) 70%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(to bottom, color-mix(in oklab, var(--line-2) 70%, transparent) 1px, transparent 1px) 0 0 / 32px 32px;
+  }
+  .clip {
+    display: grid;
+    gap: 10px;
+    max-width: 780px;
+  }
+  .clip__bar {
+    color: var(--muted);
+  }
+  .clip__video {
+    width: 100%;
+    aspect-ratio: 780 / 180;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #000;
+  }
+
+  /* ---------- body ---------- */
+  .project__body {
+    display: grid;
+    gap: 48px;
+    padding-block: clamp(48px, 7vw, 96px);
+  }
+  @media (min-width: 1000px) {
+    .project__body {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: clamp(48px, 6vw, 96px);
+      align-items: start;
+    }
+    .project__aside {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+    }
+  }
+  .project__main {
+    display: grid;
+    gap: 56px;
+    min-width: 0;
+  }
+  .project__main .prose {
+    font-size: 1.125rem;
+  }
+  .project__videos h2 {
+    margin-bottom: 16px;
+  }
+  .videos {
+    display: grid;
+    gap: 24px;
+  }
+  @media (min-width: 700px) {
+    .videos {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .videos > :only-child {
+      grid-column: span 2;
+    }
+  }
+
+  .project__aside {
+    display: grid;
+    gap: 20px;
+  }
+  .spec {
+    padding: 8px 20px;
+  }
+  .spec__row {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .spec__row:last-child {
+    border-bottom: 0;
+  }
+  .spec dt {
+    color: var(--muted);
+    padding-top: 3px;
+  }
+  .spec dd {
+    color: var(--fg);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .highlights {
+    padding: 22px 20px;
+  }
+  .highlights h2 {
+    color: var(--tint);
+    margin-bottom: 14px;
+  }
+  .highlights ul {
+    display: grid;
+    gap: 10px;
+  }
+  .highlights li {
+    position: relative;
+    padding-left: 26px;
+    color: var(--fg-2);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .highlights li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.45em;
+    width: 12px;
+    height: 7px;
+    border-left: 2px solid var(--tint);
+    border-bottom: 2px solid var(--tint);
+    transform: rotate(-45deg);
+  }
+  .links {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg-2);
+    transition:
+      color 0.2s,
+      padding 0.35s var(--ease-out);
+  }
+  .links a:hover {
+    color: var(--tint);
+    padding-left: 8px;
+  }
+
+  .project__gallery {
+    display: grid;
+    gap: 24px;
+    padding-bottom: clamp(48px, 7vw, 96px);
+  }
+
+  /* ---------- pager ---------- */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .pager__link {
+    display: grid;
+    gap: 6px;
+    padding: 20px 0;
+  }
+  .pager__link--next {
+    text-align: right;
+    justify-items: end;
+  }
+  .pager__title {
+    font-size: clamp(1.5rem, 4vw, 3rem);
+    line-height: 0.95;
+    transition: color 0.25s;
+  }
+  .pager__link:hover .pager__title {
+    color: var(--tint);
+  }
+</style>

@@ -1,0 +1,152 @@
+---
+/**
+ * Switches between the classic site and the Unreal Engine 5 editor view,
+ * keeping you on the same page. Off on the classic site (the default), on in
+ * the editor view.
+ */
+import { toClassic, toEditor } from '../lib/editor';
+
+interface Props {
+  /** The view this page is in. */
+  view: 'classic' | 'editor';
+}
+const { view } = Astro.props;
+const path = Astro.url.pathname;
+const on = view === 'editor';
+const href = on ? toClassic(path) : toEditor(path);
+const label = on ? 'Switch to the classic site' : 'Switch to the Unreal Engine 5 editor view';
+---
+
+<a class:list={['view-toggle', `view-toggle--${view}`]} href={href} data-view-toggle={view} aria-label={label} title={label}>
+  <span class="view-toggle__label">UE5<span class="view-toggle__long"> view</span></span>
+  <span class:list={['view-toggle__track', { 'is-on': on }]} aria-hidden="true"><span class="view-toggle__knob"></span></span>
+</a>
+
+<script>
+  // Keep the section you're looking at (#updates, #mods…) when switching views.
+  document.querySelectorAll<HTMLAnchorElement>('[data-view-toggle]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const hash = location.hash;
+      if (!hash) return;
+      if (a.dataset.viewToggle === 'classic' && hash === '#mods' && /^\/games\/?$/.test(location.pathname)) {
+        a.pathname = '/editor/mods/';
+        a.hash = '';
+      }
+      else if (!a.hash) a.hash = hash;
+    }),
+  );
+</script>
+
+<style>
+  .view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    white-space: nowrap;
+  }
+  .view-toggle__track {
+    position: relative;
+    flex: none;
+    width: 30px;
+    height: 16px;
+    border-radius: 999px;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s;
+  }
+  .view-toggle__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition:
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.2s;
+  }
+  .view-toggle__track.is-on .view-toggle__knob {
+    transform: translateX(14px);
+  }
+  /* Hovering previews the switch flipping. */
+  .view-toggle:hover .view-toggle__knob,
+  .view-toggle:focus-visible .view-toggle__knob {
+    transform: translateX(7px);
+  }
+
+  /* ---------- classic site: mono label, accent switch ---------- */
+  .view-toggle--classic {
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .view-toggle--classic:hover,
+  .view-toggle--classic:focus-visible {
+    border-color: var(--accent);
+    color: var(--fg);
+  }
+  .view-toggle--classic .view-toggle__track {
+    border: 1.5px solid var(--line-2);
+  }
+  .view-toggle--classic .view-toggle__knob {
+    top: 1.5px;
+    left: 1.5px;
+    background: var(--muted);
+  }
+  .view-toggle--classic:hover .view-toggle__track {
+    border-color: var(--accent);
+  }
+  .view-toggle--classic:hover .view-toggle__knob {
+    background: var(--accent);
+  }
+  @media (min-width: 900px) {
+    .view-toggle--classic {
+      height: 40px;
+    }
+  }
+
+  /* ---------- editor view: a Slate-style toggle ---------- */
+  .view-toggle--editor {
+    height: 26px;
+    padding: 0 8px 0 10px;
+    border-radius: 4px;
+    background: var(--ue-dropdown);
+    color: var(--ue-fg);
+    font-family: var(--font-ui);
+    font-size: var(--fs-ui);
+  }
+  .view-toggle--editor:hover,
+  .view-toggle--editor:focus-visible {
+    background: var(--ue-hover);
+    color: #fff;
+  }
+  .view-toggle--editor .view-toggle__track {
+    background: var(--ue-primary);
+  }
+  .view-toggle--editor .view-toggle__knob {
+    background: #fff;
+  }
+  .view-toggle--editor:hover .view-toggle__track {
+    background: var(--ue-primary-hover);
+  }
+  .view-toggle--editor:hover .view-toggle__track .view-toggle__knob {
+    transform: translateX(7px);
+  }
+
+  @media (max-width: 479px) {
+    .view-toggle__long {
+      display: none;
+    }
+  }
+</style>

@@ -132,7 +132,7 @@ const LABEL = { auto: 'Auto-apply', convert: 'Convert-only', none: 'Not converte
     color: var(--accent);
   }
   .games__title {
-    font-size: 20px;
+    font-size: clamp(2rem, 4vw, 3rem);
   }
   .games__summary {
     display: flex;
@@ -250,7 +250,7 @@ const LABEL = { auto: 'Auto-apply', convert: 'Convert-only', none: 'Not converte
     height: 36px;
     padding: 0 14px;
     border: 1px solid var(--line-2);
-    border-radius: var(--radius);
+    border-radius: 999px;
     font-family: var(--font-mono);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
@@ -266,9 +266,9 @@ const LABEL = { auto: 'Auto-apply', convert: 'Convert-only', none: 'Not converte
     color: var(--fg);
   }
   .games__filter[aria-pressed='true'] {
-    background: var(--ue-primary);
-    border-color: var(--ue-primary);
-    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
   }
 
   /* groups */

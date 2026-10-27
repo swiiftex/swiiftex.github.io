@@ -1,0 +1,36 @@
+---
+/** Title block for inner pages: index + eyebrow, huge title, lede. */
+interface Props {
+  index: string;
+  eyebrow: string;
+  title: string;
+  /** Second title line, drawn as outline text. */
+  outline?: string;
+  lede?: string;
+}
+const { index, eyebrow, title, outline, lede } = Astro.props;
+---
+
+<header class="page-header container">
+  <p class="eyebrow" data-reveal>
+    <span class="eyebrow__index">{index}</span><span class="eyebrow__rule"></span>{eyebrow}
+  </p>
+  <h1 class="display h1 page-header__title" data-reveal style="--i:1">
+    <span>{title}</span>
+    {outline && <span class="outline-text">{outline}</span>}
+  </h1>
+  {lede && <p class="lede" data-reveal style="--i:2">{lede}</p>}
+  <slot />
+</header>
+
+<style>
+  .page-header {
+    display: grid;
+    gap: 24px;
+    padding-top: calc(var(--header-h) + clamp(48px, 9vw, 120px));
+    padding-bottom: clamp(40px, 6vw, 72px);
+  }
+  .page-header__title {
+    display: grid;
+  }
+</style>
