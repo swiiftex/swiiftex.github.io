@@ -3,7 +3,7 @@
  * Sequence node to one function node per thing done on the project.
  */
 import { projectHref, type Project } from './projects';
-import { bpName } from './editor';
+import { bpName, ed } from './editor';
 
 export type PinType = 'exec' | 'object' | 'string' | 'text' | 'bool' | 'int' | 'float';
 export type BpPin = { id: string; label?: string; type: PinType; dir: 'in' | 'out'; value?: string };
@@ -88,7 +88,7 @@ export function projectGraph(p: Project): BpGraph {
 export function folderGraph(name: string, projects: Project[]): BpGraph {
   return buildGraph(
     `BP_${name}`,
-    projects.map((p) => ({ title: p.data.title, detail: p.data.summary, href: projectHref(p) })),
+    projects.map((p) => ({ title: p.data.title, detail: p.data.summary, href: ed(projectHref(p)) })),
     { comment: name },
   );
 }

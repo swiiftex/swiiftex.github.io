@@ -94,6 +94,22 @@ export const pascal = (title: string) =>
 /** The project's Blueprint asset name, e.g. BP_LUNARBALL. */
 export const bpName = (p: Project) => `BP_${pascal(p.data.title)}`;
 
+/** The editor view lives under /editor/; the classic site keeps the plain URLs. */
+export const EDITOR_BASE = '/editor';
+
+/** An editor-view URL for a site path: "/lunarball/#updates" → "/editor/lunarball/#updates". */
+export const ed = (href: string) => (href.startsWith('/') && !href.startsWith(`${EDITOR_BASE}/`) ? `${EDITOR_BASE}${href}` : href);
+
+/** The same page in the other view. The classic site keeps mods on the Games page. */
+export function toClassic(path: string) {
+  const p = path.startsWith(`${EDITOR_BASE}/`) ? path.slice(EDITOR_BASE.length) : path;
+  return p === '/mods/' || p === '/mods' ? '/games/#mods' : p;
+}
+export function toEditor(path: string) {
+  if (path.startsWith(`${EDITOR_BASE}/`)) return path;
+  return /^\/404\/?$/.test(path) ? `${EDITOR_BASE}/` : ed(path.endsWith('/') ? path : `${path}/`);
+}
+
 /** Content Drawer folder for each category. */
 export const CATEGORY_FOLDER: Record<Category, string> = {
   games: 'Projects/Games',
@@ -104,10 +120,10 @@ export const CATEGORY_FOLDER: Record<Category, string> = {
 
 /** Page each category's folder opens as a level. */
 export const CATEGORY_HREF: Record<Category, string> = {
-  games: '/games/',
-  mods: '/mods/',
-  software: '/software/',
-  events: '/events/',
+  games: '/editor/games/',
+  mods: '/editor/mods/',
+  software: '/editor/software/',
+  events: '/editor/events/',
 };
 
 export const assetPath = (folder: string, name: string) => `/Game/${folder ? `${folder}/` : ''}${name}`;

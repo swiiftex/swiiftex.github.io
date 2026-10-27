@@ -4,7 +4,7 @@
  * the Viewport plays a reel of everything in it, the graph has a node per
  * project, and the Details panel lists them. Extra categories go in the slot.
  */
-import Base from '../../layouts/Base.astro';
+import Editor from '../../layouts/Editor.astro';
 import Viewport from './Viewport.astro';
 import BlueprintGraph from './BlueprintGraph.astro';
 import DetailsPanel from './DetailsPanel.astro';
@@ -15,7 +15,7 @@ import UeIcon from './UeIcon.astro';
 import { getProjects, projectHref, whenLabel } from '../../lib/projects';
 import { reelItem } from '../../lib/viewport';
 import { folderGraph } from '../../lib/graph';
-import { CATEGORY_FOLDER, assetPath, type DockTab, type LogLine } from '../../lib/editor';
+import { CATEGORY_FOLDER, assetPath, ed, type DockTab, type LogLine } from '../../lib/editor';
 import { CATEGORY_LABELS } from '../../data/site';
 import type { Category } from '../../content.config';
 
@@ -44,7 +44,7 @@ const tabs: DockTab[] = [
 const log: LogLine[] = [{ cat: 'ContentBrowser', text: `${projects.length} assets in ${assetPath(folder, '')}` }];
 ---
 
-<Base title={title} description={description} level={name} levelIcon="folder" folder={folder} tabs={tabs} log={log}>
+<Editor title={title} description={description} level={name} levelIcon="folder" folder={folder} tabs={tabs} log={log}>
   <link slot="head" rel="preconnect" href="https://video.akamai.steamstatic.com" crossorigin />
   <Viewport items={items} level={name} />
   <BlueprintGraph graph={graph} />
@@ -61,7 +61,7 @@ const log: LogLine[] = [{ cat: 'ContentBrowser', text: `${projects.length} asset
       {
         projects.map((p) => (
           <PropRow label={whenLabel(p)} keywords={`${p.data.summary} ${p.data.kicker ?? ''}`}>
-            <a class="dp-field folder-asset" href={projectHref(p)}>
+            <a class="dp-field folder-asset" href={ed(projectHref(p))}>
               <UeIcon name="blueprint" size={13} />
               <span>
                 <strong>{p.data.title}</strong>
@@ -73,7 +73,7 @@ const log: LogLine[] = [{ cat: 'ContentBrowser', text: `${projects.length} asset
       }
     </DetailsCategory>
   </DetailsPanel>
-</Base>
+</Editor>
 
 <style>
   .folder-asset {

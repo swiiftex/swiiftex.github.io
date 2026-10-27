@@ -1,0 +1,16 @@
+---
+import FolderLevel from '../../components/editor/FolderLevel.astro';
+---
+
+<FolderLevel
+  category="games"
+  title="Games"
+  description="Games I've worked on and built — Directive 8020, Night Crew, LUNARBALL and VENATOR."
+  lede="Games I've worked on or made myself: commercial projects with Supermassive Games and Binary Spiders, and my own multiplayer games."
+  trailers
+/>
+
+<script is:inline>
+  // Mods used to live at /games/#mods.
+  if (location.hash === '#mods') location.replace('/editor/mods/');
+</script>

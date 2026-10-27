@@ -5,6 +5,7 @@
  */
 import Logo from '../Logo.astro';
 import UeIcon from './UeIcon.astro';
+import ViewToggle from '../ViewToggle.astro';
 import type { UeIconName } from '../../lib/editor';
 
 interface Props {
@@ -15,7 +16,7 @@ const { level, icon } = Astro.props;
 ---
 
 <div class="titlebar">
-  <a class="titlebar__logo" href="/" aria-label="swiift — home" data-logo-replay title="swiift — home">
+  <a class="titlebar__logo" href="/editor/" aria-label="swiift — home" data-logo-replay title="swiift — home">
     <Logo size={19} intro tight />
   </a>
   <div class="titlebar__level" title={level}>
@@ -23,6 +24,7 @@ const { level, icon } = Astro.props;
     <span class="titlebar__level-name">{level}</span>
   </div>
   <div class="titlebar__right">
+    <ViewToggle view="editor" />
     <span class="titlebar__project">swiift</span>
     <span class="titlebar__win" aria-hidden="true"><UeIcon name="minimize" size={14} /></span>
     <button type="button" class="titlebar__win titlebar__win--btn" data-action="fullscreen" aria-label="Toggle fullscreen" title="Toggle fullscreen">
@@ -90,6 +92,9 @@ const { level, icon } = Astro.props;
     align-items: center;
     margin-left: auto;
     align-self: stretch;
+  }
+  .titlebar__right :global(.view-toggle) {
+    margin-right: 8px;
   }
   .titlebar__project,
   .titlebar__win {

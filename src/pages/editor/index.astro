@@ -1,0 +1,167 @@
+---
+/**
+ * Home: the "Main" level. The Viewport plays a reel of featured projects,
+ * the Details panel introduces me, the Blueprint graph shows what I do and
+ * the Output Log carries the latest news.
+ */
+import Editor from '../../layouts/Editor.astro';
+import Viewport from '../../components/editor/Viewport.astro';
+import BlueprintGraph from '../../components/editor/BlueprintGraph.astro';
+import DetailsPanel from '../../components/editor/DetailsPanel.astro';
+import DetailsCategory from '../../components/editor/DetailsCategory.astro';
+import PropRow from '../../components/editor/PropRow.astro';
+import MediaList from '../../components/editor/MediaList.astro';
+import UeIcon from '../../components/editor/UeIcon.astro';
+import Icon from '../../components/Icon.astro';
+import { getProjects } from '../../lib/projects';
+import { steamUpdates } from '../../lib/steam-events';
+import { getReleases } from '../../lib/releases';
+import { latestRelease } from '../../lib/github';
+import { isRecent } from '../../lib/updates-view';
+import { reelItem } from '../../lib/viewport';
+import { buildGraph } from '../../lib/graph';
+import { ed, type DockTab, type LogLine } from '../../lib/editor';
+import { DISCIPLINES, MODIO, SITE, SOCIALS } from '../../data/site';
+
+const all = await getProjects();
+const count = (c: string) => all.filter((p) => p.data.category === c).length;
+const pick = (id: string) => all.find((p) => p.id === id)!;
+
+// The reel: featured work, with Steam trailers playing where there are any.
+const vrlan = pick('vrlan-2026');
+const items = await Promise.all([
+  reelItem(pick('directive-8020'), { tag: 'Now shipping', caption: 'Supermassive Games · Steam, PS5, Xbox Series X|S', trailer: true }),
+  reelItem(pick('lunarball'), { tag: 'Free on Steam', caption: '3v3 physics sports · built solo', trailer: true }),
+  reelItem(vrlan, { tag: 'Live event', caption: 'H20 Esports Campus · Purmerend, NL' }),
+  reelItem(pick('night-crew'), { tag: 'Coming soon', caption: 'Binary Spiders · co-op horror', trailer: true }),
+  reelItem(pick('quickclip'), { tag: 'Free download', caption: 'Instant-replay clipper for Windows · C# / C++' }),
+  reelItem(pick('desktopsplitter'), { tag: 'In development', caption: 'Split one monitor into virtual displays · C++' }),
+]);
+
+// Latest LUNARBALL update post and QuickClip release, looked up at build time.
+const lunarUpdate = (await steamUpdates(pick('lunarball').data.steamAppId!)).posts[0];
+const quickclipRelease = latestRelease((await getReleases(pick('quickclip').data.updates!.github!)) ?? []);
+
+const log: LogLine[] = [
+  ...(lunarUpdate && isRecent(lunarUpdate.date, 60)
+    ? [{ cat: 'News', text: `${lunarUpdate.title.replace(/\s+-\s+/, ': ')} is out now`, href: '/lunarball/#updates', action: 'Patch notes', time: lunarUpdate.date }]
+    : []),
+  { cat: 'News', text: 'Directive 8020 — out now on Steam, PS5 & Xbox Series X|S', href: '/directive-8020/' },
+  quickclipRelease
+    ? { cat: 'News', text: `${quickclipRelease.name} released`, href: '/quickclip/#updates', action: 'Release notes' }
+    : { cat: 'News', text: 'QuickClip — free download', href: '/quickclip/' },
+  { cat: 'News', verbosity: 'Warning', text: 'DesktopSplitter — in development', href: '/desktopsplitter/' },
+  { cat: 'News', text: `${MODIO.label} downloads on mod.io`, href: '/mods/' },
+  { cat: 'News', text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
+  { cat: 'News', text: 'Source2All Sensitivity Converter — free download', href: '/source2all-sensitivity-converter/' },
+  { cat: 'News', text: 'Night Crew — wishlist on Steam', href: '/night-crew/' },
+  { cat: 'News', text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
+];
+log.forEach((l) => l.href && (l.href = ed(l.href)));
+const notice =
+  lunarUpdate && isRecent(lunarUpdate.date, 60)
+    ? { title: `${lunarUpdate.title.replace(/\s+-\s+/, ': ')} is out now`, text: 'LUNARBALL · free on Steam', href: ed('/lunarball/#updates'), action: 'Read the patch notes' }
+    : undefined;
+
+const graph = buildGraph(
+  'BP_swiift',
+  DISCIPLINES.map((d, i) => ({
+    title: d.title,
+    detail: d.body,
+    pins: d.tags.map((t, j) => ({ id: `d${i}.t${j}`, label: t, type: 'bool' as const, dir: 'in' as const, value: 'true' })),
+  })),
+  { comment: 'What I do', target: 'swiift' },
+);
+
+const tabs: DockTab[] = [
+  { id: 'viewport', label: 'Viewport', icon: 'camera' },
+  { id: 'graph', label: 'Details', icon: 'graph', title: 'Blueprint: what I do' },
+];
+const stats = [
+  { k: 'Mod Downloads', v: MODIO.label, href: ed('/mods/') },
+  { k: 'Mods Published', v: String(MODIO.published), href: ed('/mods/') },
+  { k: 'Games', v: String(count('games')), href: ed('/games/') },
+  { k: 'Live Events', v: String(count('events')), href: ed('/events/') },
+];
+---
+
+<Editor level="Main" levelIcon="level" folder="Projects" asset="home" tabs={tabs} log={log} notice={notice}>
+  <link slot="head" rel="preconnect" href="https://video.akamai.steamstatic.com" crossorigin />
+  <Viewport items={items} level="Main" />
+  <BlueprintGraph graph={graph} />
+
+  <DetailsPanel slot="details" name="Owen Bladen-Kay" icon="user" type="Character · swiift" path="/Game/Lvl_Main">
+    <MediaList items={items} title="Viewport · Featured" />
+
+    <DetailsCategory title="Developer">
+      <PropRow label="Name"><span class="dp-field">{SITE.author}</span></PropRow>
+      <PropRow label="Alias"><span class="dp-field">swiift</span></PropRow>
+      <PropRow label="Role"><span class="dp-field">Unreal Engine programmer</span></PropRow>
+      <PropRow label="Based In"><span class="dp-field">{SITE.location}</span></PropRow>
+      <PropRow label="Local Time"><span class="dp-field dp-field--mono" data-clock>--:--</span></PropRow>
+      <PropRow label="Open To Work"><span class="dp-check" aria-label="Yes"><UeIcon name="check" size={12} /></span></PropRow>
+    </DetailsCategory>
+
+    <DetailsCategory title="Description">
+      <PropRow wide>
+        <div class="dp-text prose home-intro">
+          <p class="home-intro__title">I code games and software.</p>
+          <p>
+            I'm Owen, also known as <strong>swiift</strong>. I'm an Unreal Engine programmer, and I also make mods, Windows tools and broadcast
+            software.
+          </p>
+          <p>
+            Pick anything in the <strong>Viewport</strong> list above, open the <strong>Details</strong> tab for a Blueprint of what I do, or browse
+            every project in the <strong>Content Drawer</strong>.
+          </p>
+        </div>
+      </PropRow>
+      <PropRow wide>
+        <div class="dp-links">
+          <button type="button" class="dp-link dp-link--primary" data-action="open-drawer:Projects">
+            <UeIcon name="drawer" size={14} /><span>Browse my projects</span><span class="dp-link__tag dp-link__key">Ctrl+Space</span>
+          </button>
+          <a class="dp-link" href="/editor/about/"><UeIcon name="user" size={14} /><span>About me</span></a>
+          <button type="button" class="dp-link" data-action="contact"><UeIcon name="mail" size={14} /><span>Get in touch</span></button>
+        </div>
+      </PropRow>
+    </DetailsCategory>
+
+    <DetailsCategory title="Stats">
+      {
+        stats.map((s) => (
+          <PropRow label={s.k}>
+            <a class="dp-num" href={s.href}>
+              <span>{s.v}</span>
+            </a>
+          </PropRow>
+        ))
+      }
+    </DetailsCategory>
+
+    <DetailsCategory title="Links">
+      <PropRow wide keywords={SOCIALS.map((s) => s.label).join(' ')}>
+        <div class="dp-links">
+          {
+            SOCIALS.map((s) => (
+              <a class="dp-link" href={s.href} target="_blank" rel="noopener">
+                <Icon name={s.icon} size={14} />
+                <span>{s.label}</span>
+                <span class="dp-link__tag">{s.handle}</span>
+              </a>
+            ))
+          }
+        </div>
+      </PropRow>
+    </DetailsCategory>
+  </DetailsPanel>
+</Editor>
+
+<style>
+  .home-intro__title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+</style>

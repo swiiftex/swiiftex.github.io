@@ -8,7 +8,8 @@ export default defineConfig({
   trailingSlash: 'ignore',
   // Astro 7 defaults to JSX-style whitespace collapsing; keep normal HTML spacing.
   compressHTML: true,
-  integrations: [sitemap()],
+  // The editor view (/editor/…) mirrors the classic pages, so only the classic ones are listed.
+  integrations: [sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/editor/') })],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   // Images in Steam update posts are downloaded at build time and served as optimised WebP.
   image: {
@@ -17,6 +18,7 @@ export default defineConfig({
   // Old WordPress URLs, so links shared from swiift.co.uk keep working here.
   redirects: {
     '/my-games': '/games',
+    '/mods': '/games#mods',
     '/all-projects': '/',
     '/simple-sensitivity-converter': '/source2all-sensitivity-converter',
   },

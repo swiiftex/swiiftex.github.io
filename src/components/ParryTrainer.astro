@@ -27,6 +27,7 @@
   <div
     class="arena"
     data-arena
+    data-cursor-label="Fight"
     tabindex="0"
     role="button"
     aria-label="Arena: right click or Space to parry, left click or F to attack"
@@ -482,7 +483,7 @@
     color: var(--accent);
   }
   .parry__title {
-    font-size: 20px;
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
   }
   .parry__intro {
     color: var(--fg-2);
