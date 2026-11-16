@@ -33,7 +33,7 @@ const items = await Promise.all([
   reelItem(pick('directive-8020'), { tag: 'Now shipping', caption: 'Supermassive Games · Steam, PS5, Xbox Series X|S', trailer: true }),
   reelItem(pick('lunarball'), { tag: 'Free on Steam', caption: '3v3 physics sports · built solo', trailer: true }),
   reelItem(vrlan, { tag: 'Live event', caption: 'H20 Esports Campus · Purmerend, NL' }),
-  reelItem(pick('night-crew'), { tag: 'Coming soon', caption: 'Binary Spiders · co-op horror', trailer: true }),
+  reelItem(pick('night-crew'), { tag: 'Out now', caption: 'Binary Spiders · Early Access on Steam', trailer: true }),
   reelItem(pick('quickclip'), { tag: 'Free download', caption: 'Instant-replay clipper for Windows · C# / C++' }),
   reelItem(pick('desktopsplitter'), { tag: 'In development', caption: 'Split one monitor into virtual displays · C++' }),
 ]);
@@ -54,7 +54,7 @@ const log: LogLine[] = [
   { cat: 'News', text: `${MODIO.label} downloads on mod.io`, href: '/mods/' },
   { cat: 'News', text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
   { cat: 'News', text: 'Source2All Sensitivity Converter — free download', href: '/source2all-sensitivity-converter/' },
-  { cat: 'News', text: 'Night Crew — wishlist on Steam', href: '/night-crew/' },
+  { cat: 'News', text: 'Night Crew — out now in Early Access on Steam', href: '/night-crew/#updates', action: 'Launch post' },
   { cat: 'News', text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
 ];
 log.forEach((l) => l.href && (l.href = ed(l.href)));

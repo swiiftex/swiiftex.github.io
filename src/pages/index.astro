@@ -35,7 +35,7 @@ const mixer = [
   { href: '/directive-8020/', image: d8020.data.cover!, tag: 'Now shipping', title: 'Directive 8020', sub: 'Supermassive Games · Steam, PS5, Xbox Series X|S', video: await trailer('directive-8020') },
   { href: '/vrlan-2026/', image: vrlan.data.cover!, tag: 'Live event', title: 'VRLAN 2026', sub: 'H20 Esports Campus · Purmerend, NL', video: vrlanVideo ? { type: 'youtube' as const, id: vrlanVideo.id } : null },
   { href: '/lunarball/', image: pick('lunarball').data.cover!, tag: 'Free on Steam', title: 'LUNARBALL', sub: '3v3 physics sports · built solo', video: await trailer('lunarball') },
-  { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Coming soon', title: 'Night Crew', sub: 'Binary Spiders · co-op horror', video: await trailer('night-crew') },
+  { href: '/night-crew/', image: pick('night-crew').data.cover!, tag: 'Out now', title: 'Night Crew', sub: 'Binary Spiders · Early Access on Steam', video: await trailer('night-crew') },
 ];
 
 // Latest LUNARBALL update post and QuickClip release, looked up at build time.
@@ -43,6 +43,7 @@ const lunarUpdate = (await steamUpdates(pick('lunarball').data.steamAppId!)).pos
 const quickclipRelease = latestRelease((await getReleases(pick('quickclip').data.updates!.github!)) ?? []);
 
 const ticker = [
+  { text: 'Night Crew — out now in Early Access on Steam', href: '/night-crew/#updates' },
   ...(lunarUpdate && isRecent(lunarUpdate.date, 60)
     ? [{ text: `${lunarUpdate.title.replace(/\s+-\s+/, ': ')} is out now`, href: '/lunarball/#updates' }]
     : []),
@@ -54,7 +55,6 @@ const ticker = [
   { text: `${MODIO.label} downloads on mod.io`, href: '/games/#mods' },
   { text: 'LUNARBALL — free to play on Steam', href: '/lunarball/' },
   { text: 'Source2All Sensitivity Converter — free download', href: '/source2all-sensitivity-converter/' },
-  { text: 'Night Crew — wishlist on Steam', href: '/night-crew/' },
   { text: 'VRLAN 2026 — H20 Esports Campus, Purmerend', href: '/vrlan-2026/' },
 ];
 

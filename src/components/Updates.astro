@@ -279,7 +279,13 @@ const all = steam
   .upd :global(.upd__body li > p + p) {
     margin-top: 0.4em;
   }
-  .upd :global(.upd__body :is(img.bb-img, p > img, a > img)) {
+  .upd :global(.upd__body .bb-emoticon) {
+    display: inline;
+    width: 18px;
+    height: 18px;
+    vertical-align: -3px;
+  }
+  .upd :global(.upd__body :is(img.bb-img, p > img:not(.bb-emoticon), a > img:not(.bb-emoticon))) {
     display: block;
     width: 100%;
     max-width: 100%;

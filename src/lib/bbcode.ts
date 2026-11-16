@@ -119,6 +119,13 @@ export function bbcodeToHtml(body: string, images: Map<string, BbImage> = new Ma
     return url ? tok(`<a href="${attr(url)}" target="_blank" rel="noopener">${esc(url)}</a>`) : '';
   });
 
+  // Steam emoticons, written as ːnameː.
+  s = s.replace(/ː([A-Za-z0-9_]+)ː/g, (_, name: string) =>
+    tok(
+      `<img class="bb-emoticon" src="https://community.akamai.steamstatic.com/economy/emoticon/${name}" alt=":${name}:" width="18" height="18" loading="lazy" decoding="async">`,
+    ),
+  );
+
   // Everything left is text and simple tags.
   s = esc(s);
   s = s.replace(/\[(\/?)([a-z][a-z0-9]*)(?:[= ][^\]]*)?\]/gi, (m, close: string, name: string) => {

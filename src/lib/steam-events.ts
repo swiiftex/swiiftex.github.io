@@ -14,8 +14,8 @@ export const steamEventsUrl = (appId: string, count: number) =>
 /** What the update-check workflow compares: the newest post and when it was last edited. */
 export const STEAM_STAMP_JQ = '.events[0] | "\\(.gid):\\(.rtime32_last_modified)"';
 
-// Steam event types that are game updates: patch notes, regular and major updates.
-const UPDATE_TYPES: Record<number, string> = { 12: 'Patch notes', 13: 'Update', 14: 'Major update' };
+// Steam event types shown as updates: the launch post, patch notes, regular and major updates.
+const UPDATE_TYPES: Record<number, string> = { 10: 'Launch', 12: 'Patch notes', 13: 'Update', 14: 'Major update' };
 
 export type SteamUpdates = { posts: UpdatePost[]; stamp: string };
 
